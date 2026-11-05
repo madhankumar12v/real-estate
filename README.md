@@ -9,7 +9,10 @@ Premium buy-and-sell property marketplace for Tamil Nadu.
 ## Features
 - Responsive black, gold and white Mr SA Properties branding
 - Public property discovery and detailed image galleries
-- Advanced search by keyword, district, property type, price and bedrooms
+- Advanced search by keyword, district, property type, price, bedrooms and area range
+- Sorting by price (low/high) and date (new/old)
+- Browser-based saved properties, social sharing and recently posted badges
+- Admin listing search and status filters
 - Buyer, owner and agent registration/login with Supabase Auth
 - Property submission with up to 8 photos
 - New listings start as **pending** and remain hidden from public search until admin approval
@@ -26,6 +29,8 @@ Premium buy-and-sell property marketplace for Tamil Nadu.
 Free tiers have quotas, fair-use terms and possible inactivity pauses. This is an MVP starter, not a legally verified property portal. Add verification, privacy policy, terms, moderation, spam controls and backups before commercial launch.
 
 ## 1. Supabase setup
+
+For the latest marketplace upgrade, also review and run `supabase/migrations/20261105_mrsa_properties_2_0.sql` in Supabase SQL Editor. This migration expands supported property categories and adds listing-query indexes. It is separate from GitHub merging and must be applied manually.
 1. Create or open your Supabase project.
 2. Open **SQL Editor** and run the complete `supabase/schema.sql` file.
 3. In **Project Settings → API**, copy the Project URL and anon / publishable key.
