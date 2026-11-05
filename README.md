@@ -109,3 +109,9 @@ Do not make an ordinary user an admin from the public website.
 - Agent dashboard currently manages the signed-in agent's own listings; no multi-agent brokerage/team management.
 - No online payments, subscriptions, maps/geocoding, saved searches or chat inbox.
 - User-submitted listings and property details must be independently verified before a transaction.
+
+## MrSa Properties 4.0 — CRM performance workspace
+
+The 4.0 CRM adds a date-range performance dashboard, lead-pipeline KPIs, enquiry-source and district/property-type breakdowns, agent-wise outcomes, overdue/upcoming follow-up queues, corrected Indian WhatsApp number formatting and aggregate CSV export. Admins see all enquiries permitted by RLS; agents see only enquiries assigned to their own account.
+
+After merging the 4.0 feature branch, run `supabase/migrations/20261108_mrsa_properties_4_0_analytics.sql` once in Supabase SQL Editor, after the 3.0 and Phase 1/Phase 3 migrations. The migration adds reporting indexes and does not change existing records. The dashboard calculates metrics from records returned by Supabase RLS; it does not bypass row-level security or use a service-role key.
