@@ -18,9 +18,9 @@ create index if not exists enquiries_follow_up_due_idx
   on public.enquiries(follow_up_at) where follow_up_at is not null and status not in ('closed','not_interested');
 
 -- Remove broad table and column grants previously given to anon/authenticated.
-revoke all privileges on table public.enquiries from anon, authenticated;
+revoke all privileges on table public.enquiries from PUBLIC, anon, authenticated;
 revoke all privileges (id, listing_id, buyer_user_id, buyer_name, buyer_email, buyer_phone, message, status, assigned_to, source, created_at, updated_at, follow_up_at)
-  on table public.enquiries from anon, authenticated;
+  on table public.enquiries from PUBLIC, anon, authenticated;
 
 revoke all privileges on table public.listing_reports from anon, authenticated;
 revoke all privileges (id, listing_id, reporter_user_id, reporter_name, reporter_phone, reason, details, status, created_at)
@@ -179,7 +179,7 @@ create index if not exists admin_activity_logs_entity_idx
   on public.admin_activity_logs(entity_type, record_id);
 
 alter table public.admin_activity_logs enable row level security;
-revoke all privileges on table public.admin_activity_logs from anon, authenticated;
+revoke all privileges on table public.admin_activity_logs from PUBLIC, anon, authenticated;
 grant select on table public.admin_activity_logs to authenticated;
 drop policy if exists "admins read activity logs" on public.admin_activity_logs;
 create policy "admins read activity logs"
