@@ -30,13 +30,14 @@ Free tiers have quotas, fair-use terms and possible inactivity pauses. This is a
 
 ## 1. Supabase setup
 
-For the latest marketplace upgrade, also review and run `supabase/migrations/20261105_mrsa_properties_2_0.sql` in Supabase SQL Editor. This migration expands supported property categories and adds listing-query indexes. It is separate from GitHub merging and must be applied manually.
 1. Create or open your Supabase project.
 2. Open **SQL Editor** and run the complete `supabase/schema.sql` file.
 3. In **Project Settings → API**, copy the Project URL and anon / publishable key.
 4. Configure your site URL and allowed redirect URLs in **Authentication → URL Configuration**.
 
 The SQL creates the tables, signup profile trigger, RLS policies and public property image bucket. It also blocks users from changing their own account role through the normal profile update API.
+
+After the base schema has been created, review and run `supabase/migrations/20261105_mrsa_properties_2_0.sql` in Supabase SQL Editor. This separate migration expands supported property categories and adds listing-query indexes. GitHub merging and Cloudflare deployment do not execute SQL migrations automatically.
 
 ## 2. Configure and run locally
 Install Node.js LTS, then:
