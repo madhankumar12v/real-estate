@@ -18,6 +18,10 @@ Premium buy-and-sell property marketplace for Tamil Nadu.
 - New listings start as **pending** and remain hidden from public search until admin approval
 - Owner / agent dashboard to track submitted listings
 - Admin dashboard to approve, reject or delete submissions
+- Enquiry CRM with lead stages, admin assignment and agent-only assigned-lead access
+- WhatsApp follow-up and date/time follow-up reminders
+- Admin-only activity log for listing, enquiry and report changes
+- Public property report submission with admin-only review
 - WhatsApp enquiry links
 - Supabase PostgreSQL Row Level Security and property-image storage
 
@@ -37,7 +41,13 @@ Free tiers have quotas, fair-use terms and possible inactivity pauses. This is a
 
 The SQL creates the tables, signup profile trigger, RLS policies and public property image bucket. It also blocks users from changing their own account role through the normal profile update API.
 
-After the base schema has been created, review and run `supabase/migrations/20261105_mrsa_properties_2_0.sql` in Supabase SQL Editor. This separate migration expands supported property categories and adds listing-query indexes. GitHub merging and Cloudflare deployment do not execute SQL migrations automatically.
+After the base schema has been created, run the migrations in this order in Supabase SQL Editor:
+
+1. `supabase/migrations/20261105_mrsa_properties_2_0.sql` — expands supported property categories and adds listing-query indexes.
+2. `supabase/migrations/20261106_mrsa_properties_3_0.sql` — adds CRM enquiries, saved properties, listing reports and property-verification foundations.
+3. `supabase/migrations/20261105_mrsa_phase1_phase3_hardening.sql` — removes broad anonymous/authenticated grants on enquiries and reports, applies least-privilege RLS, protects lead assignment, adds follow-up reminders and creates the admin-only activity log.
+
+Run each migration once, in the order above, after reviewing it. GitHub merging and Cloudflare deployment do not execute SQL migrations automatically.
 
 ## 2. Configure and run locally
 Install Node.js LTS, then:
@@ -86,7 +96,8 @@ Do not make an ordinary user an admin from the public website.
 6. Test signup, login, image upload, property submission, admin approval, public search and WhatsApp enquiries.
 
 ## Production checklist
-- Add CAPTCHA / rate limits and email verification to reduce spam.
+- Configure CAPTCHA / rate limits and email verification to reduce spam.
+- Run the Phase 1 security-hardening migration before enabling public production traffic for CRM/report workflows.
 - Enforce image type and size restrictions; the SQL bucket limit is 5 MB per image.
 - Add report listing, block user, audit log and moderation queue.
 - Add privacy policy, terms, consent and grievance/contact process.
