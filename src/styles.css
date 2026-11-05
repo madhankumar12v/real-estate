@@ -68,3 +68,37 @@ footer{background:#f5f8f7;color:#526575;border-top:1px solid #e7eeeb}footer p{co
 .card-image-wrap{position:relative}.card-image-wrap .card-image{height:220px}.favorite-btn{position:absolute;right:12px;top:12px;width:38px;height:38px;border:0;border-radius:50%;background:#fff;color:#526575;display:grid;place-items:center;box-shadow:0 3px 12px #20364b18;cursor:pointer}.favorite-btn.saved{color:#d44c62}.new-pill{position:absolute;right:12px;bottom:12px;background:#e9f5ef;color:#287b68;border-radius:5px;padding:6px 9px;font-size:10px;font-weight:800;text-transform:uppercase}.share-btn{border:0;background:#f2f7f5;color:#287b68;border-radius:7px;padding:7px;display:grid;place-items:center;cursor:pointer}.card-meta{flex-wrap:wrap}.detail-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.detail-actions .detail-price{margin-right:8px}.admin-tools{display:flex;gap:12px;margin:18px 0;flex-wrap:wrap}.admin-tools input,.admin-tools select{border:1px solid var(--line);border-radius:8px;padding:11px 13px;background:#fff;color:#243447;font:13px 'DM Sans'}.admin-tools input{flex:1;min-width:220px}.detail-actions .btn{padding:10px 13px}.filters .btn-ghost{justify-content:center}@media(max-width:620px){.card-image-wrap .card-image{height:230px}.detail-actions{width:100%}.detail-actions .detail-price{width:100%;margin:0 0 6px}.detail-actions .btn{flex:1}}
 
 .crm-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:22px 0}.crm-stats>div{padding:19px;border:1px solid var(--line);border-radius:12px;background:#f8fbfa}.crm-stats b{display:block;font-size:26px;color:#20364b}.crm-stats span{font-size:11px;color:var(--muted)}.crm-list{display:grid;gap:12px}.crm-card{border:1px solid var(--line);border-radius:12px;padding:17px 19px;display:flex;justify-content:space-between;align-items:center;gap:18px}.crm-main{display:grid;gap:5px;min-width:0}.crm-main>span,.crm-main small{font-size:11px;color:var(--muted)}.crm-main p{font-size:12px;margin:2px 0}.crm-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.crm-actions select{border:1px solid var(--line);border-radius:7px;padding:10px;background:white;color:#243447;font-size:12px;text-transform:capitalize}.crm-actions .btn{padding:10px 12px}@media(max-width:700px){.crm-stats{grid-template-columns:repeat(2,1fr)}.crm-card{align-items:stretch;flex-direction:column}.crm-actions>*{flex:1}.crm-actions select{min-width:120px}}
+
+/* MrSa Properties — simplified two-filter search */
+.search-panel-simple{grid-template-columns:1fr 1fr auto;align-items:end;gap:12px;padding:16px}
+.search-panel-simple label{display:grid;gap:7px;margin:0;color:#526575;font-size:11px;font-weight:700}
+.search-panel-simple label span{padding-left:3px}
+.search-panel-simple select{width:100%;border:1px solid #e1e9e6;border-radius:8px;padding:13px 12px;color:#344b5b;background:#fff;font:13px 'DM Sans'}
+.search-panel-simple .btn{min-height:43px;white-space:nowrap}
+.filter-layout-simple{display:block}
+.filters-simple{display:grid;grid-template-columns:1fr 1fr auto;gap:12px 16px;align-items:end;margin-bottom:24px;padding:18px 20px}
+.filters-simple h3{grid-column:1/-1;margin:0 0 2px}
+.filters-simple label{margin:0}
+.filters-simple select{min-height:43px}
+.filter-actions{display:flex;gap:8px;align-items:center}
+.filter-actions .btn{min-height:43px;white-space:nowrap}
+.results-toolbar-simple{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 18px}
+.results-toolbar-simple label{display:flex;align-items:center;gap:9px;font-size:12px;font-weight:700;color:#526575}
+.results-toolbar-simple select{border:1px solid #dfe8e4;border-radius:8px;background:#fff;color:#344b5b;padding:10px 12px;font:12px 'DM Sans'}
+@media(max-width:700px){
+ .search-panel-simple{grid-template-columns:1fr}
+ .search-panel-simple .btn{width:100%}
+ .filters-simple{grid-template-columns:1fr 1fr}
+ .filters-simple h3{grid-column:1/-1}
+ .filter-actions{grid-column:1/-1}
+ .filter-actions .btn{flex:1}
+}
+@media(max-width:480px){
+ .filters-simple{grid-template-columns:1fr}
+ .filters-simple h3,.filter-actions{grid-column:1}
+ .results-toolbar-simple{align-items:stretch;flex-direction:column}
+ .results-toolbar-simple label{justify-content:space-between}
+}
+
+.active-filter{display:flex;align-items:center;gap:8px;margin-top:10px;color:#617582;font-size:12px}
+.active-filter button{border:0;background:#edf5f1;color:#287b68;border-radius:6px;padding:5px 9px;font:600 11px 'DM Sans';cursor:pointer}
