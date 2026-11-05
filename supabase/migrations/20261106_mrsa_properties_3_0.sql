@@ -15,7 +15,7 @@ alter table public.enquiries enable row level security;
 drop policy if exists "public create enquiries" on public.enquiries;
 create policy "public create enquiries" on public.enquiries for insert with check (true);
 drop policy if exists "crm staff read enquiries" on public.enquiries;
-create policy "crm staff read enquiries" on public.enquiries for select to authenticated using (public.is_admin() or assigned_to=auth.uid() or exists(select 1 from public.profiles p where p.id=auth.uid() and p.role='agent'));
+create policy "crm staff read enquiries" on public.enquiries for select to authenticated using (public.is_admin() or assigned_to=auth.uid());
 drop policy if exists "crm staff update enquiries" on public.enquiries;
 create policy "crm staff update enquiries" on public.enquiries for update to authenticated using (public.is_admin() or assigned_to=auth.uid()) with check (public.is_admin() or assigned_to=auth.uid());
 
