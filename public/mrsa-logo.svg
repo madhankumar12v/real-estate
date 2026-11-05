@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+<title id="title">Mr SA Properties</title><desc id="desc">Black and gold property emblem with a house roof and rising arrow.</desc>
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f5d98c"/><stop offset="1" stop-color="#a87921"/></linearGradient></defs>
+<circle cx="256" cy="256" r="239" fill="#111" stroke="url(#g)" stroke-width="12"/><circle cx="256" cy="256" r="218" fill="none" stroke="#6e5527" stroke-width="2"/>
+<path d="M104 224 256 100l152 124" fill="none" stroke="url(#g)" stroke-width="19" stroke-linecap="round" stroke-linejoin="round"/><path d="M151 214v102h210V214" fill="none" stroke="#f7f1e4" stroke-width="10" stroke-linejoin="round"/><path d="M229 316v-66h54v66" fill="none" stroke="url(#g)" stroke-width="9"/>
+<path d="m300 186 42-34 8 36m-8-36-43 7" fill="none" stroke="#d8b45e" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="256" y="371" text-anchor="middle" font-family="Georgia,serif" font-size="68" font-weight="bold" fill="#f8f3e7">Mr SA</text><text x="256" y="411" text-anchor="middle" font-family="Arial,sans-serif" font-size="24" font-weight="bold" letter-spacing="5" fill="#e0b95d">PROPERTIES</text><path d="M120 432h272" stroke="#9c772d" stroke-width="2"/><text x="256" y="462" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" letter-spacing="2" fill="#e9e1d1">BUY • SELL • DISCOVER</text>
+</svg>
