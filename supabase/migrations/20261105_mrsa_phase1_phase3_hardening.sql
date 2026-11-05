@@ -19,7 +19,7 @@ create index if not exists enquiries_follow_up_due_idx
 
 -- Remove broad table and column grants previously given to anon/authenticated.
 revoke all privileges on table public.enquiries from anon, authenticated;
-revoke all privileges (id, listing_id, buyer_user_id, buyer_name, buyer_email, buyer_phone, message, status, assigned_to, source, created_at, updated_at)
+revoke all privileges (id, listing_id, buyer_user_id, buyer_name, buyer_email, buyer_phone, message, status, assigned_to, source, created_at, updated_at, follow_up_at)
   on table public.enquiries from anon, authenticated;
 
 revoke all privileges on table public.listing_reports from anon, authenticated;
