@@ -12,6 +12,11 @@ begin
   end if;
 end $$;
 
+-- Add CRM follow-up reminders without changing existing lead data.
+alter table public.enquiries add column if not exists follow_up_at timestamptz;
+create index if not exists enquiries_follow_up_due_idx
+  on public.enquiries(follow_up_at) where follow_up_at is not null and status not in ('closed','not_interested');
+
 -- Remove broad table and column grants previously given to anon/authenticated.
 revoke all privileges on table public.enquiries from anon, authenticated;
 revoke all privileges (id, listing_id, buyer_user_id, buyer_name, buyer_email, buyer_phone, message, status, assigned_to, source, created_at, updated_at)
@@ -26,7 +31,7 @@ revoke all privileges (id, listing_id, reporter_user_id, reporter_name, reporter
 grant insert (listing_id, buyer_user_id, buyer_name, buyer_email, buyer_phone, message, source)
   on table public.enquiries to anon, authenticated;
 grant select on table public.enquiries to authenticated;
-grant update (status, updated_at, assigned_to) on table public.enquiries to authenticated;
+grant update (status, updated_at, assigned_to, follow_up_at) on table public.enquiries to authenticated;
 
 -- Public visitors may submit reports. Only admins can read, update or delete them.
 grant insert (listing_id, reporter_user_id, reporter_name, reporter_phone, reason, details)
@@ -209,6 +214,7 @@ begin
   detail_data := jsonb_strip_nulls(jsonb_build_object(
     'status', row_data -> 'status',
     'assigned_to', row_data -> 'assigned_to',
+    'follow_up_at', row_data -> 'follow_up_at',
     'title', row_data -> 'title'
   ));
 
