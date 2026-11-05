@@ -22,9 +22,9 @@ revoke all privileges on table public.enquiries from PUBLIC, anon, authenticated
 revoke all privileges (id, listing_id, buyer_user_id, buyer_name, buyer_email, buyer_phone, message, status, assigned_to, source, created_at, updated_at, follow_up_at)
   on table public.enquiries from PUBLIC, anon, authenticated;
 
-revoke all privileges on table public.listing_reports from anon, authenticated;
+revoke all privileges on table public.listing_reports from PUBLIC, anon, authenticated;
 revoke all privileges (id, listing_id, reporter_user_id, reporter_name, reporter_phone, reason, details, status, created_at)
-  on table public.listing_reports from anon, authenticated;
+  on table public.listing_reports from PUBLIC, anon, authenticated;
 
 -- Public visitors may submit enquiries, but cannot read or edit them.
 -- CRM staff can read assigned enquiries; admins can read all enquiries.
