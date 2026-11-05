@@ -7,7 +7,7 @@ Premium buy-and-sell property marketplace for Tamil Nadu.
 **Contact:** +91 88380 37689 · mrsasolutions2@gmail.com
 
 ## Features
-- Responsive black, gold and white Mr SA Properties branding
+- Responsive light MrSa Properties branding with a clean white layout and soft green accents
 - Public property discovery and detailed image galleries
 - Advanced search by keyword, district, property type, price, bedrooms and area range
 - Sorting by price (low/high) and date (new/old)
