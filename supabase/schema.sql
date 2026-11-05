@@ -69,6 +69,23 @@ create policy "profile read own" on public.profiles for select to authenticated 
 drop policy if exists "profile update own" on public.profiles;
 create policy "profile update own" on public.profiles for update to authenticated using (id = auth.uid()) with check (id = auth.uid() and role in ('buyer','owner','agent'));
 
+-- Protect account roles from self-promotion through the public profile update API.
+-- Manual admin promotion in the Supabase SQL editor remains possible.
+create or replace function public.prevent_profile_role_escalation()
+returns trigger language plpgsql security definer set search_path = public
+as $
+begin
+  if new.role is distinct from old.role and auth.uid() is not null and not public.is_admin() then
+    raise exception 'Only an administrator can change account roles.';
+  end if;
+  return new;
+end;
+$;
+
+drop trigger if exists protect_profile_role on public.profiles;
+create trigger protect_profile_role before update on public.profiles
+for each row execute procedure public.prevent_profile_role_escalation();
+
 -- Listings: public sees approved listings; owners see their own; admins see all.
 drop policy if exists "approved listings public read" on public.listings;
 create policy "approved listings public read" on public.listings for select using (status = 'approved' or user_id = auth.uid() or public.is_admin());
