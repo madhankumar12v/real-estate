@@ -283,28 +283,28 @@ export default function AdminAnalyticsPage() {
 
       <div className="analytics-section-caption analytics-section-spaced"><div><h2>Activity & insights</h2><p>Understand listing trends, demand and marketplace performance.</p></div></div>
       <div className="analytics-grid">
-        <Panel title="Marketplace activity" subtitle="Monthly enquiries and new listings · last 12 months" icon={TrendingUp} className="analytics-panel-wide">
+        <Panel title="Marketplace activity" subtitle="Monthly enquiries and new listings · last 12 months" icon={TrendingUp} className="analytics-panel-wide analytics-panel-trend">
           <TrendChart rows={monthly}/>
         </Panel>
-        <Panel title="Property mix" subtitle={'Property types added · ' + label} icon={Building2}>
+        <Panel title="Property mix" subtitle={'Property types added · ' + label} icon={Building2} className="analytics-panel-mix">
           {propertyTypes.length ? <Donut rows={propertyTypes} total={filtered.listings.length}/> : <div className="analytics-empty-state">No property listings in this period.</div>}
         </Panel>
-        <Panel title="Listing approval status" subtitle={'Review pipeline · ' + label} icon={CheckCircle2}>
+        <Panel title="Listing approval status" subtitle={'Review pipeline · ' + label} icon={CheckCircle2} className="analytics-panel-third">
           <HorizontalBars rows={listingStatuses}/>
         </Panel>
-        <Panel title="Most enquired properties" subtitle="Top five properties by enquiry volume" icon={TrendingUp}>
+        <Panel title="Most enquired properties" subtitle="Top five properties by enquiry volume" icon={TrendingUp} className="analytics-panel-third">
           {topProperties.length ? <div className="analytics-ranking-table"><div className="analytics-table-head"><span>PROPERTY</span><span>ENQUIRIES</span></div>{topProperties.map((row, index) => <div className="analytics-table-row" key={row.id}><span className="analytics-rank">{String(index + 1).padStart(2, '0')}</span><span className="analytics-property-name"><b>{row.title}</b><small>{row.city}</small></span><strong>{count(row.enquiries)}</strong></div>)}</div> : <div className="analytics-empty-state">No property enquiries in this period.</div>}
         </Panel>
-        <Panel title="Enquiry pipeline" subtitle={'Enquiry status breakdown · ' + label} icon={Activity}>
+        <Panel title="Enquiry pipeline" subtitle={'Enquiry status breakdown · ' + label} icon={Activity} className="analytics-panel-third">
           {enquiryStatuses.length ? <HorizontalBars rows={enquiryStatuses}/> : <div className="analytics-empty-state">No enquiries in this period.</div>}
         </Panel>
-        <Panel title="Channel partner leaderboard" subtitle="Ranked by enquiries, then active property listings" icon={Users} className="analytics-panel-wide">
+        <Panel title="Channel partner leaderboard" subtitle="Ranked by enquiries, then active property listings" icon={Users} className="analytics-panel-wide analytics-panel-partners">
           {partnerPerformance.length ? <div className="analytics-partner-table"><div className="analytics-table-head"><span>CHANNEL PARTNER</span><span>STATUS</span><span>PROPERTIES</span><span>ENQUIRIES</span></div>{partnerPerformance.map((partner, index) => <div className="analytics-partner-row" key={partner.id}><span className="analytics-partner-name"><i>{String(index + 1).padStart(2, '0')}</i><b>{partner.name}</b></span><span><em className={partner.active ? 'partner-active' : 'partner-inactive'}>{partner.active ? 'Active' : 'Inactive'}</em></span><strong>{count(partner.properties)}</strong><strong>{count(partner.enquiries)}</strong></div>)}</div> : <div className="analytics-empty-state">No channel partners found.</div>}
         </Panel>
-        <Panel title="Buy vs rent distribution" subtitle="Marketplace listing category report" icon={Building2}>
+        <Panel title="Buy vs rent distribution" subtitle="Marketplace listing category report" icon={Building2} className="analytics-panel-half">
           <div className="analytics-unavailable"><span><Activity size={18}/></span><b>Rental listings are not enabled</b><p>The current property submission form supports sale listings. Enable a rent / sale listing category before comparing these segments.</p></div>
         </Panel>
-        <Panel title="Property views" subtitle="Most viewed property report" icon={Eye}>
+        <Panel title="Property views" subtitle="Most viewed property report" icon={Eye} className="analytics-panel-half">
           <div className="analytics-unavailable"><span><Eye size={18}/></span><b>View tracking is not enabled</b><p>Property detail visits are not currently recorded. Add a view-events table to report verified views and most-viewed properties.</p></div>
         </Panel>
       </div>
