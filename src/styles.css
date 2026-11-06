@@ -532,3 +532,13 @@ footer{background:#f5f8f7;color:#526575;border-top:1px solid #e7eeeb}footer p{co
  .category-tile,.property-card,.btn{transition:none}
  .category-tile:hover,.property-card:hover,.btn-primary:hover{transform:none}
 }
+
+/* Homepage: three-step journey */
+.how-it-works-section{max-width:1160px}
+.how-it-works-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.how-step{min-height:218px;padding:26px;border:1px solid #e7eeeb;border-radius:16px;background:linear-gradient(145deg,#fff,#f8fbfa);box-shadow:0 7px 24px #20364b07}
+.how-step-icon{width:48px;height:48px;display:grid;place-items:center;border-radius:14px;background:#eaf4f0;color:#287b68;margin-bottom:20px}
+.how-step>small{font-size:9px;letter-spacing:1.4px;font-weight:800;color:#8b9a94}
+.how-step h3{font:600 21px 'Playfair Display',serif;color:#20364b;margin:8px 0}
+.how-step p{font-size:12px;line-height:1.75;color:#71808b;margin:0;max-width:300px}
+@media(max-width:760px){.how-it-works-grid{grid-template-columns:1fr;gap:12px}.how-step{min-height:0;padding:21px}.how-step-icon{margin-bottom:14px}}
