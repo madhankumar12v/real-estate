@@ -185,7 +185,7 @@ export default function AdminAnalyticsPage() {
     }).sort((a, b) => b.enquiries - a.enquiries || b.properties - a.properties).slice(0, 8)
   }, [data])
 
-  const label = range === 'today' ? 'Today' : range === 'week' ? 'This week' : range === 'month' ? 'This month' : range === 'year' ? 'This year' : 'Custom date range'
+  const label = range === 'today' ? 'Today' : range === 'week' ? 'This week' : range === 'month' ? 'This month' : range === 'year' ? 'This year' : range === 'all' ? 'All time' : 'Custom date range'
   const exportAll = () => {
     const rows = [
       ['MrSa Properties Admin Analytics', label],
