@@ -106,7 +106,7 @@ export default function AdminAnalyticsPage() {
     setError('')
     try {
       const [listings, enquiries, profiles, partners] = await Promise.all([
-        supabase.from('listings').select('id,title,status,property_type,price,created_at,partner_id,listing_tag,city,district'),
+        supabase.from('listings').select('id,title,status,property_type,created_at,partner_id,listing_tag,city,district'),
         supabase.from('enquiries').select('id,listing_id,created_at,status,assigned_to,listings(id,title,city,district,property_type)'),
         supabase.from('profiles').select('id,role,created_at'),
         supabase.from('partners').select('id,name,is_active')
