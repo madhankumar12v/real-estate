@@ -216,6 +216,9 @@ export default function AdminAnalyticsPage() {
     return [...statuses.entries()].map(([label, value]) => ({ label: label.replaceAll('_', ' ').replace(/\b\w/g, char => char.toUpperCase()), value })).sort((a, b) => b.value - a.value)
   }, [filtered])
 
+  const closedEnquiries = filtered.enquiries.filter(row => row.status === 'closed').length
+  const conversionRate = filtered.enquiries.length ? closedEnquiries / filtered.enquiries.length * 100 : 0
+
   const label = range === 'today' ? 'Today' : range === 'week' ? 'This week' : range === 'month' ? 'This month' : range === 'year' ? 'This year' : range === 'all' ? 'All time' : 'Custom date range'
 
   const exportAll = () => {
@@ -242,6 +245,8 @@ export default function AdminAnalyticsPage() {
       [],
       ['Enquiry status', 'Count'],
       ...enquiryStatuses.map(row => [row.label, row.value]),
+      ['Closed enquiries', closedEnquiries],
+      ['Closed enquiry conversion rate', conversionRate.toFixed(1) + '%'],
       [],
       ['Most enquired properties', 'Enquiries'],
       ...topProperties.map(row => [row.title, row.enquiries])
@@ -297,6 +302,14 @@ export default function AdminAnalyticsPage() {
         </Panel>
         <Panel title="Enquiry pipeline" subtitle={'Enquiry status breakdown · ' + label} icon={Activity} className="analytics-panel-third">
           {enquiryStatuses.length ? <HorizontalBars rows={enquiryStatuses}/> : <div className="analytics-empty-state">No enquiries in this period.</div>}
+        </Panel>
+        <Panel title="Closed enquiry conversion" subtitle={'Closed enquiries compared with all enquiries · ' + label} icon={CheckCircle2} className="analytics-panel-third">
+          <div className="analytics-conversion-summary">
+            <strong>{conversionRate.toFixed(1)}%</strong>
+            <span>{count(closedEnquiries)} closed out of {count(filtered.enquiries.length)} enquiries</span>
+            <div className="analytics-conversion-track"><i style={{width: Math.min(100, conversionRate) + '%'}}/></div>
+            <small>Conversion = closed enquiries ÷ total enquiries</small>
+          </div>
         </Panel>
         <Panel title="Channel partner leaderboard" subtitle="Ranked by enquiries, then active property listings" icon={Users} className="analytics-panel-wide analytics-panel-partners">
           {partnerPerformance.length ? <div className="analytics-partner-table"><div className="analytics-table-head"><span>CHANNEL PARTNER</span><span>STATUS</span><span>PROPERTIES</span><span>ENQUIRIES</span></div>{partnerPerformance.map((partner, index) => <div className="analytics-partner-row" key={partner.id}><span className="analytics-partner-name"><i>{String(index + 1).padStart(2, '0')}</i><b>{partner.name}</b></span><span><em className={partner.active ? 'partner-active' : 'partner-inactive'}>{partner.active ? 'Active' : 'Inactive'}</em></span><strong>{count(partner.properties)}</strong><strong>{count(partner.enquiries)}</strong></div>)}</div> : <div className="analytics-empty-state">No channel partners found.</div>}
