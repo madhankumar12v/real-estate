@@ -37,6 +37,8 @@ create index if not exists listings_partner_status_created_idx
 
 alter table public.partners enable row level security;
 
+grant select, insert, update, delete on public.partners to authenticated;
+
 drop policy if exists "partners authenticated read" on public.partners;
 create policy "partners authenticated read"
   on public.partners for select to authenticated using (true);
@@ -49,6 +51,26 @@ create policy "partners admin manage"
 -- Partner role is assigned only by an administrator in Supabase.
 -- The existing listing policies continue to require authenticated ownership
 -- for submissions and admin authority for publication/approval.
+create or replace function public.validate_partner_listing_attribution()
+returns trigger language plpgsql set search_path = public
+as $
+begin
+  if exists (select 1 from public.profiles where id = auth.uid() and role = 'partner') then
+    if new.partner_id is null or not exists (
+      select 1 from public.partners where id = new.partner_id and is_active = true
+    ) then
+      raise exception 'Select an active partner before submitting this property.';
+    end if;
+  end if;
+  return new;
+end;
+$;
+
+drop trigger if exists validate_partner_listing_attribution on public.listings;
+create trigger validate_partner_listing_attribution
+  before insert or update of partner_id on public.listings
+  for each row execute procedure public.validate_partner_listing_attribution();
+
 comment on column public.listings.partner_id is
   'Partner attribution selected at submission; shared partner login means attribution is user-entered, not individual authentication.';
 
