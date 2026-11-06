@@ -568,3 +568,17 @@ footer{background:#f5f8f7;color:#526575;border-top:1px solid #e7eeeb}footer p{co
  .gallery-main img{height:240px}
  .detail-columns{margin-top:8px}
 }
+
+
+/* Property detail gallery: show more uploaded photos in a wrapping thumbnail grid */
+.gallery{grid-template-columns:minmax(0,1fr);gap:14px}
+.gallery-main img{height:420px}
+.gallery-thumbs{display:flex;flex-direction:row;flex-wrap:wrap;gap:12px;overflow:visible;padding:0}
+.gallery-thumbs button{flex:0 0 112px;height:82px}
+.detail-columns{margin-top:28px}
+@media(max-width:620px){
+ .gallery-main img{height:290px}
+ .gallery-thumbs{gap:9px}
+ .gallery-thumbs button{flex:0 0 82px;height:64px}
+ .detail-columns{margin-top:22px}
+}
