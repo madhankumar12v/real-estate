@@ -102,3 +102,9 @@ footer{background:#f5f8f7;color:#526575;border-top:1px solid #e7eeeb}footer p{co
 
 .active-filter{display:flex;align-items:center;gap:8px;margin-top:10px;color:#617582;font-size:12px}
 .active-filter button{border:0;background:#edf5f1;color:#287b68;border-radius:6px;padding:5px 9px;font:600 11px 'DM Sans';cursor:pointer}
+
+/* Secure account recovery */
+.auth-forgot{display:flex;justify-content:flex-end;margin:-5px 0 14px;font-size:12px}
+.auth-forgot a{color:#287b68;font-weight:700;text-decoration:none}
+.auth-forgot a:hover{text-decoration:underline}
+.auth-card .btn-outline.full{display:flex;justify-content:center;align-items:center;margin-top:12px;text-decoration:none}
