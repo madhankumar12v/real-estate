@@ -542,3 +542,8 @@ footer{background:#f5f8f7;color:#526575;border-top:1px solid #e7eeeb}footer p{co
 .how-step h3{font:600 21px 'Playfair Display',serif;color:#20364b;margin:8px 0}
 .how-step p{font-size:12px;line-height:1.75;color:#71808b;margin:0;max-width:300px}
 @media(max-width:760px){.how-it-works-grid{grid-template-columns:1fr;gap:12px}.how-step{min-height:0;padding:21px}.how-step-icon{margin-bottom:14px}}
+
+
+/* Property detail page: add breathing room below the photo gallery */
+.detail-columns{margin-top:64px}
+@media(max-width:620px){.detail-columns{margin-top:44px}}
