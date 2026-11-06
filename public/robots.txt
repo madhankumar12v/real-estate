@@ -5,3 +5,9 @@ Disallow: /dashboard
 Disallow: /post
 Disallow: /login
 Disallow: /register
+Disallow: /crm
+Disallow: /activity
+Disallow: /partners
+Disallow: /saved
+
+Sitemap: https://mrsa.mrsaproperties.workers.dev/sitemap.xml
