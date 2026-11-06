@@ -625,3 +625,23 @@ footer{background:#f5f8f7;color:#526575;border-top:1px solid #e7eeeb}footer p{co
 
 /* MrSa brand mark: reliable fallback until custom logo artwork is uploaded */
 .brand-mark{width:48px;height:48px;flex:0 0 48px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:#102a43;color:#fff;font-size:15px;font-weight:800;letter-spacing:-1px;border:2px solid #d9b45f;box-shadow:0 2px 8px #102a4318}.brand-mark span{color:#e2bd68}@media(max-width:620px){.brand-mark{width:40px;height:40px;flex-basis:40px;font-size:13px}}
+
+
+/* Careers page */
+.careers-page{max-width:1080px;padding-top:72px;padding-bottom:80px}
+.careers-hero{max-width:760px;margin:0 auto 64px;text-align:center;padding:45px 28px;background:#faf8f3;border:1px solid #eee8dc;border-radius:20px}
+.careers-hero h1{font:600 clamp(36px,5vw,56px)/1.12 'Playfair Display',serif;color:var(--navy);margin:16px 0}
+.careers-hero>p{max-width:600px;margin:0 auto 24px}
+.careers-content{margin:0 auto 42px}
+.careers-content>div:first-child{text-align:center;margin-bottom:24px}
+.careers-content h2{font:600 30px 'Playfair Display';color:var(--navy);margin:10px 0}
+.careers-role-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.careers-role-grid article{padding:23px;border:1px solid var(--line);border-radius:13px;background:#fff}
+.careers-role-grid b{font-size:14px;color:var(--navy)}
+.careers-role-grid p{font-size:12px;line-height:1.7;color:var(--muted);margin:9px 0 0}
+.careers-note{padding:25px 28px;border-radius:13px;background:#f7f8f6;border:1px solid var(--line)}
+.careers-note>b{color:var(--navy);font-size:14px}
+.careers-note p{margin:8px 0 12px}
+@media(max-width:620px){.careers-page{padding-top:42px;padding-bottom:55px}.careers-hero{padding:34px 19px;margin-bottom:45px}.careers-role-grid{grid-template-columns:1fr}.careers-role-grid article{padding:19px}.careers-note{padding:21px}}
+/* Keep the expanded mobile navigation comfortable with the Careers link */
+@media(max-width:620px){.topbar nav{flex-wrap:wrap;justify-content:flex-start;column-gap:17px;row-gap:12px}}
