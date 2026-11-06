@@ -622,3 +622,6 @@ footer{background:#f5f8f7;color:#526575;border-top:1px solid #e7eeeb}footer p{co
   .gallery-main{min-height:220px}
   .gallery-main img{height:290px}
 }
+
+/* MrSa brand mark: reliable fallback until custom logo artwork is uploaded */
+.brand-mark{width:48px;height:48px;flex:0 0 48px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:#102a43;color:#fff;font-size:15px;font-weight:800;letter-spacing:-1px;border:2px solid #d9b45f;box-shadow:0 2px 8px #102a4318}.brand-mark span{color:#e2bd68}@media(max-width:620px){.brand-mark{width:40px;height:40px;flex-basis:40px;font-size:13px}}
