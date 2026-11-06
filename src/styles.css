@@ -120,3 +120,19 @@ footer{background:#f5f8f7;color:#526575;border-top:1px solid #e7eeeb}footer p{co
 .auth-forgot a{color:#287b68;font-weight:700;text-decoration:none}
 .auth-forgot a:hover{text-decoration:underline}
 .auth-card .btn-outline.full{display:flex;justify-content:center;align-items:center;margin-top:12px;text-decoration:none}
+
+
+/* Homepage channel partner marquee */
+.channel-partners-home{overflow:hidden}
+.channel-partners-home .section-heading{align-items:end}
+.partner-count{font-size:12px;color:#287b68;font-weight:700;white-space:nowrap;padding-bottom:5px}
+.partner-marquee{overflow:hidden;width:100%;mask-image:linear-gradient(to right,transparent,black 3%,black 97%,transparent);outline:none}
+.partner-marquee-track{display:flex;align-items:stretch;gap:16px;width:max-content;animation:mrsa-partners-scroll 38s linear infinite}
+.partner-marquee:hover .partner-marquee-track,.partner-marquee:focus-within .partner-marquee-track,.partner-marquee:focus .partner-marquee-track{animation-play-state:paused}
+.home-partner-card{width:220px;min-height:142px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;padding:18px 16px;border:1px solid #e5ece9;border-radius:14px;background:linear-gradient(145deg,#fff,#f7faf9);box-shadow:0 5px 18px #20364b08;text-align:center}
+.home-partner-icon{width:44px;height:44px;display:grid;place-items:center;border-radius:13px;background:#eaf4f0;color:#287b68;font:700 20px 'DM Sans'}
+.home-partner-card b{max-width:100%;overflow-wrap:anywhere;color:#20364b;font-size:13px}
+.home-partner-card small{color:#819099;font-size:10px;letter-spacing:.5px;text-transform:uppercase}
+@keyframes mrsa-partners-scroll{from{transform:translateX(0)}to{transform:translateX(calc(-50% - 8px))}}
+@media(max-width:620px){.channel-partners-home .section-heading{flex-direction:row;align-items:end}.home-partner-card{width:170px;min-height:130px}.partner-marquee-track{gap:12px;animation-duration:30s}}
+@media(prefers-reduced-motion:reduce){.partner-marquee-track{animation:none}.partner-marquee{overflow-x:auto;mask-image:none}}
