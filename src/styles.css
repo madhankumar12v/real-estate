@@ -645,3 +645,26 @@ footer{background:#f5f8f7;color:#526575;border-top:1px solid #e7eeeb}footer p{co
 @media(max-width:620px){.careers-page{padding-top:42px;padding-bottom:55px}.careers-hero{padding:34px 19px;margin-bottom:45px}.careers-role-grid{grid-template-columns:1fr}.careers-role-grid article{padding:19px}.careers-note{padding:21px}}
 /* Keep the expanded mobile navigation comfortable with the Careers link */
 @media(max-width:620px){.topbar nav{flex-wrap:wrap;justify-content:flex-start;column-gap:17px;row-gap:12px}}
+
+
+/* Optional price-per-square-foot detail */
+.price-per-sqft {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 14px 0 22px;
+  padding: 14px 16px;
+  border: 1px solid var(--line, #e7e7e7);
+  border-radius: 12px;
+  background: var(--surface-soft, #faf9f6);
+}
+.price-per-sqft span {
+  color: var(--muted, #686868);
+  font-size: 0.92rem;
+}
+.price-per-sqft strong {
+  color: var(--text, #202020);
+  font-size: 1.2rem;
+  font-weight: 700;
+}
