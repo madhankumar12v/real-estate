@@ -85,7 +85,7 @@ export default function CRMPage({ user, profile }) {
       const pageSize = 500
       while (true) {
         let request = supabase.from('enquiries')
-          .select('id,listing_id,buyer_name,buyer_phone,message,source,status,assigned_to,created_at,updated_at,follow_up_at,listings(title,city,district,property_type,price)')
+          .select('id,listing_id,buyer_name,buyer_phone,message,source,status,assigned_to,created_at,updated_at,follow_up_at,listings(title,city,district,property_type)')
           .order('created_at', { ascending: false })
           .range(from, from + pageSize - 1)
         if (!admin) request = request.eq('assigned_to', user.id)
