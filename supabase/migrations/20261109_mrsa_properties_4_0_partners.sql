@@ -53,7 +53,7 @@ create policy "partners admin manage"
 -- for submissions and admin authority for publication/approval.
 create or replace function public.validate_partner_listing_attribution()
 returns trigger language plpgsql set search_path = public
-as $
+as $partner$
 begin
   if exists (select 1 from public.profiles where id = auth.uid() and role = 'partner') then
     if new.partner_id is null or not exists (
@@ -64,7 +64,7 @@ begin
   end if;
   return new;
 end;
-$;
+$partner$;
 
 drop trigger if exists validate_partner_listing_attribution on public.listings;
 create trigger validate_partner_listing_attribution
