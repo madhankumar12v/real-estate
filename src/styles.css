@@ -668,3 +668,6 @@ footer{background:#f5f8f7;color:#526575;border-top:1px solid #e7eeeb}footer p{co
   font-size: 1.2rem;
   font-weight: 700;
 }
+
+
+.card-price-per-sqft{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-top:12px;padding:10px 12px;border-radius:8px;background:#f3f7f4;border:1px solid #e2ebe5}.card-price-per-sqft span{font-size:12px;color:var(--muted)}.card-price-per-sqft strong{font-size:16px;font-weight:700;color:var(--green)}
