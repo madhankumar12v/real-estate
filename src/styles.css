@@ -102,3 +102,14 @@ footer{background:#f5f8f7;color:#526575;border-top:1px solid #e7eeeb}footer p{co
 
 .active-filter{display:flex;align-items:center;gap:8px;margin-top:10px;color:#617582;font-size:12px}
 .active-filter button{border:0;background:#edf5f1;color:#287b68;border-radius:6px;padding:5px 9px;font:600 11px 'DM Sans';cursor:pointer}
+
+/* MrSa Properties 4.0 — partner workspace */
+.partners-page .partner-directory{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:16px 0 30px}
+.partner-card{display:flex;align-items:center;gap:12px;min-width:0;padding:15px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.partner-card-icon{width:38px;height:38px;flex:0 0 38px;border-radius:10px;background:#edf6f1;color:#287b68;display:grid;place-items:center}
+.partner-card-copy{flex:1;min-width:0}.partner-card-copy b{display:block;color:var(--navy);font-size:13px}.partner-card-copy small{display:block;color:var(--muted);font-size:11px;margin-top:4px}
+.partner-card .btn{padding:8px 10px;font-size:11px;white-space:nowrap}
+.partner-submission-heading{margin-top:32px}
+.partner-listing-row{align-items:center}
+.partner-admin-note{display:flex;align-items:center;gap:6px;margin-top:20px}
+@media(max-width:700px){.partners-page .partner-directory{grid-template-columns:1fr}.partner-card{flex-wrap:wrap}.partner-card-copy{min-width:calc(100% - 60px)}.partner-card .btn{margin-left:auto}}
