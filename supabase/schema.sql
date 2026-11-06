@@ -17,6 +17,7 @@ create table if not exists public.listings (
   city text not null,
   locality text,
   price numeric(14,2),
+  price_per_sqft numeric(12,2) check (price_per_sqft is null or price_per_sqft >= 0),
   area_sqft numeric(12,2),
   bedrooms integer,
   bathrooms integer,
