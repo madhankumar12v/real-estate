@@ -582,3 +582,43 @@ footer{background:#f5f8f7;color:#526575;border-top:1px solid #e7eeeb}footer p{co
  .gallery-thumbs button{flex:0 0 82px;height:64px}
  .detail-columns{margin-top:22px}
 }
+
+
+/* Property photos: fit every image completely without cropping */
+.gallery-main{
+  width:100%;
+  min-height:320px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  border-radius:12px;
+  background:#f3f6f4;
+}
+.gallery-main img{
+  display:block;
+  width:100%;
+  height:420px;
+  max-width:100%;
+  object-fit:contain;
+  object-position:center;
+  background:#f3f6f4;
+}
+.gallery-thumbs button{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  background:#f3f6f4;
+}
+.gallery-thumbs img{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  object-position:center;
+}
+@media(max-width:620px){
+  .gallery-main{min-height:220px}
+  .gallery-main img{height:290px}
+}
