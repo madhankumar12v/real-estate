@@ -547,3 +547,15 @@ footer{background:#f5f8f7;color:#526575;border-top:1px solid #e7eeeb}footer p{co
 /* Property detail page: increase spacing below the photo gallery */
 .detail-columns{margin-top:100px}
 @media(max-width:620px){.detail-columns{margin-top:72px}}
+
+
+/* Property detail gallery: thumbnails below the main image, not in a tall side column */
+.gallery{grid-template-columns:minmax(0,1fr);gap:10px}
+.gallery-thumbs{flex-direction:row;gap:10px;overflow-x:auto;overflow-y:hidden;padding-bottom:4px}
+.gallery-thumbs button{flex:0 0 92px;height:68px}
+.detail-columns{margin-top:24px}
+@media(max-width:620px){
+ .gallery-main img{height:300px}
+ .gallery-thumbs button{flex-basis:76px;height:58px}
+ .detail-columns{margin-top:20px}
+}
