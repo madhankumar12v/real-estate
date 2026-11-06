@@ -45,18 +45,18 @@ export default function PartnersPage({ user, profile }) {
   }
   return <section className="section page-section partners-page">
     <div className="section-heading">
-      <div><span className="eyebrow">MRSA PROPERTIES · PARTNERS</span><h1>{admin ? 'Partner management' : 'Partner workspace'}</h1>
-        <p className="muted">{admin ? 'Manage the partner directory and review partner-submitted properties.' : 'Submit properties under the correct partner name and track approval status.'}</p></div>
+      <div><span className="eyebrow">MRSA PROPERTIES · CHANNEL PARTNERS</span><h1>{admin ? 'Channel Partner Management' : 'Channel Partner Portal'}</h1>
+        <p className="muted">{admin ? 'Manage the channel partner directory and review partner-submitted properties.' : 'Submit properties under the correct partner name and track approval status.'}</p></div>
       <button className="btn btn-outline" onClick={load} disabled={busy}><RefreshCw size={15}/> Refresh</button>
     </div>
     {message && <p className="notice" role="status">{message}</p>}
     <div className="admin-stats">
-      <div><b>{partners.length}</b><span>Registered partners</span></div>
+      <div><b>{partners.length}</b><span>Channel partners</span></div>
       <div><b>{counts.total}</b><span>Submissions visible</span></div>
       <div><b>{counts.pending}</b><span>Awaiting approval</span></div>
       <div><b>{counts.approved}</b><span>Approved listings</span></div>
     </div>
-    <div className="section-heading"><div><h2>Partner directory</h2><p className="muted">The shared partner account selects a partner when submitting each property.</p></div></div>
+    <div className="section-heading"><div><h2>Channel Partner Directory</h2><p className="muted">The shared Channel Partner account selects a partner name when submitting each property.</p></div></div>
     {busy ? <p className="muted">Loading partner records…</p> : <div className="partner-directory">
       {partners.map(partner => <article className="partner-card" key={partner.id}>
         <div className="partner-card-icon"><Building2 size={19}/></div>
@@ -65,18 +65,18 @@ export default function PartnersPage({ user, profile }) {
         {admin && <button className="btn btn-outline" onClick={() => togglePartner(partner)}>{partner.is_active ? 'Deactivate' : 'Activate'}</button>}
       </article>)}
     </div>}
-    <div className="section-heading partner-submission-heading"><div><h2>Partner property submissions</h2><p className="muted">All new submissions remain pending until MrSa Admin approval.</p></div>
+    <div className="section-heading partner-submission-heading"><div><h2>Channel Partner Listings</h2><p className="muted">All new submissions remain pending until MrSa Admin approval.</p></div>
       {!admin && <Link className="btn btn-primary" to="/post"><Building2 size={16}/> Submit property</Link>}
     </div>
     {!busy && <div className="dashboard-list">
       {listings.map(item => <article className="dashboard-row partner-listing-row" key={item.id}>
-        <div className="row-grow"><b>{item.title}</b><p className="muted">{item.city}, {item.district} · {item.partners?.name || 'No partner attribution'}</p></div>
+        <div className="row-grow"><b>{item.title}</b><p className="muted">{item.city}, {item.district} · {item.partners?.name || 'No channel partner attribution'}</p></div>
         <span className={`status status-${item.status}`}>{item.status}</span>
         {admin && item.status === 'pending' && <span className="tiny"><Clock3 size={13}/> Awaiting review</span>}
       </article>)}
       {!listings.length && <div className="empty"><Building2 size={28}/><h3>No partner properties yet</h3><p>Submitted properties will appear here.</p></div>}
     </div>}
     {admin && <p className="tiny partner-admin-note"><ShieldCheck size={14}/> Approve or reject submissions from the <Link to="/admin">Admin dashboard</Link>.</p>}
-    {!admin && <p className="tiny partner-admin-note"><ShieldCheck size={14}/> Shared-login notice: all users of this one partner account can see its submitted properties. Partner selection is an attribution field, not separate identity verification.</p>}
+    {!admin && <p className="tiny partner-admin-note"><ShieldCheck size={14}/> Shared-login notice: everyone using this single Channel Partner account can view its submitted properties. Selecting a partner name records attribution; it does not verify an individual user's identity.</p>}
   </section>
 }
