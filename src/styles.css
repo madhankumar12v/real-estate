@@ -559,3 +559,12 @@ footer{background:#f5f8f7;color:#526575;border-top:1px solid #e7eeeb}footer p{co
  .gallery-thumbs button{flex-basis:76px;height:58px}
  .detail-columns{margin-top:20px}
 }
+
+
+/* Compact property detail gallery to avoid excessive vertical space */
+.gallery-main img{height:320px}
+.detail-columns{margin-top:8px}
+@media(max-width:620px){
+ .gallery-main img{height:240px}
+ .detail-columns{margin-top:8px}
+}
