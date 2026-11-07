@@ -41,8 +41,8 @@ const downloadReport = (rows, agents, periodLabel) => {
     ['Enquiry source', 'Count'],
     ...Object.entries(rows.reduce((acc, row) => { const key = row.source || 'Unknown'; acc[key] = (acc[key] || 0) + 1; return acc }, {})),
     [],
-    ['City', 'Count'],
-    ...Object.entries(rows.reduce((acc, row) => { const key = row.listings?.city || 'Not specified'; acc[key] = (acc[key] || 0) + 1; return acc }, {})),
+    ['District', 'Count'],
+    ...Object.entries(rows.reduce((acc, row) => { const key = row.listings?.district || 'Not specified'; acc[key] = (acc[key] || 0) + 1; return acc }, {})),
     [],
     ['Property type', 'Count'],
     ...Object.entries(rows.reduce((acc, row) => { const key = row.listings?.property_type || 'General enquiry'; acc[key] = (acc[key] || 0) + 1; return acc }, {})),
@@ -85,7 +85,7 @@ export default function CRMPage({ user, profile }) {
       const pageSize = 500
       while (true) {
         let request = supabase.from('enquiries')
-          .select('id,listing_id,buyer_name,buyer_phone,message,source,status,assigned_to,created_at,updated_at,follow_up_at,listings(title,city,locality,property_type)')
+          .select('id,listing_id,buyer_name,buyer_phone,message,source,status,assigned_to,created_at,updated_at,follow_up_at,listings(title,city,district,property_type)')
           .order('created_at', { ascending: false })
           .range(from, from + pageSize - 1)
         if (!admin) request = request.eq('assigned_to', user.id)
@@ -131,14 +131,14 @@ export default function CRMPage({ user, profile }) {
   const overdue = rows.filter(row => row.follow_up_at && new Date(row.follow_up_at) < now && !['closed', 'not_interested'].includes(row.status))
   const upcoming = rows.filter(row => row.follow_up_at && new Date(row.follow_up_at) >= now && new Date(row.follow_up_at) <= new Date(now.getTime() + 7 * 86400000) && !['closed', 'not_interested'].includes(row.status)).sort((a, b) => new Date(a.follow_up_at) - new Date(b.follow_up_at))
   const sourceBreakdown = Object.entries(periodRows.reduce((acc, row) => { const key = row.source || 'Unknown'; acc[key] = (acc[key] || 0) + 1; return acc }, {})).sort((a, b) => b[1] - a[1])
-  const cityBreakdown = Object.entries(periodRows.reduce((acc, row) => { const key = row.listings?.city || 'Not specified'; acc[key] = (acc[key] || 0) + 1; return acc }, {})).sort((a, b) => b[1] - a[1]).slice(0, 6)
+  const districtBreakdown = Object.entries(periodRows.reduce((acc, row) => { const key = row.listings?.district || 'Not specified'; acc[key] = (acc[key] || 0) + 1; return acc }, {})).sort((a, b) => b[1] - a[1]).slice(0, 6)
   const typeBreakdown = Object.entries(periodRows.reduce((acc, row) => { const key = row.listings?.property_type || 'General enquiry'; acc[key] = (acc[key] || 0) + 1; return acc }, {})).sort((a, b) => b[1] - a[1]).slice(0, 6)
   const agentBreakdown = [...new Set(periodRows.map(row => row.assigned_to || 'unassigned'))].map(id => {
     const mine = periodRows.filter(row => (row.assigned_to || 'unassigned') === id)
     return { id, name: id === 'unassigned' ? 'Unassigned' : agents.find(agent => agent.id === id)?.full_name || 'Agent', total: mine.length, closed: mine.filter(row => row.status === 'closed').length, interested: mine.filter(row => row.status === 'interested').length, open: mine.filter(row => !['closed', 'not_interested'].includes(row.status)).length }
   }).sort((a, b) => b.total - a.total)
 
-  const visible = periodRows.filter(row => (filter === 'all' || row.status === filter) && [row.buyer_name, row.buyer_phone, row.listings?.title, row.listings?.city, row.listings?.locality].join(' ').toLowerCase().includes(query.toLowerCase()))
+  const visible = periodRows.filter(row => (filter === 'all' || row.status === filter) && [row.buyer_name, row.buyer_phone, row.listings?.title, row.listings?.city, row.listings?.district].join(' ').toLowerCase().includes(query.toLowerCase()))
 
   const update = async (id, patch) => {
     setSavingId(id)
@@ -150,7 +150,7 @@ export default function CRMPage({ user, profile }) {
   }
 
   const periodLabel = period === 'all' ? 'All available records' : 'Last ' + (period === '7d' ? '7' : period === '30d' ? '30' : '90') + ' days'
-  const maxBar = Math.max(1, ...[...cityBreakdown, ...typeBreakdown, ...sourceBreakdown].map(item => item[1]))
+  const maxBar = Math.max(1, ...[...districtBreakdown, ...typeBreakdown, ...sourceBreakdown].map(item => item[1]))
   const renderBars = items => items.length ? <div className="crm4-bars">{items.map(([label, value]) => <div className="crm4-bar-row" key={label}><span title={label}>{label}</span><div className="crm4-track"><i style={{ width: (value / maxBar * 100) + '%' }}/></div><b>{value}</b></div>)}</div> : <p className="crm4-empty-note">No records for this period.</p>
 
   return <section className="section page-section crm4">
@@ -178,7 +178,7 @@ export default function CRMPage({ user, profile }) {
       </div>
       <div className="crm4-grid">
         <article className="crm4-panel"><div className="crm4-section-title"><div><h2>Enquiry sources</h2><p>Where your leads come from.</p></div><BarChart3 size={18}/></div>{renderBars(sourceBreakdown)}</article>
-        <article className="crm4-panel"><div className="crm4-section-title"><div><h2>City demand</h2><p>Cities linked to property enquiries.</p></div><BarChart3 size={18}/></div>{renderBars(cityBreakdown)}</article>
+        <article className="crm4-panel"><div className="crm4-section-title"><div><h2>District demand</h2><p>Districts linked to property enquiries.</p></div><BarChart3 size={18}/></div>{renderBars(districtBreakdown)}</article>
         <article className="crm4-panel"><div className="crm4-section-title"><div><h2>Property interest</h2><p>Most enquired property categories.</p></div><BarChart3 size={18}/></div>{renderBars(typeBreakdown)}</article>
         <article className="crm4-panel"><div className="crm4-section-title"><div><h2>Agent performance</h2><p>Assigned leads and outcomes.</p></div><Users size={18}/></div>
           {agentBreakdown.length ? <div className="crm4-agent-list">{agentBreakdown.map(agent => <div className="crm4-agent" key={agent.id}><div><b>{agent.name}</b><small>{agent.total} leads · {agent.closed} closed · {agent.interested} interested</small></div><span>{agent.open} open</span></div>)}</div> : <p className="crm4-empty-note">No agent data for this period.</p>}
@@ -196,9 +196,9 @@ export default function CRMPage({ user, profile }) {
       </div>
       <div className="crm4-leads">
         <div className="crm4-section-title"><div><h2>Enquiry records</h2><p>Search, update lead stages and set the next follow-up.</p></div><span>{visible.length} records</span></div>
-        <div className="crm4-search"><label><Search size={16}/><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search buyer, phone, property, city or area"/></label><select value={filter} onChange={event => setFilter(event.target.value)}><option value="all">All stages</option>{stages.map(stage => <option key={stage} value={stage}>{stageLabel(stage)}</option>)}</select></div>
+        <div className="crm4-search"><label><Search size={16}/><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search buyer, phone, property or district"/></label><select value={filter} onChange={event => setFilter(event.target.value)}><option value="all">All stages</option>{stages.map(stage => <option key={stage} value={stage}>{stageLabel(stage)}</option>)}</select></div>
         <div className="crm4-record-list">{visible.map(row => <article className="crm4-record" key={row.id}>
-          <div className="crm4-record-main"><b>{row.buyer_name}</b><small>{row.buyer_phone} · {new Date(row.created_at).toLocaleDateString('en-IN')}</small><p>{row.listings?.title || 'General enquiry'}{row.listings?.city ? ' · ' + row.listings.city : ''}{row.listings?.locality ? ' · ' + row.listings.locality : ''}</p>{row.message && <small className="crm4-message">{row.message}</small>}{row.follow_up_at && <small className={new Date(row.follow_up_at) < now && !['closed', 'not_interested'].includes(row.status) ? 'crm4-overdue-text' : 'crm4-muted'}>Follow-up: {new Date(row.follow_up_at).toLocaleString('en-IN')}</small>}</div>
+          <div className="crm4-record-main"><b>{row.buyer_name}</b><small>{row.buyer_phone} · {new Date(row.created_at).toLocaleDateString('en-IN')}</small><p>{row.listings?.title || 'General enquiry'}{row.listings?.city ? ' · ' + row.listings.city : ''}{row.listings?.district ? ' · ' + row.listings.district : ''}</p>{row.message && <small className="crm4-message">{row.message}</small>}{row.follow_up_at && <small className={new Date(row.follow_up_at) < now && !['closed', 'not_interested'].includes(row.status) ? 'crm4-overdue-text' : 'crm4-muted'}>Follow-up: {new Date(row.follow_up_at).toLocaleString('en-IN')}</small>}</div>
           <div className="crm4-record-actions"><a className="btn btn-whatsapp" href={'https://wa.me/' + normaliseIndianPhone(row.buyer_phone) + '?text=' + encodeURIComponent('Hello ' + row.buyer_name + ', following up on your MrSa Properties enquiry.')} target="_blank" rel="noreferrer"><MessageCircle size={14}/> WhatsApp</a><label className="crm4-follow-input">Next follow-up<input type="datetime-local" value={toLocalInput(row.follow_up_at)} disabled={savingId === row.id} onChange={event => update(row.id, { follow_up_at: event.target.value ? new Date(event.target.value).toISOString() : null })}/></label><label>Lead stage<select value={row.status} disabled={savingId === row.id} onChange={event => update(row.id, { status: event.target.value })}>{stages.map(stage => <option key={stage} value={stage}>{stageLabel(stage)}</option>)}</select></label>{admin && <label>Assign agent<select value={row.assigned_to || ''} disabled={savingId === row.id} onChange={event => update(row.id, { assigned_to: event.target.value || null })}><option value="">Unassigned</option>{agents.map(agent => <option key={agent.id} value={agent.id}>{agent.full_name || 'Agent'}</option>)}</select></label>}</div>
         </article>)}</div>
         {!visible.length && <div className="crm4-empty"><Users size={28}/><h3>No enquiries found</h3><p>Try another filter or search term.</p></div>}
