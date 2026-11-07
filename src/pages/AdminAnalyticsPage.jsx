@@ -106,8 +106,8 @@ export default function AdminAnalyticsPage() {
     setError('')
     try {
       const [listings, enquiries, profiles, partners] = await Promise.all([
-        supabase.from('listings').select('id,title,status,property_type,created_at,partner_id,listing_tag,city,locality'),
-        supabase.from('enquiries').select('id,listing_id,created_at,status,assigned_to,listings(id,title,city,locality,property_type)'),
+        supabase.from('listings').select('id,title,status,property_type,created_at,partner_id,listing_tag,city,district'),
+        supabase.from('enquiries').select('id,listing_id,created_at,status,assigned_to,listings(id,title,city,district,property_type)'),
         supabase.from('profiles').select('id,role,created_at'),
         supabase.from('partners').select('id,name,is_active')
       ])
@@ -194,7 +194,7 @@ export default function AdminAnalyticsPage() {
     filtered.enquiries.forEach(row => {
       const listing = row.listings
       if (!listing?.id) return
-      const item = counts.get(listing.id) || { id: listing.id, title: listing.title || 'Untitled property', city: [listing.locality, listing.city].filter(Boolean).join(', ') || 'Location not added', enquiries: 0 }
+      const item = counts.get(listing.id) || { id: listing.id, title: listing.title || 'Untitled property', city: listing.city || listing.district || 'Location not added', enquiries: 0 }
       item.enquiries += 1
       counts.set(listing.id, item)
     })
