@@ -13,7 +13,7 @@ create table if not exists public.listings (
   user_id uuid not null references auth.users(id) on delete cascade,
   title text not null,
   property_type text not null check (property_type in ('Apartment','Independent House','Villa','Plot','Commercial')),
-  district text not null,
+  district text,
   city text not null,
   locality text,
   price numeric(14,2),
