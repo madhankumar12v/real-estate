@@ -1011,3 +1011,16 @@ footer{margin-top:0}
 @media(max-width:620px){
   .enquiry-copy h2{font-size:clamp(14px,4.2vw,22px) !important}
 }
+
+
+/* Footer: keep the brand, message, disclaimer and copyright in one horizontal row on wider screens. */
+footer{display:flex;align-items:center;justify-content:space-between;gap:12px 24px;flex-wrap:wrap}
+footer>.footer-brand{flex:0 0 auto;white-space:nowrap}
+footer>p{margin:0;max-width:340px}
+footer>p.tiny{max-width:390px}
+footer>span{margin-left:auto;white-space:nowrap}
+@media(max-width:760px){
+  footer{align-items:flex-start;flex-direction:column;gap:10px}
+  footer>p,footer>p.tiny{max-width:100%}
+  footer>span{margin-left:0}
+}
