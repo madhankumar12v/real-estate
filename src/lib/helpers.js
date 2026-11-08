@@ -1,10 +1,15 @@
-export const districts = [
-  'Ariyalur','Chengalpattu','Chennai','Coimbatore','Cuddalore','Dharmapuri','Dindigul','Erode',
-  'Kallakurichi','Kancheepuram','Kanniyakumari','Karur','Krishnagiri','Madurai','Mayiladuthurai',
-  'Nagapattinam','Namakkal','Nilgiris','Perambalur','Pudukkottai','Ramanathapuram','Ranipet',
-  'Salem','Sivaganga','Tenkasi','Thanjavur','Theni','Thoothukudi','Tiruchirappalli','Tirunelveli',
-  'Tirupathur','Tiruppur','Tiruvallur','Tiruvannamalai','Tiruvarur','Vellore','Viluppuram','Virudhunagar'
-]
+export const cityTowns = ['Ranipet','Vellore','Arcot','Anaicut','Walajah','Katpadi','Gudiyatham']
+
+// Keep the existing required database district column populated without asking users to select a district.
+export const districtForCity = city => ({
+  Ranipet: 'Ranipet',
+  Vellore: 'Vellore',
+  Arcot: 'Ranipet',
+  Anaicut: 'Vellore',
+  Walajah: 'Ranipet',
+  Katpadi: 'Vellore',
+  Gudiyatham: 'Vellore'
+}[city] || 'Vellore')
 export const money = n => n == null ? 'Price on request' : new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(n)
 export const waLink = (phone, title) => {
   const p = String(phone || import.meta.env.VITE_WHATSAPP_DEFAULT || '').replace(/\D/g,'')
