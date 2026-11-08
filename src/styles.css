@@ -887,3 +887,26 @@ footer{margin-top:0}
   .analytics-grid{gap:10px}
   .analytics-panel{padding:12px}
 }
+
+
+/* Give the homepage “Let’s Talk Property” enquiry section more breathing room */
+.enquiry-section{
+  padding-top:78px !important;
+  padding-bottom:78px !important;
+  column-gap:clamp(48px,7vw,88px) !important;
+}
+.enquiry-copy{padding:12px 0}
+.enquiry-copy h2{margin-top:18px;margin-bottom:18px}
+.enquiry-copy>p{margin-bottom:30px;line-height:1.85}
+.contact-lines{gap:16px}
+.enquiry-form{padding:30px}
+@media(max-width:900px){
+  .enquiry-section{padding-top:62px !important;padding-bottom:62px !important;row-gap:34px !important}
+}
+@media(max-width:620px){
+  .enquiry-section{padding:54px 18px !important;row-gap:28px !important}
+  .enquiry-copy{padding:4px 0}
+  .enquiry-copy h2{margin-top:14px;margin-bottom:14px}
+  .enquiry-copy>p{margin-bottom:22px}
+  .enquiry-form{padding:22px}
+}
