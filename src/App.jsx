@@ -59,7 +59,9 @@ function PropertiesPage(){ const [params]=useSearchParams(); const [items,setIte
   setBusy(true);setLoadError('');
   const sortConfig={date_newest:{column:'created_at',ascending:false},date_oldest:{column:'created_at',ascending:true},price_low:{column:'price_per_sqft',ascending:true},price_high:{column:'price_per_sqft',ascending:false}}[sort]||{column:'created_at',ascending:false};
   let q=supabase.from('listings').select('*, listing_images(url)').eq('status','approved').order(sortConfig.column,{ascending:sortConfig.ascending,nullsFirst:false});
-  if(filters.city)q=q.ilike('city',`%${filters.city.trim()}%`);
+  if(filters.city==='Vellore')q=q.or('district.eq.Vellore,city.ilike.%Vellore%');
+   else if(filters.city==='Ranipet')q=q.or('district.eq.Ranipet,city.ilike.%Ranipet%');
+   else if(filters.city)q=q.ilike('city',`%${filters.city.trim()}%`);
   if(filters.type==='Plot')q=q.ilike('property_type','plot%');
   else if(filters.type)q=q.ilike('property_type',filters.type.trim());
   if(filters.tag==='New Launch')q=q.or('listing_tag.eq.\"New Launch\",property_type.eq.\"New Launch\"');
