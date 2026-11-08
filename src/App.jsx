@@ -59,8 +59,9 @@ function PropertiesPage(){ const [params]=useSearchParams(); const [items,setIte
   setBusy(true);setLoadError('');
   const sortConfig={date_newest:{column:'created_at',ascending:false},date_oldest:{column:'created_at',ascending:true},price_low:{column:'price_per_sqft',ascending:true},price_high:{column:'price_per_sqft',ascending:false}}[sort]||{column:'created_at',ascending:false};
   let q=supabase.from('listings').select('*, listing_images(url)').eq('status','approved').order(sortConfig.column,{ascending:sortConfig.ascending,nullsFirst:false});
-  if(filters.city)q=q.ilike('city',filters.city.trim());
-  if(filters.type)q=q.eq('property_type',filters.type);
+  if(filters.city)q=q.ilike('city',`%${filters.city.trim()}%`);
+  if(filters.type==='Plot')q=q.ilike('property_type','plot%');
+  else if(filters.type)q=q.ilike('property_type',filters.type.trim());
   if(filters.tag==='New Launch')q=q.or('listing_tag.eq.\"New Launch\",property_type.eq.\"New Launch\"');
   const {data,error}=await q;
   if(error){console.error('Unable to load properties:',error.message);setLoadError('Unable to apply filters. Please refresh and try again.')}else{setItems((data||[]).map(p=>({...p,images:p.listing_images?.map(i=>i.url)||[]})))}
