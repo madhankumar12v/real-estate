@@ -1000,3 +1000,14 @@ footer{margin-top:0}
  .enquiry-fields-grid{grid-template-columns:1fr;gap:10px}
  .enquiry-fields-grid .enquiry-field-full{grid-column:auto}
 }
+
+
+/* Keep the homepage enquiry heading on one line at every screen size */
+.enquiry-copy h2{
+  font-size:clamp(15px,2.8vw,30px) !important;
+  line-height:1.2 !important;
+  white-space:nowrap !important;
+}
+@media(max-width:620px){
+  .enquiry-copy h2{font-size:clamp(14px,4.2vw,22px) !important}
+}
