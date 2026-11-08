@@ -952,3 +952,20 @@ footer{margin-top:0}
   .enquiry-form{padding:21px}
   .enquiry-form h3{font-size:20px}
 }
+
+
+/* Compact homepage enquiry form: paired contact and budget fields */
+.enquiry-fields-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 14px}
+.enquiry-fields-grid>label{min-width:0;margin:0 !important}
+.enquiry-fields-grid .enquiry-field-full{grid-column:1/-1}
+.enquiry-form{padding:24px}
+.enquiry-form h3{margin-bottom:15px}
+.enquiry-form .enquiry-fields-grid input,.enquiry-form .enquiry-fields-grid select{min-height:43px}
+.enquiry-form .enquiry-fields-grid textarea{min-height:68px}
+.enquiry-form>button{margin-top:14px}
+.enquiry-form>small{display:block;margin-top:9px}
+@media(max-width:620px){
+  .enquiry-form{padding:19px}
+  .enquiry-fields-grid{gap:10px}
+  .enquiry-form .enquiry-fields-grid input,.enquiry-form .enquiry-fields-grid select{min-height:41px}
+}
