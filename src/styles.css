@@ -825,3 +825,65 @@ footer{padding-top:32px;padding-bottom:32px}
  footer{padding:28px 18px}
  .cta{padding:30px 18px}
 }
+
+
+/* Final site-wide spacing cleanup: remove oversized blank areas on every page */
+.page-section{
+  min-height:0 !important;
+  padding-top:30px !important;
+  padding-bottom:36px !important;
+}
+.page-section > h1{margin:0 0 18px}
+.page-section .section-heading{margin-bottom:18px}
+.narrow{margin-top:0;margin-bottom:28px}
+.loading,.setup{margin:42px auto;padding:24px}
+.dashboard-row{padding:12px 16px;gap:11px}
+.admin-stats{margin:16px 0;gap:12px}
+.admin-stats div{padding:15px}
+.admin-tools{margin:12px 0;gap:9px}
+.form-card{padding:20px}
+.filters label,.form-card label,.auth-card label{margin:10px 0}
+.form-card h2,.form-card h3,.contact-card h3{margin-top:0;margin-bottom:12px}
+.filter-layout{gap:20px}
+.results-toolbar-simple{margin-bottom:13px}
+.empty{padding:30px 18px}
+.detail-head{margin:16px 0}
+.detail-columns{margin-top:16px;gap:20px}
+.detail-content h3{margin:16px 0 7px}
+.description{line-height:1.65}
+.analytics-page,.admin-analytics{padding-top:26px !important;padding-bottom:30px !important}
+.analytics-heading{margin-bottom:17px;gap:16px}
+.analytics-toolbar{min-height:0;margin-bottom:17px;padding:10px 13px}
+.analytics-filters{gap:10px;padding:12px 14px;margin-bottom:16px}
+.analytics-kpis{gap:11px;margin-bottom:14px}
+.analytics-kpis article{padding:14px}
+.analytics-grid{gap:14px}
+.analytics-panel{padding:15px}
+.analytics-panel-heading{margin-bottom:12px}
+.analytics-section-caption{margin-bottom:11px}
+footer{margin-top:0}
+@media(max-width:900px){
+  .page-section{padding-top:24px !important;padding-bottom:28px !important}
+  .filter-layout{gap:15px}
+  .analytics-page,.admin-analytics{padding-top:22px !important}
+}
+@media(max-width:620px){
+  .page-section{padding:20px 15px 25px !important}
+  .loading,.setup{margin:28px auto;padding:18px}
+  .dashboard-row{padding:11px 12px;gap:9px}
+  .admin-stats{margin:12px 0;gap:8px}
+  .admin-stats div{padding:11px}
+  .form-card{padding:16px}
+  .filter-layout{gap:12px}
+  .empty{padding:24px 14px}
+  .detail-head{margin:12px 0}
+  .detail-columns{margin-top:12px;gap:14px}
+  .analytics-page,.admin-analytics{padding:18px 14px 24px !important}
+  .analytics-heading{margin-bottom:13px;gap:10px}
+  .analytics-toolbar{margin-bottom:13px;padding:10px}
+  .analytics-filters{padding:10px;gap:9px;margin-bottom:12px}
+  .analytics-kpis{gap:8px;margin-bottom:11px}
+  .analytics-kpis article{padding:11px}
+  .analytics-grid{gap:10px}
+  .analytics-panel{padding:12px}
+}
