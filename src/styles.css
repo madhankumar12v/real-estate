@@ -910,3 +910,45 @@ footer{margin-top:0}
   .enquiry-copy>p{margin-bottom:22px}
   .enquiry-form{padding:22px}
 }
+
+
+/* Homepage enquiry section: larger, more spacious visual treatment */
+.enquiry-section{
+  padding:104px clamp(28px,6vw,88px) !important;
+  column-gap:clamp(56px,8vw,112px) !important;
+  align-items:center;
+}
+.enquiry-copy{padding:18px 0}
+.enquiry-copy .eyebrow{font-size:13px;letter-spacing:.16em}
+.enquiry-copy h2{
+  font-size:clamp(46px,5.2vw,68px) !important;
+  line-height:1.08;
+  letter-spacing:-.045em;
+  margin:24px 0 24px;
+  max-width:650px;
+}
+.enquiry-copy>p{
+  font-size:17px;
+  line-height:1.85;
+  max-width:560px;
+  margin-bottom:34px;
+}
+.contact-lines{gap:18px}
+.enquiry-form{padding:36px}
+.enquiry-form h3{font-size:25px;margin-bottom:22px}
+.enquiry-form label{margin-bottom:16px}
+.enquiry-form input,.enquiry-form select{min-height:50px}
+.enquiry-form textarea{min-height:104px}
+@media(max-width:900px){
+  .enquiry-section{padding:76px 30px !important;row-gap:42px !important}
+  .enquiry-copy h2{font-size:clamp(42px,6vw,56px) !important}
+}
+@media(max-width:620px){
+  .enquiry-section{padding:62px 20px !important;row-gap:34px !important}
+  .enquiry-copy{padding:0}
+  .enquiry-copy .eyebrow{font-size:11px}
+  .enquiry-copy h2{font-size:clamp(38px,10vw,46px) !important;line-height:1.1;margin:18px 0}
+  .enquiry-copy>p{font-size:15px;line-height:1.75;margin-bottom:24px}
+  .enquiry-form{padding:24px}
+  .enquiry-form h3{font-size:22px}
+}
