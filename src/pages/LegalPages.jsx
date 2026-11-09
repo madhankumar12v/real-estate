@@ -87,7 +87,7 @@ const pages = {
 
 export default function LegalPages() {
   const { pathname } = useLocation()
-  const slug = pathname.replace(/^\\/+|\\/+$/g, '')
+  const slug = pathname.split('/').filter(Boolean).pop() || ''
   const page = pages[slug]
   if (!page) return <section className="section page-section"><h1>Policy page not found</h1><Link to="/">Return home</Link></section>
   return <section className="section page-section legal-page">
