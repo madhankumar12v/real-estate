@@ -1582,3 +1582,72 @@ footer>span{margin-left:auto;white-space:nowrap}
   .topbar > button.mobile-menu{display:none!important}
   body{overflow-x:hidden!important}
 }
+
+
+/* Mobile navigation: one floating menu icon opens the complete link panel. */
+.topbar > button.mobile-float-toggle{display:none}
+@media(max-width:620px){
+  .topbar > button.mobile-float-toggle{
+    display:flex!important;
+    position:fixed!important;
+    top:50%!important;
+    right:14px!important;
+    left:auto!important;
+    bottom:auto!important;
+    transform:translateY(-50%)!important;
+    z-index:10001!important;
+    width:48px!important;
+    height:48px!important;
+    min-width:48px!important;
+    align-items:center!important;
+    justify-content:center!important;
+    padding:0!important;
+    border:1px solid #d7e1e5!important;
+    border-radius:50%!important;
+    background:#20364b!important;
+    color:#fff!important;
+    box-shadow:0 5px 18px rgba(20,43,74,.24)!important;
+  }
+  .topbar > nav#site-navigation{
+    display:none!important;
+  }
+  .topbar > nav#site-navigation.nav-open{
+    display:flex!important;
+    position:fixed!important;
+    top:50%!important;
+    right:72px!important;
+    left:auto!important;
+    bottom:auto!important;
+    transform:translateY(-50%)!important;
+    z-index:10000!important;
+    width:220px!important;
+    max-width:calc(100vw - 92px)!important;
+    max-height:80dvh!important;
+    overflow-y:auto!important;
+    margin:0!important;
+    padding:9px!important;
+    flex-direction:column!important;
+    align-items:stretch!important;
+    gap:2px!important;
+    border:1px solid #dce5e9!important;
+    border-radius:12px!important;
+    background:#fff!important;
+    box-shadow:0 10px 28px rgba(20,43,74,.2)!important;
+  }
+  .topbar > nav#site-navigation.nav-open > a{
+    display:flex!important;
+    align-items:center!important;
+    min-height:42px!important;
+    padding:10px 12px!important;
+    color:#263b4c!important;
+    border-radius:7px!important;
+    font-size:13px!important;
+  }
+  .topbar > nav#site-navigation.nav-open > a[href="/properties"],
+  .topbar > nav#site-navigation.nav-open > a[href="/saved"],
+  .topbar > nav#site-navigation.nav-open > a[href="/careers"]{
+    display:flex!important;
+  }
+  .topbar > nav.mobile-side-nav{display:none!important}
+  body{overflow-x:hidden!important}
+}
