@@ -1129,3 +1129,7 @@ footer>span{margin-left:auto;white-space:nowrap}
 .loan-documents-accordion .loan-doc-grid{margin-top:14px}
 @media(max-width:700px){.filters-simple{grid-template-columns:1fr 1fr}.filters-simple h3,.filter-actions{grid-column:1/-1}}
 @media(max-width:480px){.filters-simple{grid-template-columns:1fr}.filters-simple h3,.filter-actions{grid-column:1}.loan-documents-accordion{padding:14px}.loan-documents-accordion summary{align-items:flex-start;flex-direction:column;gap:5px}}
+
+.loan-contact-options{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 20px}
+.loan-contact-options .btn{min-height:42px}
+@media(max-width:480px){.loan-contact-options{display:grid;grid-template-columns:1fr}.loan-contact-options .btn{width:100%}}
