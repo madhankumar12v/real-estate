@@ -1644,3 +1644,48 @@ footer p, footer a, footer .tiny { font-size:var(--font-xs); line-height:1.6; }
 .footer-policy-links a{display:inline-flex;align-items:center;gap:7px;text-decoration:none;white-space:nowrap;transition:color .2s ease}
 .footer-policy-links a svg{flex:0 0 auto;opacity:.9;stroke-width:1.8}
 .footer-policy-links a:hover svg{opacity:1}
+
+/* Footer policy links — improve contrast and readability on desktop and mobile */
+footer .footer-policy-links {
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:14px 24px;
+  margin:22px 0;
+}
+footer .footer-policy-links a {
+  display:inline-flex;
+  align-items:center;
+  gap:9px;
+  color:#20364b;
+  font-size:14px;
+  font-weight:600;
+  line-height:1.5;
+  padding:5px 0;
+  white-space:normal;
+  text-decoration:none;
+}
+footer .footer-policy-links a svg {
+  width:17px;
+  height:17px;
+  color:#287b68;
+  opacity:1;
+  stroke-width:2.2;
+  flex:0 0 17px;
+}
+footer .footer-policy-links a:hover,
+footer .footer-policy-links a:focus-visible {
+  color:#14614f;
+  text-decoration:underline;
+  text-underline-offset:4px;
+}
+@media(max-width:620px) {
+  footer .footer-policy-links {
+    gap:13px 18px;
+    margin:18px 0;
+  }
+  footer .footer-policy-links a {
+    font-size:14px;
+    padding:6px 0;
+  }
+}
