@@ -1640,3 +1640,7 @@ footer p, footer a, footer .tiny { font-size:var(--font-xs); line-height:1.6; }
 .footer-policy-links a{color:#e6edf0;font-size:12px}
 .footer-policy-links a:hover{color:#b9d8ce;text-decoration:underline}
 @media(max-width:620px){.legal-page{padding-left:18px;padding-right:18px}.legal-section{padding:20px 0}.legal-section h2,.legal-contact h2{font-size:20px}.legal-section p,.legal-contact p{font-size:13px}.footer-policy-links{gap:12px 16px}}
+
+.footer-policy-links a{display:inline-flex;align-items:center;gap:7px;text-decoration:none;white-space:nowrap;transition:color .2s ease}
+.footer-policy-links a svg{flex:0 0 auto;opacity:.9;stroke-width:1.8}
+.footer-policy-links a:hover svg{opacity:1}
