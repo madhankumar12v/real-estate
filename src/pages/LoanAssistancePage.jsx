@@ -77,14 +77,16 @@ Consent: I agree that MrSa Properties may contact me and share my enquiry with a
    <p className="loan-disclaimer">Do not submit Aadhaar, PAN, bank statements, passwords or other sensitive documents through this form. Share documents only through a lender’s verified secure process.</p>
   </form>
   <section className="loan-documents">
-   <h2><FileText size={19}/> Document checklist</h2>
-   <p className="muted">These are common examples. Requirements vary by lender, loan type and applicant profile.</p>
-   <div className="loan-doc-grid">
-    <article><h3>Salaried applicants</h3><ul><li>Latest 3 months’ payslips</li><li>6 months’ bank statements</li><li>Form 16 or income-tax returns</li><li>PAN and identity/address proof, when requested securely</li></ul></article>
-    <article><h3>Self-employed applicants</h3><ul><li>2–3 years’ income-tax returns</li><li>Profit and loss statements / balance sheets</li><li>12 months’ bank statements</li><li>Business registration / GST details, where applicable</li></ul></article>
-    <article><h3>Property-related documents</h3><ul><li>Parent documents and sale deed</li><li>DTCP / RERA approval or approved plan, where applicable</li><li>Encumbrance Certificate (EC)</li><li>Land / construction estimate and related records, as requested</li></ul></article>
-   </div>
-   <p className="loan-disclaimer">Do not upload identity or financial documents to MrSa Properties. Submit them directly to the lender using its verified secure channel.</p>
+   <details className="loan-documents-accordion">
+    <summary><span><FileText size={19}/> Document checklist (optional)</span><span className="muted">View common documents</span></summary>
+    <p className="muted">These are common examples. Requirements vary by lender, loan type and applicant profile.</p>
+    <div className="loan-doc-grid">
+     <article><h3>Salaried applicants</h3><ul><li>Latest 3 months’ payslips</li><li>6 months’ bank statements</li><li>Form 16 or income-tax returns</li><li>PAN and identity/address proof, when requested securely</li></ul></article>
+     <article><h3>Self-employed applicants</h3><ul><li>2–3 years’ income-tax returns</li><li>Profit and loss statements / balance sheets</li><li>12 months’ bank statements</li><li>Business registration / GST details, where applicable</li></ul></article>
+     <article><h3>Property-related documents</h3><ul><li>Parent documents and sale deed</li><li>DTCP / RERA approval or approved plan, where applicable</li><li>Encumbrance Certificate (EC)</li><li>Land / construction estimate and related records, as requested</li></ul></article>
+    </div>
+    <p className="loan-disclaimer">Do not upload identity or financial documents to MrSa Properties. Submit them directly to the lender using its verified secure channel.</p>
+   </details>
   </section>
  </section>
 }
