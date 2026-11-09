@@ -1,4 +1,4 @@
-import { Link, useParams } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 
 const contact = { email: 'mrsasolutions2@gmail.com', phone: '88380 37689' }
 
@@ -86,7 +86,8 @@ const pages = {
 }
 
 export default function LegalPages() {
-  const { slug } = useParams()
+  const { pathname } = useLocation()
+  const slug = pathname.replace(/^\\/+|\\/+$/g, '')
   const page = pages[slug]
   if (!page) return <section className="section page-section"><h1>Policy page not found</h1><Link to="/">Return home</Link></section>
   return <section className="section page-section legal-page">
