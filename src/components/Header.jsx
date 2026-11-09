@@ -1,5 +1,5 @@
 import { Link, NavLink } from 'react-router-dom'
-import { PlusCircle, LayoutDashboard, LogIn, LogOut, Menu, Heart, Users, ClipboardList, Handshake, Banknote, House, Building2, UserRound } from 'lucide-react'
+import { PlusCircle, LayoutDashboard, LogIn, LogOut, Menu, Heart, Users, ClipboardList, Handshake, Banknote, House, Building2, Briefcase } from 'lucide-react'
 import { useState } from 'react'
 export default function Header({user, profile, onSignOut}) {
  const [open,setOpen]=useState(false)
@@ -11,8 +11,8 @@ export default function Header({user, profile, onSignOut}) {
  <nav className="mobile-bottom-nav" aria-label="Mobile navigation">
   <NavLink to="/" end><House size={19}/><span>Home</span></NavLink>
   <NavLink to="/properties"><Building2 size={19}/><span>Properties</span></NavLink>
+  <NavLink to="/careers"><Briefcase size={19}/><span>Career</span></NavLink>
   <NavLink to="/saved"><Heart size={19}/><span>Saved</span></NavLink>
-  <NavLink to="/post"><PlusCircle size={19}/><span>Post</span></NavLink>
-  <NavLink to={user?(profile?.role==='admin'?'/admin':profile?.role==='partner'?'/partners':'/dashboard'):'/login'}><UserRound size={19}/><span>{user?'Account':'Login'}</span></NavLink>
+  <button className={open ? 'more-active' : ''} type="button" aria-label="More navigation options" aria-expanded={open} aria-controls="site-navigation" onClick={()=>setOpen(!open)}><Menu size={19}/><span>More</span></button>
  </nav></>
 }
