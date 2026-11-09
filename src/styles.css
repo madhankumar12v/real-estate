@@ -1731,3 +1731,70 @@ footer > span {
   footer > span { max-width:none; }
   footer > .footer-policy-links { justify-content:flex-start; }
 }
+
+
+/* Footer: brand and tagline left, property disclaimer right */
+footer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.9fr);
+  grid-template-areas:
+    "brand disclaimer"
+    "tagline disclaimer"
+    "policies policies"
+    "copyright copyright";
+  column-gap: 48px;
+  row-gap: 8px;
+  align-items: start;
+}
+footer > .footer-brand {
+  grid-area: brand;
+  margin: 0;
+}
+footer > p:not(.tiny) {
+  grid-area: tagline;
+  margin: 0;
+  max-width: 100%;
+}
+footer > p.tiny {
+  grid-area: disclaimer;
+  justify-self: end;
+  align-self: center;
+  max-width: 470px;
+  margin: 0;
+  text-align: right;
+  font-size: 13px;
+  line-height: 1.7;
+}
+footer > .footer-policy-links {
+  grid-area: policies;
+  width: 100%;
+  margin-top: 22px;
+}
+footer > span {
+  grid-area: copyright;
+  justify-self: end;
+  margin: 4px 0 0;
+}
+@media (max-width: 700px) {
+  footer {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "brand"
+      "tagline"
+      "disclaimer"
+      "policies"
+      "copyright";
+    row-gap: 9px;
+  }
+  footer > p.tiny {
+    justify-self: start;
+    max-width: 100%;
+    text-align: left;
+  }
+  footer > .footer-policy-links {
+    margin-top: 14px;
+  }
+  footer > span {
+    justify-self: start;
+  }
+}
