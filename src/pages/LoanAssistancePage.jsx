@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { MessageCircle, FileText } from 'lucide-react'
+import { MessageCircle, FileText, Phone } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { waLink } from '../lib/helpers'
 
@@ -61,6 +61,7 @@ Consent: I agree that MrSa Properties may contact me and share my enquiry with a
   <form className="form-card loan-request-card" onSubmit={submit}>
    <h2>Loan assistance enquiry</h2>
    <p className="muted">Share your details and our team will contact you about your loan enquiry.</p>
+   <div className="loan-contact-options"><a className="btn btn-outline" href="tel:8838037689"><Phone size={16}/> Call 88380 37689</a><a className="btn btn-whatsapp" href={waLink('918838037689','Hello MrSa Properties, I would like to know about loan assistance.')} target="_blank" rel="noreferrer"><MessageCircle size={16}/> WhatsApp us</a></div>
    <div className="loan-form-grid">
     <label>Your name<input required value={name} onChange={e=>setName(e.target.value)} placeholder="Enter your name"/></label>
     <label>Mobile number<input required type="tel" inputMode="tel" value={phone} onChange={e=>setPhone(e.target.value)} placeholder="Enter your mobile number"/></label>
