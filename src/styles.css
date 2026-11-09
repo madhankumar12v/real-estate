@@ -1320,3 +1320,26 @@ footer>span{margin-left:auto;white-space:nowrap}
  .topbar .mobile-top-nav a.active span,.topbar .mobile-top-nav button.more-active span{font-weight:800}
  .topbar .mobile-top-nav a:focus-visible,.topbar .mobile-top-nav button:focus-visible{outline:2px solid #E4B64F;outline-offset:-2px;border-radius:7px}
 }
+
+/* Mobile: show only the compact top navigation; keep the full link list inside More. */
+@media(max-width:620px){
+  .topbar > #site-navigation{
+    display:none !important;
+    order:4;
+    width:100%;
+    padding:12px 0 5px;
+    border-top:1px solid #edf0f2;
+    flex-direction:column;
+    align-items:stretch;
+    gap:0;
+  }
+  .topbar > #site-navigation.nav-open{
+    display:flex !important;
+  }
+  .topbar > #site-navigation a{
+    padding:10px 3px;
+  }
+  .topbar > .mobile-menu{
+    display:none !important;
+  }
+}
