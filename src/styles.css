@@ -1531,10 +1531,6 @@ svg,
 canvas {
   max-width: 100%;
 }
-img,
-video {
-  height: auto;
-}
 /* Grid and flex children must be allowed to shrink instead of widening the page. */
 .property-grid,
 .results,
