@@ -93,7 +93,7 @@ function Donut({ rows, total }) {
 }
 
 export default function AdminAnalyticsPage() {
-  const [data, setData] = useState({ listings: [], enquiries: [], profiles: [], partners: [] })
+  const [data, setData] = useState({ listings: [], enquiries: [], profiles: [], partners: [], views: [] })
   const [busy, setBusy] = useState(true)
   const [error, setError] = useState('')
   const [range, setRange] = useState('month')
@@ -105,15 +105,16 @@ export default function AdminAnalyticsPage() {
     setBusy(true)
     setError('')
     try {
-      const [listings, enquiries, profiles, partners] = await Promise.all([
+      const [listings, enquiries, profiles, partners, views] = await Promise.all([
         supabase.from('listings').select('id,title,status,property_type,created_at,partner_id,listing_tag,city,district'),
         supabase.from('enquiries').select('id,listing_id,created_at,status,assigned_to,listings(id,title,city,district,property_type)'),
         supabase.from('profiles').select('id,role,created_at'),
-        supabase.from('partners').select('id,name,is_active')
+        supabase.from('partners').select('id,name,is_active'),
+        supabase.from('listing_views').select('id,listing_id,viewed_at,listings(id,title,city,district,property_type)')
       ])
       const failed = [listings, enquiries, profiles, partners].find(result => result.error)
       if (failed) throw failed.error
-      setData({ listings: listings.data || [], enquiries: enquiries.data || [], profiles: profiles.data || [], partners: partners.data || [] })
+      setData({ listings: listings.data || [], enquiries: enquiries.data || [], profiles: profiles.data || [], partners: partners.data || [], views: views.error ? [] : (views.data || []) })
       setRefreshedAt(new Date())
     } catch (err) {
       setError(err?.message || 'Unable to load analytics. Check admin database access and try again.')
@@ -146,7 +147,8 @@ export default function AdminAnalyticsPage() {
     return {
       listings: data.listings.filter(row => inside(row.created_at)),
       enquiries: data.enquiries.filter(row => inside(row.created_at)),
-      profiles: data.profiles.filter(row => inside(row.created_at))
+      profiles: data.profiles.filter(row => inside(row.created_at)),
+      views: data.views.filter(row => inside(row.viewed_at))
     }
   }, [data, range, fromDate, toDate])
 
@@ -201,6 +203,18 @@ export default function AdminAnalyticsPage() {
     return [...counts.values()].sort((a, b) => b.enquiries - a.enquiries).slice(0, 5)
   }, [filtered])
 
+  const topViewedProperties = useMemo(() => {
+    const counts = new Map()
+    filtered.views.forEach(row => {
+      const listing = row.listings
+      if (!listing?.id) return
+      const item = counts.get(listing.id) || { id: listing.id, title: listing.title || 'Untitled property', city: listing.city || listing.district || 'Location not added', views: 0 }
+      item.views += 1
+      counts.set(listing.id, item)
+    })
+    return [...counts.values()].sort((a, b) => b.views - a.views).slice(0, 5)
+  }, [filtered])
+
   const partnerPerformance = useMemo(() => data.partners.map(partner => {
     const propertyIds = new Set(data.listings.filter(listing => listing.partner_id === partner.id).map(listing => listing.id))
     const enquiries = data.enquiries.filter(enquiry => propertyIds.has(enquiry.listing_id)).length
@@ -249,7 +263,10 @@ export default function AdminAnalyticsPage() {
       ['Closed enquiry conversion rate', conversionRate.toFixed(1) + '%'],
       [],
       ['Most enquired properties', 'Enquiries'],
-      ...topProperties.map(row => [row.title, row.enquiries])
+      ...topProperties.map(row => [row.title, row.enquiries]),
+      [],
+      ['Most viewed properties', 'Views'],
+      ...topViewedProperties.map(row => [row.title, row.views])
     ]
     downloadCsv('mrsa-admin-analytics-' + new Date().toISOString().slice(0, 10) + '.csv', rows)
   }
@@ -314,11 +331,12 @@ export default function AdminAnalyticsPage() {
         <Panel title="Channel partner leaderboard" subtitle="Ranked by enquiries, then active property listings" icon={Users} className="analytics-panel-wide analytics-panel-partners">
           {partnerPerformance.length ? <div className="analytics-partner-table"><div className="analytics-table-head"><span>CHANNEL PARTNER</span><span>STATUS</span><span>PROPERTIES</span><span>ENQUIRIES</span></div>{partnerPerformance.map((partner, index) => <div className="analytics-partner-row" key={partner.id}><span className="analytics-partner-name"><i>{String(index + 1).padStart(2, '0')}</i><b>{partner.name}</b></span><span><em className={partner.active ? 'partner-active' : 'partner-inactive'}>{partner.active ? 'Active' : 'Inactive'}</em></span><strong>{count(partner.properties)}</strong><strong>{count(partner.enquiries)}</strong></div>)}</div> : <div className="analytics-empty-state">No channel partners found.</div>}
         </Panel>
-        <Panel title="Buy vs rent distribution" subtitle="Marketplace listing category report" icon={Building2} className="analytics-panel-half">
-          <div className="analytics-unavailable"><span><Activity size={18}/></span><b>Rental listings are not enabled</b><p>The current property submission form supports sale listings. Enable a rent / sale listing category before comparing these segments.</p></div>
+        <Panel title="Property listing distribution" subtitle={'Sale listings by property type · ' + label} icon={Building2} className="analytics-panel-half">
+          {propertyTypes.length ? <Donut rows={propertyTypes} total={filtered.listings.length}/> : <div className="analytics-empty-state">No sale listings in this period.</div>}
         </Panel>
-        <Panel title="Property views" subtitle="Most viewed property report" icon={Eye} className="analytics-panel-half">
-          <div className="analytics-unavailable"><span><Eye size={18}/></span><b>View tracking is not enabled</b><p>Property detail visits are not currently recorded. Add a view-events table to report verified views and most-viewed properties.</p></div>
+        <Panel title="Property views" subtitle={'Most viewed properties · ' + label} icon={Eye} className="analytics-panel-half">
+          <div className="analytics-view-summary"><strong>{count(filtered.views.length)}</strong><span>Recorded property detail views</span></div>
+          {topViewedProperties.length ? <div className="analytics-ranking-table"><div className="analytics-table-head"><span>PROPERTY</span><span>VIEWS</span></div>{topViewedProperties.map((row, index) => <div className="analytics-table-row" key={row.id}><span className="analytics-rank">{String(index + 1).padStart(2, '0')}</span><span className="analytics-property-name"><b>{row.title}</b><small>{row.city}</small></span><strong>{count(row.views)}</strong></div>)}</div> : <div className="analytics-empty-state">No property views recorded in this period yet.</div>}
         </Panel>
       </div>
     </>}
