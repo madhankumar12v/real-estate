@@ -1075,3 +1075,35 @@ footer>span{margin-left:auto;white-space:nowrap}
 @media(max-width:380px){
   .analytics-quick-insights article>strong{font-size:17px}
 }
+
+
+/* Loan assistance: compact homepage link and clear standalone service page */
+.loan-home-promo{display:flex;align-items:center;justify-content:space-between;gap:22px;margin:0 auto;max-width:1180px;padding-top:28px;padding-bottom:28px;border-top:1px solid var(--line,#e7e9e5);border-bottom:1px solid var(--line,#e7e9e5)}
+.loan-home-copy h2{font-size:clamp(21px,2.5vw,28px);margin:5px 0}
+.loan-home-copy p{margin:0}
+.loan-page{max-width:1040px}
+.loan-page-intro{padding:25px 28px;border:1px solid var(--line);border-radius:14px;background:#f8faf8;margin-bottom:22px}
+.loan-page-intro h1{margin:8px 0}
+.loan-page-intro p{margin:0;color:var(--muted)}
+.loan-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px 16px}
+.loan-form-grid label{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:600}
+.loan-form-grid input,.loan-form-grid select,.loan-calculator input{width:100%;min-width:0;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--text);font:inherit}
+.loan-form-grid .loan-full{grid-column:1/-1}
+.loan-calculator{margin:24px 0;padding:20px;border:1px solid var(--line);border-radius:13px;background:#fff}
+.loan-calculator h2,.loan-documents h2{font-size:22px;margin:0 0 12px}
+.loan-calc-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.loan-calc-grid label{display:grid;gap:6px;font-size:12px;font-weight:600}
+.loan-emi-result{margin-top:13px;padding:12px 14px;border-radius:9px;background:#f1f6f2;color:var(--navy);font-weight:700}
+.loan-documents{margin:24px 0}
+.loan-doc-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.loan-doc-grid article{padding:15px;border:1px solid var(--line);border-radius:11px;background:#fff}
+.loan-doc-grid h3{font-size:14px;margin:0 0 8px}
+.loan-doc-grid ul{padding-left:17px;margin:0;color:var(--muted);font-size:12px;line-height:1.8}
+.loan-disclaimer{font-size:11px;color:var(--muted);line-height:1.6;margin-top:12px}
+@media(max-width:650px){
+ .loan-home-promo{align-items:flex-start;flex-direction:column;padding:22px 16px;gap:12px}
+ .loan-form-grid,.loan-calc-grid,.loan-doc-grid{grid-template-columns:1fr}
+ .loan-form-grid .loan-full{grid-column:auto}
+ .loan-page-intro{padding:20px}
+ .loan-calculator{padding:16px}
+}
