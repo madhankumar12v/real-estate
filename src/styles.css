@@ -1651,3 +1651,26 @@ footer>span{margin-left:auto;white-space:nowrap}
   .topbar > nav.mobile-side-nav{display:none!important}
   body{overflow-x:hidden!important}
 }
+
+
+/* FINAL OVERRIDE: remove every legacy mobile tab bar (including the old More item).
+   Mobile uses only the floating menu button and the single expandable site navigation. */
+@media (max-width: 620px) {
+  .topbar > nav.mobile-top-nav,
+  .topbar > nav.mobile-bottom-nav,
+  .topbar > nav.mobile-side-nav,
+  .topbar > button.mobile-menu {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+  .topbar > button.mobile-float-toggle {
+    display: flex !important;
+  }
+  .topbar > nav#site-navigation {
+    display: none !important;
+  }
+  .topbar > nav#site-navigation.nav-open {
+    display: flex !important;
+  }
+}
