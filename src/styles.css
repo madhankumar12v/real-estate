@@ -1380,3 +1380,24 @@ footer>span{margin-left:auto;white-space:nowrap}
     display:none!important;
   }
 }
+
+/* Mobile navigation: align all five items to the right without clipping. */
+@media(max-width:620px){
+  .topbar > nav.mobile-top-nav{
+    display:flex !important;
+    justify-content:flex-end !important;
+    align-items:center !important;
+    width:100% !important;
+    margin-left:auto !important;
+    padding:7px 4px !important;
+    gap:clamp(3px,2vw,12px) !important;
+    box-sizing:border-box !important;
+  }
+  .topbar > nav.mobile-top-nav > a,
+  .topbar > nav.mobile-top-nav > button{
+    flex:0 1 auto !important;
+    min-width:0 !important;
+    padding:5px clamp(3px,1.5vw,9px) !important;
+    white-space:nowrap !important;
+  }
+}
