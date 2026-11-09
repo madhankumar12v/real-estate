@@ -92,6 +92,6 @@ export default function LegalPages() {
   return <section className="section page-section legal-page">
     <div className="legal-page-heading"><span className="eyebrow">MRSA PROPERTIES · WEBSITE POLICIES</span><h1>{page.title}</h1><p className="muted">{page.intro}</p><p className="legal-effective">Effective date: 9 November 2026</p></div>
     <div className="legal-content">{page.sections.map(([heading, body]) => <section className="legal-section" key={heading}><h2>{heading}</h2><p>{body}</p></section>)}</div>
-    <div className="legal-contact"><h2>Need assistance?</h2><p>Email: <a href={`mailto:${contact.email}`}>{contact.email}</a></p><p>Phone: <a href={`tel:${contact.phone.replace(/\\s/g, '')}`}>{contact.phone}</a></p><Link className="text-link" to="/">Return to MrSa Properties →</Link></div>
+    <div className="legal-contact"><h2>Need assistance?</h2><p>Email: <a href={`mailto:${contact.email}`}>{contact.email}</a></p><p>Phone: <a href={`tel:${contact.phone.replace(/\s/g, '')}`}>{contact.phone}</a></p><Link className="text-link" to="/">Return to MrSa Properties →</Link></div>
   </section>
 }
