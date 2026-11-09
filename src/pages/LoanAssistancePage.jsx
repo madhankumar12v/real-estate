@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { MessageCircle, Calculator, FileText, ShieldCheck, Banknote, CheckCircle2 } from 'lucide-react'
+import { MessageCircle, Calculator, FileText, Banknote } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { waLink } from '../lib/helpers'
 
@@ -67,7 +67,7 @@ Existing monthly EMIs: ${money(existingEmis)}
 Requested amount: ${requestedAmount?money(requestedAmount):'Not specified'}
 Estimated eligibility (illustrative): ${money(estimatedEligibility)}
 Preferred location: ${location}
-Consent: I agree to be contacted and to have my enquiry shared with a relevant banking professional for follow-up.`
+Consent: I agree that MrSa Properties may contact me and share my enquiry with a relevant bank representative for follow-up.`
   const whatsappWindow=window.open('about:blank','_blank')
   setBusy(true);setNotice('')
   try{
@@ -82,7 +82,6 @@ Consent: I agree to be contacted and to have my enquiry shared with a relevant b
   }finally{setBusy(false)}
  }
  return <section className="section page-section loan-page">
-  <div className="loan-page-intro"><span className="eyebrow">MRSA PROPERTIES · LOAN ASSISTANCE</span><h1>Fast-Track Your Property &amp; Home Loans</h1><p>Get connected with banking professionals to explore plot loans, home construction loans and personal financing options with guidance at every step.</p><div className="loan-trust-points"><span><ShieldCheck size={16}/> Consent-led banker connection</span><span><CheckCircle2 size={16}/> Clear estimates, no approval promises</span></div></div>
   <section className="loan-calculator loan-eligibility">
    <h2><Banknote size={19}/> Check your indicative loan eligibility</h2>
    <p className="muted">Enter your monthly income and current EMIs to see an illustrative estimate of the loan amount you may be able to explore.</p>
@@ -107,8 +106,8 @@ Consent: I agree to be contacted and to have my enquiry shared with a relevant b
    <p className="loan-disclaimer">Illustrative calculation only. Actual interest rates, fees, eligibility and approval are determined by the lender.</p>
   </section>
   <form className="form-card loan-request-card" onSubmit={submit}>
-   <h2>Request a banker connection</h2>
-   <p className="muted">Share your basic details. With your consent, our team can connect your enquiry with a relevant banking professional.</p>
+   <h2>Loan assistance enquiry</h2>
+   <p className="muted">Share your details and our team will contact you about your loan enquiry.</p>
    <div className="loan-form-grid">
     <label>Your name<input required value={name} onChange={e=>setName(e.target.value)} placeholder="Enter your name"/></label>
     <label>Mobile number<input required type="tel" inputMode="tel" value={phone} onChange={e=>setPhone(e.target.value)} placeholder="Enter your mobile number"/></label>
@@ -119,7 +118,7 @@ Consent: I agree to be contacted and to have my enquiry shared with a relevant b
     <label>Loan amount required (₹)<input type="number" min="1" value={requestedAmount} onChange={e=>setRequestedAmount(e.target.value)} placeholder="Optional"/></label>
     <label>Preferred location<select value={location} onChange={e=>setLocation(e.target.value)}>{locations.map(x=><option key={x}>{x}</option>)}</select></label>
    </div>
-   <label className="loan-consent"><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)} required/><span>I agree that MrSa Properties may contact me about this enquiry and, with this consent, share these basic details with a relevant banking professional for follow-up. I understand that loan approval is subject to the lender’s assessment.</span></label>
+   <label className="loan-consent"><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)} required/><span>I agree that MrSa Properties may contact me and share my loan enquiry with a relevant bank representative for follow-up. I understand that loan approval depends on the lender’s assessment.</span></label>
    <button className="btn btn-primary full" type="submit" disabled={busy||!consent}>{busy?'Submitting enquiry…':'Submit & Continue on WhatsApp'} <MessageCircle size={17}/></button>
    {notice&&<p className="notice" role="status">{notice}</p>}
    <p className="loan-disclaimer">Do not submit Aadhaar, PAN, bank statements, passwords or other sensitive documents through this form. Share documents only through a lender’s verified secure process.</p>
