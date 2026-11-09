@@ -1183,3 +1183,20 @@ footer>span{margin-left:auto;white-space:nowrap}
 .verification-report p{margin:7px 0 0;color:#63727d;font-size:12px;overflow-wrap:anywhere}
 @media(max-width:760px){.verification-layout{grid-template-columns:1fr}.verification-sidebar{position:static}.property-trust-grid,.verification-checklist{grid-template-columns:1fr}.verification-document-list>div{grid-template-columns:minmax(0,1fr) auto}.verification-document-list>div select{grid-column:1/-1}.property-trust-heading{align-items:flex-start;flex-direction:column}}
 @media(max-width:480px){.property-trust-panel{padding:16px}.verification-card,.verification-sidebar{padding:14px}.verification-report{flex-direction:column}.verification-upload{align-items:stretch;flex-direction:column}.verification-upload input{min-width:0}}
+
+
+/* Make the homepage enquiry section span the full viewport width */
+.enquiry-section{
+  width:100% !important;
+  max-width:none !important;
+  margin-left:0 !important;
+  margin-right:0 !important;
+  padding-left:clamp(24px,5vw,72px) !important;
+  padding-right:clamp(24px,5vw,72px) !important;
+}
+@media(max-width:620px){
+  .enquiry-section{
+    padding-left:16px !important;
+    padding-right:16px !important;
+  }
+}
