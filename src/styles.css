@@ -1506,3 +1506,92 @@ footer{padding-top:32px;padding-bottom:32px}
   .cta{padding:30px 20px;gap:16px}
   footer{padding-top:28px;padding-bottom:28px}
 }
+
+
+/* Prevent unwanted horizontal page scrolling on every screen size.
+   Keep intentional inner carousels and swipeable galleries usable. */
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+html,
+body {
+  overflow-x: clip;
+}
+body {
+  margin: 0;
+}
+img,
+video,
+iframe,
+svg,
+canvas {
+  max-width: 100%;
+}
+img,
+video {
+  height: auto;
+}
+/* Grid and flex children must be allowed to shrink instead of widening the page. */
+.property-grid,
+.results,
+.filter-layout,
+.detail-columns,
+.enquiry-section,
+.enquiry-copy,
+.enquiry-form,
+.why-inner,
+.contact-strip,
+.topbar,
+.topbar nav,
+.nav-actions,
+footer,
+footer > * {
+  min-width: 0;
+  max-width: 100%;
+}
+/* Long names, URLs and user-entered text must wrap within their containers. */
+.card-body,
+.card-body h3,
+.dashboard-row,
+.dashboard-row > div,
+.form-card,
+.auth-card,
+.contact-card,
+.detail-content,
+.description,
+footer p,
+footer a {
+  overflow-wrap: anywhere;
+}
+/* Preserve horizontal swipe only inside components designed for it. */
+.gallery-thumbs,
+.channel-partners-track,
+.channel-partners-carousel,
+.partner-carousel-track {
+  max-width: 100%;
+  overscroll-behavior-x: contain;
+}
+@media (max-width: 760px) {
+  .hero-light,
+  .section,
+  .why-section,
+  .enquiry-section,
+  .contact-strip,
+  .cta,
+  footer {
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+  .property-grid,
+  .results .property-grid,
+  .category-grid,
+  .facts,
+  .admin-stats {
+    min-width: 0;
+  }
+}
