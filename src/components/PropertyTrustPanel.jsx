@@ -59,10 +59,7 @@ export default function PropertyTrustPanel({ listingId }) {
 
   const completed = badge ? labels.filter(([key]) => badge[key]) : []
   return <section className="property-trust-panel" aria-label="Property review information">
-    <div className="property-trust-heading">
-      <div><span className="eyebrow">MRSA PROPERTY CHECKS</span><h3>Property information & checks</h3></div>
-      {completed.length > 0 && <span className="trust-reviewed-pill"><ShieldCheck size={14}/> Checks recorded</span>}
-    </div>
+    {completed.length > 0 && <span className="trust-reviewed-pill"><ShieldCheck size={14}/> Checks recorded</span>}
     {completed.length ? <div className="property-trust-grid">
       {completed.map(([key, title, description, Icon]) => <div className="property-trust-item" key={key}>
         <Icon size={19}/><div><b>{title}</b><small>{description}</small></div>
