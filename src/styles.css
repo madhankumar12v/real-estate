@@ -1492,3 +1492,93 @@ footer>span{margin-left:auto;white-space:nowrap}
   }
   body { overflow-x: hidden !important; }
 }
+
+
+/* Isolated mobile side navigation: deliberately separate from legacy nav rules. */
+.topbar > nav.mobile-side-nav{display:none}
+@media (max-width:620px){
+  .topbar{position:relative}
+  .topbar > nav.mobile-side-nav{
+    display:flex!important;
+    position:fixed!important;
+    top:50%!important;
+    right:0!important;
+    left:auto!important;
+    bottom:auto!important;
+    transform:translateY(-50%)!important;
+    z-index:9999!important;
+    width:132px!important;
+    max-width:42vw!important;
+    margin:0!important;
+    padding:8px!important;
+    flex-direction:column!important;
+    flex-wrap:nowrap!important;
+    align-items:stretch!important;
+    justify-content:center!important;
+    gap:5px!important;
+    border:1px solid #dce5e9!important;
+    border-right:0!important;
+    border-radius:12px 0 0 12px!important;
+    background:#20364b!important;
+    box-shadow:0 8px 24px rgba(20,43,74,.2)!important;
+    box-sizing:border-box!important;
+  }
+  .topbar > nav.mobile-side-nav > a,
+  .topbar > nav.mobile-side-nav > button{
+    display:flex!important;
+    position:static!important;
+    width:100%!important;
+    min-width:0!important;
+    min-height:42px!important;
+    flex:0 0 auto!important;
+    flex-direction:row!important;
+    align-items:center!important;
+    justify-content:flex-start!important;
+    gap:9px!important;
+    margin:0!important;
+    padding:8px 9px!important;
+    border:0!important;
+    border-radius:7px!important;
+    background:transparent!important;
+    color:#fff!important;
+    font-size:12px!important;
+    line-height:1.2!important;
+    text-align:left!important;
+    white-space:nowrap!important;
+  }
+  .topbar > nav.mobile-side-nav > a.active,
+  .topbar > nav.mobile-side-nav > button.more-active{
+    color:#f0c66b!important;
+    background:rgba(255,255,255,.1)!important;
+  }
+  .topbar > nav#site-navigation{display:none!important}
+  .topbar > nav#site-navigation.nav-open{
+    display:flex!important;
+    position:fixed!important;
+    top:50%!important;
+    right:136px!important;
+    left:auto!important;
+    bottom:auto!important;
+    transform:translateY(-50%)!important;
+    z-index:9998!important;
+    width:190px!important;
+    max-width:52vw!important;
+    max-height:80dvh!important;
+    overflow-y:auto!important;
+    margin:0!important;
+    padding:8px!important;
+    flex-direction:column!important;
+    align-items:stretch!important;
+    gap:2px!important;
+    border:1px solid #dce5e9!important;
+    border-radius:12px!important;
+    background:#fff!important;
+    box-shadow:0 8px 24px rgba(20,43,74,.16)!important;
+  }
+  .topbar > nav#site-navigation.nav-open > a{display:flex!important;padding:10px!important;color:#263b4c!important}
+  .topbar > nav#site-navigation.nav-open > a[href="/properties"],
+  .topbar > nav#site-navigation.nav-open > a[href="/saved"],
+  .topbar > nav#site-navigation.nav-open > a[href="/careers"]{display:none!important}
+  .topbar > button.mobile-menu{display:none!important}
+  body{overflow-x:hidden!important}
+}
