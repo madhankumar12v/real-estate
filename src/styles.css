@@ -1372,3 +1372,71 @@ footer>span{margin-left:auto;white-space:nowrap}
     pointer-events:none!important;
   }
 }
+
+
+/* Global readability pass: stronger contrast, comfortable sizing and spacing */
+:root{
+  --muted:#596b79;
+  --line:#dfe6e9;
+  color:#203447;
+}
+body{
+  color:#263b4c;
+  font-size:15px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+p{line-height:1.7}
+small,.tiny{color:#5f707d}
+.muted{color:#596b79;font-size:14px;line-height:1.7}
+.eyebrow{font-size:12px;letter-spacing:1.5px}
+.topbar nav a{font-size:14px;color:#40566a}
+.btn{font-size:14px;min-height:42px}
+.section h2{line-height:1.2}
+.hero-copy>p,.why-inner>div:first-child>p,.enquiry-copy>p,.contact-strip p,
+.faq-item p,.description,.loan-page-intro>p{
+  color:#526675;
+  font-size:15px;
+  line-height:1.75;
+}
+.card-body h3{line-height:1.3}
+.card-body .muted,.card-meta,.card-area,.detail-area{
+  color:#526575;
+  font-size:13px;
+}
+.status-pill,.status{font-size:11px}
+.filters label,.form-card label,.auth-card label,
+.enquiry-form label,.loan-calculator label,.loan-request-card label{
+  color:#405568;
+  font-size:13px;
+  line-height:1.5;
+}
+.filters input,.filters select,.form-card input,.form-card select,
+.form-card textarea,.auth-card input,.auth-card select,
+.enquiry-form input,.enquiry-form select,.enquiry-form textarea,
+.loan-form-grid input,.loan-form-grid select,.loan-calculator input{
+  color:#263b4c;
+  font-size:14px;
+  min-height:43px;
+}
+input::placeholder,textarea::placeholder{color:#788894;opacity:1}
+.text-link,.view-link{font-size:14px}
+footer{font-size:14px;line-height:1.7}
+footer p,.tiny{color:#596b79}
+.faq-item button{font-size:15px;line-height:1.5}
+.category-tile b{font-size:15px}
+.category-tile small{font-size:12px}
+@media(max-width:620px){
+  body{font-size:15px}
+  .topbar nav a{font-size:14px}
+  .hero-copy>p,.why-inner>div:first-child>p,.enquiry-copy>p,
+  .contact-strip p,.faq-item p,.description,.muted{font-size:14px}
+  .section h2{font-size:30px}
+  .card-body{padding:17px}
+  .card-body h3{font-size:21px}
+  .card-meta{font-size:12px;flex-wrap:wrap}
+  .filters label,.form-card label,.auth-card label,
+  .enquiry-form label{font-size:13px}
+  footer{font-size:13px}
+}
