@@ -130,7 +130,7 @@ footer{background:#f5f8f7;color:#526575;border-top:1px solid #e7eeeb}footer p{co
 .partner-carousel-arrow{width:38px;height:38px;display:grid;place-items:center;border:1px solid #dfe9e5;border-radius:50%;background:#fff;color:#287b68;cursor:pointer;transition:background .2s,border-color .2s}
 .partner-carousel-arrow:hover:not(:disabled){background:#eaf4f0;border-color:#b9d7ca}
 .partner-carousel-arrow:disabled{opacity:.4;cursor:not-allowed}
-.partner-marquee{overflow-x:auto;overflow-y:hidden;width:100%;scroll-behavior:smooth;scroll-snap-type:x proximity;scrollbar-width:none;touch-action:pan-x;overscroll-behavior-x:contain;mask-image:linear-gradient(to right,transparent,black 2%,black 98%,transparent);outline:none}
+.partner-marquee{overflow-x:auto;overflow-y:hidden;width:100%;scroll-behavior:auto;scroll-snap-type:x proximity;scrollbar-width:none;touch-action:pan-x;overscroll-behavior-x:contain;mask-image:linear-gradient(to right,transparent,black 2%,black 98%,transparent);outline:none}
 .partner-marquee::-webkit-scrollbar{display:none}
 .partner-marquee-track{display:flex;align-items:stretch;gap:16px;width:max-content}
 .home-partner-card{width:220px;min-height:142px;display:flex;flex:0 0 220px;flex-direction:column;align-items:center;justify-content:center;gap:9px;padding:18px 16px;border:1px solid #e5ece9;border-radius:14px;background:linear-gradient(145deg,#fff,#f7faf9);box-shadow:0 5px 18px #20364b08;text-align:center;scroll-snap-align:start}
