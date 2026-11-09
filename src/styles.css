@@ -1267,3 +1267,33 @@ footer>span{margin-left:auto;white-space:nowrap}
   .enquiry-fields-grid{grid-template-columns:minmax(0,1fr)}
   .enquiry-fields-grid .enquiry-field-full{grid-column:auto}
 }
+
+/* Homepage full-bleed section backgrounds.
+   The section content remains on the shared 1220px grid while the background
+   extends edge-to-edge across the viewport. */
+.category-section,
+.latest-properties-section,
+.loan-home-promo,
+.channel-partners-home{
+  position:relative;
+  isolation:isolate;
+}
+.category-section::before,
+.latest-properties-section::before,
+.loan-home-promo::before,
+.channel-partners-home::before{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  top:0;
+  bottom:0;
+  left:50%;
+  width:100vw;
+  transform:translateX(-50%);
+  pointer-events:none;
+}
+.category-section::before,
+.loan-home-promo::before{background:#f7faf8}
+.latest-properties-section::before,
+.channel-partners-home::before{background:#fff}
+.channel-partners-home{overflow:visible}
