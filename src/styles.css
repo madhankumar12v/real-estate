@@ -1401,3 +1401,94 @@ footer>span{margin-left:auto;white-space:nowrap}
     white-space:nowrap !important;
   }
 }
+
+
+/* FINAL MOBILE NAV: vertical stack fixed to the right edge. Desktop is untouched. */
+@media (max-width: 620px) {
+  .topbar > nav.mobile-top-nav {
+    display: flex !important;
+    position: fixed !important;
+    top: 88px !important;
+    right: 0 !important;
+    left: auto !important;
+    z-index: 50 !important;
+    width: 112px !important;
+    margin: 0 !important;
+    padding: 8px 6px !important;
+    flex-direction: column !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    gap: 4px !important;
+    background: #20364b !important;
+    border: 1px solid #d9e3e8 !important;
+    border-right: 0 !important;
+    border-radius: 12px 0 0 12px !important;
+    box-shadow: 0 8px 24px rgba(20, 43, 74, .18) !important;
+    box-sizing: border-box !important;
+  }
+  .topbar > nav.mobile-top-nav > a,
+  .topbar > nav.mobile-top-nav > button {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 46px !important;
+    padding: 7px 8px !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 9px !important;
+    white-space: nowrap !important;
+    color: #fff !important;
+    font-size: 12px !important;
+    line-height: 1.2 !important;
+    text-align: left !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 7px !important;
+  }
+  .topbar > nav.mobile-top-nav > a.active,
+  .topbar > nav.mobile-top-nav > button.more-active {
+    color: #f0c66b !important;
+    background: rgba(255,255,255,.09) !important;
+  }
+  .topbar > nav#site-navigation {
+    display: none !important;
+  }
+  .topbar > nav#site-navigation.nav-open {
+    display: flex !important;
+    position: fixed !important;
+    top: 362px !important;
+    right: 0 !important;
+    left: auto !important;
+    z-index: 49 !important;
+    width: 190px !important;
+    max-height: calc(100dvh - 380px) !important;
+    overflow-y: auto !important;
+    padding: 8px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 2px !important;
+    background: #fff !important;
+    border: 1px solid #dce5e9 !important;
+    border-right: 0 !important;
+    border-radius: 12px 0 0 12px !important;
+    box-shadow: 0 8px 24px rgba(20,43,74,.16) !important;
+  }
+  .topbar > nav#site-navigation.nav-open > a {
+    display: flex !important;
+    padding: 11px 10px !important;
+    color: #263b4c !important;
+    border-radius: 7px !important;
+  }
+  .topbar > nav#site-navigation.nav-open > a[href="/properties"],
+  .topbar > nav#site-navigation.nav-open > a[href="/saved"],
+  .topbar > nav#site-navigation.nav-open > a[href="/careers"] {
+    display: none !important;
+  }
+  .topbar > button.mobile-menu {
+    display: none !important;
+  }
+  body { overflow-x: hidden !important; }
+}
