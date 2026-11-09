@@ -1299,315 +1299,13 @@ footer>span{margin-left:auto;white-space:nowrap}
 .channel-partners-home{overflow:visible}
 
 
-/* Mobile primary navigation sits at the top, directly below the brand row. */
-.mobile-top-nav{display:none}
-.mobile-bottom-nav{display:none!important}
-@media(max-width:620px){
- body{padding-bottom:0!important}
- .topbar .mobile-top-nav{
-  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:center;gap:2px;
-  width:100%;order:2;margin-top:2px;padding:7px 5px;
-  background:#142B4A;border-top:2px solid #C99A36;border-radius:8px;
- }
- .topbar .mobile-top-nav a,.topbar .mobile-top-nav button{
-  min-width:0;min-height:46px;display:flex;flex-direction:column;align-items:center;
-  justify-content:center;gap:4px;color:#fff!important;font-family:Inter,system-ui,sans-serif;
-  font-size:10px;font-weight:600;line-height:1;text-decoration:none;
-  background:transparent;border:0;padding:3px 1px;cursor:pointer
- }
- .topbar .mobile-top-nav a svg,.topbar .mobile-top-nav button svg{flex:0 0 auto}
- .topbar .mobile-top-nav a.active,.topbar .mobile-top-nav button.more-active{color:#E4B64F!important}
- .topbar .mobile-top-nav a.active span,.topbar .mobile-top-nav button.more-active span{font-weight:800}
- .topbar .mobile-top-nav a:focus-visible,.topbar .mobile-top-nav button:focus-visible{outline:2px solid #E4B64F;outline-offset:-2px;border-radius:7px}
-}
-
-/* Mobile: show only the compact top navigation; keep the full link list inside More. */
-@media(max-width:620px){
-  .topbar > #site-navigation{
-    display:none !important;
-    order:4;
-    width:100%;
-    padding:12px 0 5px;
-    border-top:1px solid #edf0f2;
-    flex-direction:column;
-    align-items:stretch;
-    gap:0;
-  }
-  .topbar > #site-navigation.nav-open{
-    display:flex !important;
-  }
-  .topbar > #site-navigation a{
-    padding:10px 3px;
-  }
-  .topbar > .mobile-menu{
-    display:none !important;
-  }
-}
-
-
-/* Final navigation visibility: desktop gets the full nav; mobile gets the compact nav. */
-.topbar > nav#site-navigation{display:flex}
-.topbar > nav.mobile-top-nav{display:none!important}
-.topbar > button.mobile-menu{display:none!important}
-@media(max-width:620px){
-  .topbar > nav#site-navigation{display:none!important}
-  .topbar > nav#site-navigation.nav-open{
-    display:flex!important;
-    order:4;
-    width:100%;
-    padding:12px 0 5px;
-    border-top:1px solid #edf0f2;
-    flex-direction:column;
-    align-items:stretch;
-    gap:0;
-  }
-  .topbar > nav.mobile-top-nav{
-    display:grid!important;
-    grid-template-columns:repeat(5,minmax(0,1fr));
-    order:2;
-    width:100%;
-  }
-  .topbar > button.mobile-menu{display:none!important}
-  .topbar > nav#site-navigation a{padding:10px 3px}
-}
-
-
-/* Mobile More menu: avoid repeating destinations already present in the five-item mobile bar. */
-@media(max-width:620px){
-  .topbar > nav#site-navigation.nav-open > a[href="/properties"],
-  .topbar > nav#site-navigation.nav-open > a[href="/saved"],
-  .topbar > nav#site-navigation.nav-open > a[href="/careers"]{
-    display:none!important;
-  }
-}
-
-/* Mobile navigation: align all five items to the right without clipping. */
-@media(max-width:620px){
-  .topbar > nav.mobile-top-nav{
-    display:flex !important;
-    justify-content:flex-end !important;
-    align-items:center !important;
-    width:100% !important;
-    margin-left:auto !important;
-    padding:7px 4px !important;
-    gap:clamp(3px,2vw,12px) !important;
-    box-sizing:border-box !important;
-  }
-  .topbar > nav.mobile-top-nav > a,
-  .topbar > nav.mobile-top-nav > button{
-    flex:0 1 auto !important;
-    min-width:0 !important;
-    padding:5px clamp(3px,1.5vw,9px) !important;
-    white-space:nowrap !important;
-  }
-}
-
-
-/* FINAL MOBILE NAV: vertical stack fixed to the right edge. Desktop is untouched. */
-@media (max-width: 620px) {
-  .topbar > nav.mobile-top-nav {
-    display: flex !important;
-    position: fixed !important;
-    top: 88px !important;
-    right: 0 !important;
-    left: auto !important;
-    z-index: 50 !important;
-    width: 112px !important;
-    margin: 0 !important;
-    padding: 8px 6px !important;
-    flex-direction: column !important;
-    flex-wrap: nowrap !important;
-    align-items: stretch !important;
-    justify-content: flex-start !important;
-    gap: 4px !important;
-    background: #20364b !important;
-    border: 1px solid #d9e3e8 !important;
-    border-right: 0 !important;
-    border-radius: 12px 0 0 12px !important;
-    box-shadow: 0 8px 24px rgba(20, 43, 74, .18) !important;
-    box-sizing: border-box !important;
-  }
-  .topbar > nav.mobile-top-nav > a,
-  .topbar > nav.mobile-top-nav > button {
-    display: flex !important;
-    flex: 0 0 auto !important;
-    width: 100% !important;
-    min-width: 0 !important;
-    min-height: 46px !important;
-    padding: 7px 8px !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    justify-content: flex-start !important;
-    gap: 9px !important;
-    white-space: nowrap !important;
-    color: #fff !important;
-    font-size: 12px !important;
-    line-height: 1.2 !important;
-    text-align: left !important;
-    background: transparent !important;
-    border: 0 !important;
-    border-radius: 7px !important;
-  }
-  .topbar > nav.mobile-top-nav > a.active,
-  .topbar > nav.mobile-top-nav > button.more-active {
-    color: #f0c66b !important;
-    background: rgba(255,255,255,.09) !important;
-  }
-  .topbar > nav#site-navigation {
-    display: none !important;
-  }
-  .topbar > nav#site-navigation.nav-open {
-    display: flex !important;
-    position: fixed !important;
-    top: 362px !important;
-    right: 0 !important;
-    left: auto !important;
-    z-index: 49 !important;
-    width: 190px !important;
-    max-height: calc(100dvh - 380px) !important;
-    overflow-y: auto !important;
-    padding: 8px !important;
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 2px !important;
-    background: #fff !important;
-    border: 1px solid #dce5e9 !important;
-    border-right: 0 !important;
-    border-radius: 12px 0 0 12px !important;
-    box-shadow: 0 8px 24px rgba(20,43,74,.16) !important;
-  }
-  .topbar > nav#site-navigation.nav-open > a {
-    display: flex !important;
-    padding: 11px 10px !important;
-    color: #263b4c !important;
-    border-radius: 7px !important;
-  }
-  .topbar > nav#site-navigation.nav-open > a[href="/properties"],
-  .topbar > nav#site-navigation.nav-open > a[href="/saved"],
-  .topbar > nav#site-navigation.nav-open > a[href="/careers"] {
-    display: none !important;
-  }
-  .topbar > button.mobile-menu {
-    display: none !important;
-  }
-  body { overflow-x: hidden !important; }
-}
-
-
-/* Isolated mobile side navigation: deliberately separate from legacy nav rules. */
-.topbar > nav.mobile-side-nav{display:none}
-@media (max-width:620px){
-  .topbar{position:relative}
-  .topbar > nav.mobile-side-nav{
-    display:flex!important;
-    position:fixed!important;
-    top:50%!important;
-    right:0!important;
-    left:auto!important;
-    bottom:auto!important;
-    transform:translateY(-50%)!important;
-    z-index:9999!important;
-    width:132px!important;
-    max-width:42vw!important;
-    margin:0!important;
-    padding:8px!important;
-    flex-direction:column!important;
-    flex-wrap:nowrap!important;
-    align-items:stretch!important;
-    justify-content:center!important;
-    gap:5px!important;
-    border:1px solid #dce5e9!important;
-    border-right:0!important;
-    border-radius:12px 0 0 12px!important;
-    background:#20364b!important;
-    box-shadow:0 8px 24px rgba(20,43,74,.2)!important;
-    box-sizing:border-box!important;
-  }
-  .topbar > nav.mobile-side-nav > a,
-  .topbar > nav.mobile-side-nav > button{
-    display:flex!important;
-    position:static!important;
-    width:100%!important;
-    min-width:0!important;
-    min-height:42px!important;
-    flex:0 0 auto!important;
-    flex-direction:row!important;
-    align-items:center!important;
-    justify-content:flex-start!important;
-    gap:9px!important;
-    margin:0!important;
-    padding:8px 9px!important;
-    border:0!important;
-    border-radius:7px!important;
-    background:transparent!important;
-    color:#fff!important;
-    font-size:12px!important;
-    line-height:1.2!important;
-    text-align:left!important;
-    white-space:nowrap!important;
-  }
-  .topbar > nav.mobile-side-nav > a.active,
-  .topbar > nav.mobile-side-nav > button.more-active{
-    color:#f0c66b!important;
-    background:rgba(255,255,255,.1)!important;
-  }
-  .topbar > nav#site-navigation{display:none!important}
-  .topbar > nav#site-navigation.nav-open{
-    display:flex!important;
-    position:fixed!important;
-    top:50%!important;
-    right:136px!important;
-    left:auto!important;
-    bottom:auto!important;
-    transform:translateY(-50%)!important;
-    z-index:9998!important;
-    width:190px!important;
-    max-width:52vw!important;
-    max-height:80dvh!important;
-    overflow-y:auto!important;
-    margin:0!important;
-    padding:8px!important;
-    flex-direction:column!important;
-    align-items:stretch!important;
-    gap:2px!important;
-    border:1px solid #dce5e9!important;
-    border-radius:12px!important;
-    background:#fff!important;
-    box-shadow:0 8px 24px rgba(20,43,74,.16)!important;
-  }
-  .topbar > nav#site-navigation.nav-open > a{display:flex!important;padding:10px!important;color:#263b4c!important}
-  .topbar > nav#site-navigation.nav-open > a[href="/properties"],
-  .topbar > nav#site-navigation.nav-open > a[href="/saved"],
-  .topbar > nav#site-navigation.nav-open > a[href="/careers"]{display:none!important}
-  .topbar > button.mobile-menu{display:none!important}
-  body{overflow-x:hidden!important}
-}
-
-
-/* Mobile navigation: one floating menu icon opens the complete link panel. */
+/* Consolidated mobile navigation.
+   Desktop keeps the standard horizontal navigation.
+   Mobile uses one floating toggle and one expandable navigation panel. */
 .topbar > button.mobile-float-toggle{display:none}
-@media(max-width:620px){
-  .topbar > button.mobile-float-toggle{
-    display:flex!important;
-    position:fixed!important;
-    top:50%!important;
-    right:14px!important;
-    left:auto!important;
-    bottom:auto!important;
-    transform:translateY(-50%)!important;
-    z-index:10001!important;
-    width:48px!important;
-    height:48px!important;
-    min-width:48px!important;
-    align-items:center!important;
-    justify-content:center!important;
-    padding:0!important;
-    border:1px solid #d7e1e5!important;
-    border-radius:50%!important;
-    background:#20364b!important;
-    color:#fff!important;
-    box-shadow:0 5px 18px rgba(20,43,74,.24)!important;
-  }
+@media (max-width:620px){
+  body{overflow-x:hidden;padding-bottom:0!important}
+  .topbar{position:relative}
   .topbar > nav#site-navigation{
     display:none!important;
   }
@@ -1621,7 +1319,7 @@ footer>span{margin-left:auto;white-space:nowrap}
     transform:translateY(-50%)!important;
     z-index:10000!important;
     width:220px!important;
-    max-width:calc(100vw - 92px)!important;
+    max-width:calc(100vw - 100px)!important;
     max-height:80dvh!important;
     overflow-y:auto!important;
     margin:0!important;
@@ -1643,34 +1341,34 @@ footer>span{margin-left:auto;white-space:nowrap}
     border-radius:7px!important;
     font-size:13px!important;
   }
-  .topbar > nav#site-navigation.nav-open > a[href="/properties"],
-  .topbar > nav#site-navigation.nav-open > a[href="/saved"],
-  .topbar > nav#site-navigation.nav-open > a[href="/careers"]{
+  .topbar > button.mobile-float-toggle{
     display:flex!important;
+    position:fixed!important;
+    top:50%!important;
+    right:14px!important;
+    left:auto!important;
+    bottom:auto!important;
+    transform:translateY(-50%)!important;
+    z-index:10001!important;
+    width:48px!important;
+    height:48px!important;
+    min-width:48px!important;
+    align-items:center!important;
+    justify-content:center!important;
+    padding:0!important;
+    border:1px solid #d7e1e5!important;
+    border-radius:50%!important;
+    background:#20364b!important;
+    color:#fff!important;
+    box-shadow:0 5px 18px rgba(20,43,74,.24)!important;
   }
-  .topbar > nav.mobile-side-nav{display:none!important}
-  body{overflow-x:hidden!important}
-}
-
-
-/* FINAL OVERRIDE: remove every legacy mobile tab bar (including the old More item).
-   Mobile uses only the floating menu button and the single expandable site navigation. */
-@media (max-width: 620px) {
+  /* Hide any legacy navigation bars if an older component is still rendered. */
   .topbar > nav.mobile-top-nav,
   .topbar > nav.mobile-bottom-nav,
   .topbar > nav.mobile-side-nav,
-  .topbar > button.mobile-menu {
-    display: none !important;
-    visibility: hidden !important;
-    pointer-events: none !important;
-  }
-  .topbar > button.mobile-float-toggle {
-    display: flex !important;
-  }
-  .topbar > nav#site-navigation {
-    display: none !important;
-  }
-  .topbar > nav#site-navigation.nav-open {
-    display: flex !important;
+  .topbar > button.mobile-menu{
+    display:none!important;
+    visibility:hidden!important;
+    pointer-events:none!important;
   }
 }
