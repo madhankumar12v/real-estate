@@ -1306,7 +1306,7 @@ footer>span{margin-left:auto;white-space:nowrap}
  body{padding-bottom:0!important}
  .topbar .mobile-top-nav{
   display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:center;gap:2px;
-  width:100%;order:5;margin-top:2px;padding:7px 5px;
+  width:100%;order:2;margin-top:2px;padding:7px 5px;
   background:#142B4A;border-top:2px solid #C99A36;border-radius:8px;
  }
  .topbar .mobile-top-nav a,.topbar .mobile-top-nav button{
