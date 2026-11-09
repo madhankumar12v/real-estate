@@ -107,7 +107,7 @@ export default function AdminAnalyticsPage() {
     try {
       const [listings, enquiries, profiles, partners, views] = await Promise.all([
         supabase.from('listings').select('id,title,status,property_type,created_at,partner_id,listing_tag,city,district'),
-        supabase.from('enquiries').select('id,listing_id,created_at,status,assigned_to,listings(id,title,city,district,property_type)'),
+        supabase.from('enquiries').select('id,listing_id,created_at,status,assigned_to,city_town,listings(id,title,city,district,property_type)'),
         supabase.from('profiles').select('id,role,created_at'),
         supabase.from('partners').select('id,name,is_active'),
         supabase.from('listing_views').select('id,listing_id,viewed_at,listings(id,title,city,district,property_type)')
@@ -233,6 +233,24 @@ export default function AdminAnalyticsPage() {
   const closedEnquiries = filtered.enquiries.filter(row => row.status === 'closed').length
   const conversionRate = filtered.enquiries.length ? closedEnquiries / filtered.enquiries.length * 100 : 0
 
+  const allTimeTopCity = useMemo(() => {
+    const totals = new Map()
+    data.enquiries.forEach(row => {
+      const city = String(row.city_town || '').trim()
+      if (city) totals.set(city, (totals.get(city) || 0) + 1)
+    })
+    return [...totals.entries()].sort((a, b) => b[1] - a[1])[0] || null
+  }, [data.enquiries])
+
+  const allTimeTopType = useMemo(() => {
+    const totals = new Map()
+    data.listings.forEach(row => {
+      const type = String(row.property_type || '').trim()
+      if (type) totals.set(type, (totals.get(type) || 0) + 1)
+    })
+    return [...totals.entries()].sort((a, b) => b[1] - a[1])[0] || null
+  }, [data.listings])
+
   const label = range === 'today' ? 'Today' : range === 'week' ? 'This week' : range === 'month' ? 'This month' : range === 'year' ? 'This year' : range === 'all' ? 'All time' : 'Custom date range'
 
   const exportAll = () => {
@@ -281,6 +299,13 @@ export default function AdminAnalyticsPage() {
       </div>
     </div>
 
+    {!busy && !error && <div className="analytics-quick-insights" aria-label="Business snapshot">
+      <article><span>Total enquiries</span><strong>{count(data.enquiries.length)}</strong><small>All recorded enquiries</small></article>
+      <article><span>Property views</span><strong>{count(data.views.length)}</strong><small>Recorded detail-page views</small></article>
+      <article><span>Top enquiry city</span><strong title={allTimeTopCity?.[0] || 'No data'}>{allTimeTopCity?.[0] || '—'}</strong><small>{allTimeTopCity ? count(allTimeTopCity[1]) + ' enquiries' : 'No city data yet'}</small></article>
+      <article><span>Most listed type</span><strong title={allTimeTopType?.[0] || 'No data'}>{allTimeTopType?.[0] || '—'}</strong><small>{allTimeTopType ? count(allTimeTopType[1]) + ' properties' : 'No listing data yet'}</small></article>
+    </div>}
+
     <div className="analytics-toolbar">
       <label><CalendarDays size={16}/><span>Report period</span>
         <select value={range} onChange={event => setRange(event.target.value)}>
@@ -307,9 +332,6 @@ export default function AdminAnalyticsPage() {
       <div className="analytics-grid">
         <Panel title="Marketplace activity" subtitle="Monthly enquiries and new listings · last 12 months" icon={TrendingUp} className="analytics-panel-wide analytics-panel-trend">
           <TrendChart rows={monthly}/>
-        </Panel>
-        <Panel title="Property mix" subtitle={'Property types added · ' + label} icon={Building2} className="analytics-panel-mix">
-          {propertyTypes.length ? <Donut rows={propertyTypes} total={filtered.listings.length}/> : <div className="analytics-empty-state">No property listings in this period.</div>}
         </Panel>
         <Panel title="Listing approval status" subtitle={'Review pipeline · ' + label} icon={CheckCircle2} className="analytics-panel-third">
           <HorizontalBars rows={listingStatuses}/>
