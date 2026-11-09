@@ -1,21 +1,11 @@
-import { useMemo, useState } from 'react'
-import { MessageCircle, Calculator, FileText, Banknote } from 'lucide-react'
+import { useState } from 'react'
+import { MessageCircle, FileText } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { waLink } from '../lib/helpers'
 
 const locations = ['Vellore','Katpadi','Anaicut','Ranipet','Arcot','Gudiyatham','Walajah']
 const loanTypes = ['Plot / Land Loan','Home Construction Loan','Personal Loan','Business Loan']
 const money = value => new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(Math.max(0,Number(value)||0))
-const calculateEmi = (principal,annualRate,months) => {
- const p=Number(principal),r=Number(annualRate)/1200,n=Number(months)
- if(!(p>0&&n>0))return 0
- return r===0?p/n:p*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1)
-}
-const loanFromEmi = (emi,annualRate,months) => {
- const r=Number(annualRate)/1200,n=Number(months),payment=Math.max(0,Number(emi)||0)
- if(!(payment>0&&n>0))return 0
- return r===0?payment*n:payment*(Math.pow(1+r,n)-1)/(r*Math.pow(1+r,n))
-}
 
 export default function LoanAssistancePage(){
  const [loanType,setLoanType]=useState(loanTypes[0])
@@ -29,20 +19,8 @@ export default function LoanAssistancePage(){
  const [consent,setConsent]=useState(false)
  const [busy,setBusy]=useState(false)
  const [notice,setNotice]=useState('')
- const [principal,setPrincipal]=useState('2500000')
- const [rate,setRate]=useState('9')
- const [years,setYears]=useState('20')
- const [eligibilityRate,setEligibilityRate]=useState('9')
- const [eligibilityYears,setEligibilityYears]=useState('20')
  const monthlyIncome=Math.max(0,Number(income)||0)
  const existingEmis=Math.max(0,Number(emis)||0)
- const eligibleEmi=Math.max(0,monthlyIncome*0.5-existingEmis)
- const estimatedEligibility=loanFromEmi(eligibleEmi,eligibilityRate,Number(eligibilityYears)*12)
- const amount=Number(principal),months=Number(years)*12
- const emi=calculateEmi(amount,rate,months)
- const totalPayment=emi*months
- const totalInterest=Math.max(0,totalPayment-amount)
- const canEstimate=monthlyIncome>0&&Number(eligibilityYears)>0&&Number(eligibilityRate)>=0
  const submit=async e=>{
   e.preventDefault()
   if(busy)return
@@ -53,8 +31,7 @@ export default function LoanAssistancePage(){
    name:name.trim(),phone:phone.trim(),loan_type:loanType,employment_type:employment,
    monthly_income:monthlyIncome,existing_emis:existingEmis,
    requested_amount:requestedAmount?Number(requestedAmount):null,
-   preferred_location:location,estimated_eligible_amount:Math.round(estimatedEligibility),
-   eligibility_interest_rate:Number(eligibilityRate),eligibility_tenure_years:Number(eligibilityYears),
+   preferred_location:location,
    consent_to_contact:true,consent_to_share:true,status:'new'
   }
   const message=`Hello MrSa Properties, I would like loan assistance.
@@ -65,7 +42,6 @@ Employment: ${employment}
 Monthly net income: ${money(monthlyIncome)}
 Existing monthly EMIs: ${money(existingEmis)}
 Requested amount: ${requestedAmount?money(requestedAmount):'Not specified'}
-Estimated eligibility (illustrative): ${money(estimatedEligibility)}
 Preferred location: ${location}
 Consent: I agree that MrSa Properties may contact me and share my enquiry with a relevant bank representative for follow-up.`
   const whatsappWindow=window.open('about:blank','_blank')
@@ -82,29 +58,6 @@ Consent: I agree that MrSa Properties may contact me and share my enquiry with a
   }finally{setBusy(false)}
  }
  return <section className="section page-section loan-page">
-  <section className="loan-calculator loan-eligibility">
-   <h2><Banknote size={19}/> Check your indicative loan eligibility</h2>
-   <p className="muted">Enter your monthly income and current EMIs to see an illustrative estimate of the loan amount you may be able to explore.</p>
-   <div className="loan-calc-grid">
-    <label>Monthly net income (₹)<input type="number" min="0" value={income} onChange={e=>setIncome(e.target.value)}/></label>
-    <label>Existing monthly EMIs (₹)<input type="number" min="0" value={emis} onChange={e=>setEmis(e.target.value)}/></label>
-    <label>Illustrative annual interest rate (%)<input type="number" min="0" max="30" step="0.1" value={eligibilityRate} onChange={e=>setEligibilityRate(e.target.value)}/></label>
-    <label>Repayment tenure (years)<input type="number" min="1" max="40" value={eligibilityYears} onChange={e=>setEligibilityYears(e.target.value)}/></label>
-   </div>
-   <div className="loan-eligibility-result"><span>Indicative eligible loan amount</span><strong>{canEstimate?money(estimatedEligibility):'Enter valid income and tenure'}</strong><small>Illustration uses a 50% total-EMI-to-income assumption. Actual lender criteria can be different.</small></div>
-   <p className="loan-disclaimer">This is not a bank eligibility decision, sanction or pre-approval. Lenders assess credit history, income stability, age, property, existing obligations and their own policies.</p>
-  </section>
-  <section className="loan-calculator">
-   <h2><Calculator size={19}/> Home loan EMI calculator</h2>
-   <div className="loan-calc-grid">
-    <label>Loan amount (₹)<input type="number" min="1" value={principal} onChange={e=>setPrincipal(e.target.value)}/></label>
-    <label>Annual interest rate (%)<input type="number" min="0" max="50" step="0.1" value={rate} onChange={e=>setRate(e.target.value)}/></label>
-    <label>Loan tenure (years)<input type="number" min="1" max="40" value={years} onChange={e=>setYears(e.target.value)}/></label>
-   </div>
-   <div className="loan-emi-result">Estimated monthly EMI: {money(emi)}</div>
-   <div className="loan-emi-breakdown"><div><span>Total interest</span><b>{money(totalInterest)}</b></div><div><span>Total repayment</span><b>{money(totalPayment)}</b></div></div>
-   <p className="loan-disclaimer">Illustrative calculation only. Actual interest rates, fees, eligibility and approval are determined by the lender.</p>
-  </section>
   <form className="form-card loan-request-card" onSubmit={submit}>
    <h2>Loan assistance enquiry</h2>
    <p className="muted">Share your details and our team will contact you about your loan enquiry.</p>
