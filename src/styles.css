@@ -1440,3 +1440,69 @@ footer p,.tiny{color:#596b79}
   .enquiry-form label{font-size:13px}
   footer{font-size:13px}
 }
+
+
+/* MrSa Properties — balanced compact spacing across desktop and mobile.
+   Keeps comfortable reading space while reducing oversized blank areas. */
+.section{
+  padding-top:58px;
+  padding-bottom:58px;
+}
+.section-heading{margin-bottom:22px}
+.property-grid{gap:18px}
+.card-image{height:205px}
+.card-body{padding:16px}
+.card-meta{margin-top:12px;padding-top:11px}
+.hero-light{
+  min-height:510px;
+  padding-top:56px;
+  padding-bottom:56px;
+}
+.hero-light .search-panel{margin-top:23px}
+.hero-light .hero-trust{margin-top:20px}
+.category-section{padding-top:20px;padding-bottom:48px}
+.latest-properties-section{padding-top:48px;padding-bottom:58px}
+.category-grid{gap:12px}
+.category-tile{min-height:145px;padding:18px 16px;gap:10px}
+.why-section{padding-top:58px;padding-bottom:58px}
+.why-inner{gap:58px}
+.why-points article{padding:14px 0}
+.faq-section{padding-top:52px;padding-bottom:52px}
+.faq-item button{padding-top:16px;padding-bottom:16px}
+.enquiry-section{padding-top:52px!important;padding-bottom:52px!important}
+.enquiry-form{padding:22px}
+.contact-strip{padding-top:48px;padding-bottom:48px}
+.cta{padding-top:40px;padding-bottom:40px}
+footer{padding-top:32px;padding-bottom:32px}
+@media(max-width:900px){
+  .section{padding-top:46px;padding-bottom:46px}
+  .hero-light{min-height:0;padding-top:46px;padding-bottom:46px}
+  .why-section{padding-top:46px;padding-bottom:46px}
+  .why-inner{gap:32px}
+  .enquiry-section{padding-top:42px!important;padding-bottom:42px!important}
+}
+@media(max-width:620px){
+  .section{padding:34px 17px}
+  .section-heading{margin-bottom:18px}
+  .hero-light{padding:34px 18px}
+  .hero-light h1{margin-top:12px;margin-bottom:12px}
+  .hero-light .search-panel{margin-top:18px}
+  .hero-light .hero-trust{margin-top:16px;gap:12px;flex-wrap:wrap}
+  .category-section{padding-top:18px;padding-bottom:32px}
+  .latest-properties-section{padding-top:32px;padding-bottom:38px}
+  .category-grid{gap:10px}
+  .category-tile{min-height:125px;padding:14px 12px}
+  .property-grid,.results .property-grid{gap:14px}
+  .card-image{height:195px}
+  .card-body{padding:15px}
+  .why-section{padding:36px 18px}
+  .why-inner{gap:22px}
+  .why-points article{padding:12px 0;gap:12px}
+  .faq-section{padding-top:34px;padding-bottom:34px}
+  .faq-item button{padding-top:14px;padding-bottom:14px}
+  .enquiry-section{padding:32px 16px!important;gap:18px!important}
+  .enquiry-form{padding:17px}
+  .contact-strip{padding:34px 18px;gap:18px}
+  .cta{padding:30px 20px;gap:16px}
+  footer{padding-top:28px;padding-bottom:28px}
+}
