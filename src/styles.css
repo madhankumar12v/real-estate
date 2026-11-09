@@ -1370,3 +1370,13 @@ footer>span{margin-left:auto;white-space:nowrap}
   .topbar > button.mobile-menu{display:none!important}
   .topbar > nav#site-navigation a{padding:10px 3px}
 }
+
+
+/* Mobile More menu: avoid repeating destinations already present in the five-item mobile bar. */
+@media(max-width:620px){
+  .topbar > nav#site-navigation.nav-open > a[href="/properties"],
+  .topbar > nav#site-navigation.nav-open > a[href="/saved"],
+  .topbar > nav#site-navigation.nav-open > a[href="/careers"]{
+    display:none!important;
+  }
+}
