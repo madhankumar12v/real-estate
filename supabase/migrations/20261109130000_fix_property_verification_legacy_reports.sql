@@ -12,6 +12,20 @@ alter table public.listing_reports
   add column if not exists reviewed_by uuid references auth.users(id) on delete set null,
   add column if not exists reviewed_at timestamptz;
 
+-- Preserve legacy report contact and review status when those fields exist.
+update public.listing_reports
+set reporter_contact = reporter_phone
+where reporter_contact is null and reporter_phone is not null;
+
+update public.listing_reports
+set report_status = case status
+  when 'reviewing' then 'investigating'
+  when 'resolved' then 'resolved'
+  when 'dismissed' then 'dismissed'
+  else 'open'
+end
+where report_status = 'open';
+
 -- Remove legacy permissive policy names so the current approved-listing
 -- submission policy is the one that governs public reports.
 drop policy if exists "public submit listing reports" on public.listing_reports;
