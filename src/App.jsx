@@ -26,9 +26,41 @@ function HomePage(){
  useEffect(()=>{
   const scroller=partnerScroller.current;
   if(!scroller||partners.length<2)return;
+  const motionPreference=window.matchMedia('(prefers-reduced-motion: reduce)');
+  if(motionPreference.matches)return;
   let paused=false;
-  const pause=()=>{paused=true};
-  const resume=()=>{paused=false};
+  let frame=0;
+  let lastTime=0;
+  const previousScrollBehavior=scroller.style.scrollBehavior;
+  const previousScrollSnapType=scroller.style.scrollSnapType;
+  // Auto movement must be immediate; smooth scrolling is reserved for arrow clicks.
+  scroller.style.scrollBehavior='auto';
+  scroller.style.scrollSnapType='none';
+  const pause=()=>{
+   paused=true;
+   lastTime=0;
+   scroller.style.scrollSnapType=previousScrollSnapType;
+  };
+  const resume=()=>{
+   paused=false;
+   lastTime=0;
+   scroller.style.scrollSnapType='none';
+  };
+  const tick=now=>{
+   if(!paused){
+    if(lastTime){
+     const track=scroller.firstElementChild;
+     const gap=track?parseFloat(window.getComputedStyle(track).columnGap)||0:0;
+     const loopWidth=(scroller.scrollWidth-gap)/2;
+     scroller.scrollLeft+=((now-lastTime)*0.04);
+     if(loopWidth>0&&scroller.scrollLeft>=loopWidth)scroller.scrollLeft-=loopWidth;
+    }
+    lastTime=now;
+   }else{
+    lastTime=0;
+   }
+   frame=window.requestAnimationFrame(tick);
+  };
   scroller.addEventListener('mouseenter',pause);
   scroller.addEventListener('mouseleave',resume);
   scroller.addEventListener('focusin',pause);
@@ -36,16 +68,11 @@ function HomePage(){
   scroller.addEventListener('touchstart',pause,{passive:true});
   scroller.addEventListener('touchend',resume,{passive:true});
   scroller.addEventListener('touchcancel',resume,{passive:true});
-  const timer=window.setInterval(()=>{
-   if(paused)return;
-   const track=scroller.firstElementChild;
-   const gap=track?parseFloat(window.getComputedStyle(track).columnGap)||0:0;
-   const loopWidth=(scroller.scrollWidth-gap)/2;
-   if(loopWidth>0&&scroller.scrollLeft>=loopWidth)scroller.scrollLeft-=loopWidth;
-   else scroller.scrollLeft+=1;
-  },30);
+  frame=window.requestAnimationFrame(tick);
   return()=>{
-   window.clearInterval(timer);
+   window.cancelAnimationFrame(frame);
+   scroller.style.scrollBehavior=previousScrollBehavior;
+   scroller.style.scrollSnapType=previousScrollSnapType;
    scroller.removeEventListener('mouseenter',pause);
    scroller.removeEventListener('mouseleave',resume);
    scroller.removeEventListener('focusin',pause);
