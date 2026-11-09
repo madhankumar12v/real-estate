@@ -32,7 +32,7 @@ Please share suitable bank options, indicative eligible amount and required docu
   window.open(waLink('918838037689',message),'_blank','noopener,noreferrer')
  }
  return <section className="section page-section loan-page">
-  <div className="loan-page-intro"><span className="eyebrow">MRSA PROPERTIES · LOAN ASSISTANCE</span><h1>Need help financing your property?</h1><p>Share a few details and our team will connect with you to discuss suitable loan options.</p></div>
+  <div className="loan-page-intro"><span className="eyebrow">MRSA PROPERTIES · LOAN ASSISTANCE</span><h1>Fast-Track Your Property &amp; Home Loans</h1><p>Get connected with banking professionals to explore plot loans, home construction loans and personal financing options with guidance at every step.</p></div>
   <form className="form-card" onSubmit={submit}>
    <h2>Request loan assistance</h2>
    <div className="loan-form-grid">
@@ -44,7 +44,7 @@ Please share suitable bank options, indicative eligible amount and required docu
     <label>Existing monthly EMIs (₹)<input type="number" min="0" value={emis} onChange={e=>setEmis(e.target.value)} placeholder="e.g. 8000"/></label>
     <label className="loan-full">Preferred location<select value={location} onChange={e=>setLocation(e.target.value)}>{locations.map(x=><option key={x}>{x}</option>)}</select></label>
    </div>
-   <button className="btn btn-primary full" type="submit">Get Loan Eligibility & Connect on WhatsApp <MessageCircle size={17}/></button>
+   <button className="btn btn-primary full" type="submit">Check Loan Eligibility <MessageCircle size={17}/></button>
    <p className="loan-disclaimer">Your details will be shared with MrSa Properties through WhatsApp for follow-up. Do not send Aadhaar, PAN, bank statements or other sensitive documents through this initial enquiry form.</p>
   </form>
   <section className="loan-calculator">
