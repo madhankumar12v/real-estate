@@ -1024,3 +1024,10 @@ footer>span{margin-left:auto;white-space:nowrap}
   footer>p,footer>p.tiny{max-width:100%}
   footer>span{margin-left:0}
 }
+
+
+/* Align desktop navigation links to the left, beside the brand */
+@media(min-width:621px){
+ .topbar nav{margin-left:32px;margin-right:auto;justify-content:flex-start}
+ .topbar .nav-actions{margin-left:24px}
+}
