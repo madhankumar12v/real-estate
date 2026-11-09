@@ -38,7 +38,9 @@ function HomePage(){
   scroller.addEventListener('touchcancel',resume,{passive:true});
   const timer=window.setInterval(()=>{
    if(paused)return;
-   const loopWidth=scroller.scrollWidth/2;
+   const track=scroller.firstElementChild;
+   const gap=track?parseFloat(window.getComputedStyle(track).columnGap)||0:0;
+   const loopWidth=(scroller.scrollWidth-gap)/2;
    if(loopWidth>0&&scroller.scrollLeft>=loopWidth)scroller.scrollLeft-=loopWidth;
    else scroller.scrollLeft+=1;
   },30);
