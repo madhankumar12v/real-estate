@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Activity, CalendarDays, Eye, RefreshCw, Users, MonitorSmartphone, FileSpreadsheet, ArrowUpRight } from 'lucide-react'
+import { Activity, CalendarDays, Eye, RefreshCw, Users, MonitorSmartphone, FileSpreadsheet, ArrowUpRight, MessageCircle } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 const number = value => new Intl.NumberFormat('en-IN').format(Number(value) || 0)
