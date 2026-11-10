@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { cityTowns, waLink } from '../lib/helpers'
 import { MessageCircle } from 'lucide-react'
+import { getMarketingAttribution } from '../lib/marketing'
 
 export default function PropertyEnquiryPage(){
  const {id}=useParams()
@@ -49,7 +50,8 @@ export default function PropertyEnquiryPage(){
     interest:form.interest||null,
     heard_about:form.heard_about||null,
     message:form.message.trim()||'Interested in this property',
-    source:'property'
+    source:'property',
+    ...getMarketingAttribution()
    })
    if(result.error)throw result.error
 
