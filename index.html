@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-IN">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -61,14 +61,36 @@
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "RealEstateAgent",
-        "name": "MrSa Properties",
-        "url": "https://mrsa.mrsaproperties.workers.dev/",
-        "logo": "https://mrsa.mrsaproperties.workers.dev/mrsa-logo.png",
-        "email": "mrsasolutions2@gmail.com",
-        "telephone": "+91-88380-37689",
-        "areaServed": { "@type": "State", "name": "Tamil Nadu" },
-        "description": "Buy and sell plots, land, homes and commercial properties across Tamil Nadu."
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://mrsa.mrsaproperties.workers.dev/#organization",
+            "name": "MrSa Properties",
+            "url": "https://mrsa.mrsaproperties.workers.dev/",
+            "logo": "https://mrsa.mrsaproperties.workers.dev/mrsa-logo.png",
+            "email": "mrsasolutions2@gmail.com",
+            "telephone": "+91-88380-37689",
+            "areaServed": {
+              "@type": "State",
+              "name": "Tamil Nadu",
+              "containedInPlace": {
+                "@type": "Country",
+                "name": "India"
+              }
+            },
+            "description": "A property listing and enquiry platform for buying and selling plots, land, houses, villas, apartments and commercial properties across Tamil Nadu."
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://mrsa.mrsaproperties.workers.dev/#website",
+            "url": "https://mrsa.mrsaproperties.workers.dev/",
+            "name": "MrSa Properties",
+            "publisher": {
+              "@id": "https://mrsa.mrsaproperties.workers.dev/#organization"
+            },
+            "inLanguage": "en-IN"
+          }
+        ]
       }
     </script>
   </head>
