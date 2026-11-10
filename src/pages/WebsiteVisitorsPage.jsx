@@ -25,9 +25,6 @@ const exportCsv = (data, range) => {
     ['Traffic source', 'Views'],
     ...(data.sources || []).map(row => [row.label, row.views]),
     [],
-    ['Campaign', 'Views'],
-    ...(data.campaigns || []).map(row => [row.label, row.views]),
-    [],
     ['Device', 'Views'],
     ...(data.devices || []).map(row => [row.label, row.views])
   ]
@@ -110,8 +107,8 @@ export default function WebsiteVisitorsPage() {
         <article className="visitor-metric"><span><Clock size={18}/></span><small>Total engagement</small><strong>{duration(data?.summary?.total_engagement_seconds)}</strong><em>Combined active browsing time</em></article>
       </div>
       <div className="visitor-chart-panel visitor-panel"><div className="visitor-panel-heading"><div><h2>Daily page views</h2><p>Traffic trend for {periodLabel.toLowerCase()}</p></div><span>{number(data?.summary?.period_page_views)} views</span></div>{daily.length ? <div className="visitor-daily-chart">{daily.map(row => <div className="visitor-day" key={row.day} title={row.day + ': ' + number(row.views) + ' views'}><span style={{ height: Math.max(3, (Number(row.views) || 0) / maxDaily * 100) + '%' }}/><small>{new Date(row.day + 'T00:00:00').toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</small></div>)}</div> : <p className="visitor-empty">No visitor activity recorded for this period yet. Once tracking is enabled, page views will appear here.</p>}</div>
-      <div className="visitor-breakdown-grid"><Breakdown title="Most visited pages" rows={data?.top_pages} empty="No page views recorded yet."/><Breakdown title="Most-engaged pages (minutes)" rows={(data?.top_engaged_pages || []).map(row => ({label:row.path,views:Math.round((Number(row.seconds)||0)/60)}))} empty="Engagement details will appear after visitors browse."/><Breakdown title="Peak engagement hours (IST)" rows={(data?.peak_hours || []).map(row => ({label:row.hour_label,views:row.seconds}))} empty="Peak hours will appear after engagement is recorded."/><Breakdown title="Traffic sources" rows={data?.sources} empty="Traffic sources will appear here."/><Breakdown title="Campaigns / shared links" rows={data?.campaigns} empty="Use tagged social and WhatsApp links to see campaign visits."/><Breakdown title="Visitor devices" rows={data?.devices} empty="Device details will appear here."/></div>
-      <div className="visitor-privacy-note"><b>Privacy-friendly tracking</b><p>MrSa records anonymous visitor and session IDs, page path, referring website, broad device type, tagged campaign source, WhatsApp button clicks and active page engagement duration. It does not store IP addresses, names, phone numbers or email addresses. Admin pages and account areas are excluded.</p></div>
+      <div className="visitor-breakdown-grid"><Breakdown title="Most visited pages" rows={data?.top_pages} empty="No page views recorded yet."/><Breakdown title="Most-engaged pages (minutes)" rows={(data?.top_engaged_pages || []).map(row => ({label:row.path,views:Math.round((Number(row.seconds)||0)/60)}))} empty="Engagement details will appear after visitors browse."/><Breakdown title="Peak engagement hours (IST)" rows={(data?.peak_hours || []).map(row => ({label:row.hour_label,views:row.seconds}))} empty="Peak hours will appear after engagement is recorded."/><Breakdown title="Traffic sources" rows={data?.sources} empty="Traffic sources will appear here."/><Breakdown title="Visitor devices" rows={data?.devices} empty="Device details will appear here."/></div>
+      <div className="visitor-privacy-note"><b>Privacy-friendly tracking</b><p>MrSa records anonymous visitor and session IDs, page path, referring website, broad device type, source category, WhatsApp button clicks and active page engagement duration. It does not store IP addresses, names, phone numbers or email addresses. Admin pages and account areas are excluded.</p></div>
     </>}
     <div className="analytics-footer"><span>Visitor tracking starts after the SQL setup is run and the website is redeployed.</span><Link to="/admin">← Back to Admin dashboard</Link></div>
   </section>
