@@ -2009,3 +2009,13 @@ footer > span {
 @media(max-width:850px){.visitor-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.visitor-breakdown-grid{grid-template-columns:1fr}}
 @media(max-width:560px){.visitor-heading{align-items:flex-start;flex-direction:column}.visitor-toolbar{align-items:stretch}.visitor-toolbar label{flex-wrap:wrap}.visitor-toolbar small{width:100%;margin:0}.visitor-metric{padding:13px}.visitor-metric>strong{font-size:23px}.visitor-panel{padding:15px}.visitor-daily-chart{gap:3px}.visitor-day{min-width:18px}}
 @media print{.visitor-heading .analytics-actions,.visitor-toolbar,.analytics-footer{display:none!important}.website-visitors-page{max-width:none;padding:10px!important}.visitor-metrics{grid-template-columns:repeat(4,1fr)}.visitor-panel,.visitor-metric{break-inside:avoid}}
+
+
+/* Traffic & Enquiry Sources channel comparison */
+.source-performance-scroll{width:100%;overflow-x:auto}
+.source-performance-table{width:100%;border-collapse:collapse;min-width:560px;font-size:12px}
+.source-performance-table th,.source-performance-table td{padding:11px 12px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+.source-performance-table th{font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:#788792;background:#f7faf8}
+.source-performance-table td{color:#526575;font-variant-numeric:tabular-nums}
+.source-performance-table td:first-child{color:var(--navy)}
+.source-performance-table tr:last-child td{border-bottom:0}
