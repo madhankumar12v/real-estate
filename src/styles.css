@@ -1858,8 +1858,8 @@ footer > span {
   border-radius:8px;
   background:#fbfcfb;
 }
-.plot-inventory-summary span{font-size:12px;color:#596b79}
-.plot-inventory-summary b{font-size:21px;line-height:1.2;color:var(--navy)}
+.plot-inventory-summary span{font-size:14px;font-weight:600;color:#405568}
+.plot-inventory-summary b{font-size:30px;line-height:1.15;font-weight:800;color:var(--navy)}
 .plot-inventory-filters{
   display:grid;
   grid-template-columns:minmax(220px,2fr) minmax(150px,1fr) minmax(180px,1.2fr) auto;
