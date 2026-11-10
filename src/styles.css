@@ -1954,3 +1954,18 @@ footer > span {
 .database-storage-summary strong{font-size:23px;color:var(--navy);font-variant-numeric:tabular-nums}
 .database-tables-panel{margin-top:22px}
 @media(max-width:620px){.database-storage-summary{grid-template-columns:1fr 1fr;gap:8px}.database-storage-summary>div{padding:12px}.database-storage-summary strong{font-size:19px}}
+
+
+/* Database and file storage capacity: total, used and remaining */
+.database-capacity-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:18px 0 22px}
+.database-capacity-card{padding:20px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.database-capacity-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:18px}
+.database-capacity-heading h2{margin:0;color:var(--navy);font-size:18px;font-weight:700}
+.database-capacity-heading>span{font-size:10px;color:var(--muted);white-space:nowrap}
+.database-capacity-values{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.database-capacity-values>div{display:grid;gap:6px;min-width:0}
+.database-capacity-values span{font-size:11px;color:var(--muted)}
+.database-capacity-values strong{font-size:17px;color:var(--navy);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.database-capacity-track{height:9px;margin-top:18px;border-radius:20px;background:#e9efec;overflow:hidden}
+.database-capacity-track span{display:block;height:100%;border-radius:20px;background:#21845d;transition:width .25s ease}
+@media(max-width:620px){.database-capacity-grid{grid-template-columns:1fr;gap:10px}.database-capacity-card{padding:15px}.database-capacity-values{gap:6px}.database-capacity-values strong{font-size:15px}}
