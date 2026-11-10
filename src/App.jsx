@@ -208,15 +208,15 @@ export default function App(){
    return value;
   };
   const classifySource=(raw)=>{
-   const source=String(raw||'').toLowerCase().replace(/^www\\./,'');
+   const source=String(raw||'').toLowerCase().replace(/^www\./,'');
    if(!source)return 'Direct';
-   if(/whatsapp|wa\\.me/.test(source))return 'WhatsApp';
+   if(/whatsapp|wa\.me/.test(source))return 'WhatsApp';
    if(/instagram/.test(source))return 'Instagram';
-   if(/facebook|fb\\.com/.test(source))return 'Facebook';
-   if(/youtube|youtu\\.be/.test(source))return 'YouTube';
+   if(/facebook|fb\.com/.test(source))return 'Facebook';
+   if(/youtube|youtu\.be/.test(source))return 'YouTube';
    if(/linkedin/.test(source))return 'LinkedIn';
    if(/google|bing|yahoo|duckduckgo|search/.test(source))return 'Search';
-   if(/tiktok|twitter|(^|\\.)x\\.com/.test(source))return 'Social';
+   if(/tiktok|twitter|(^|\.)x\.com/.test(source))return 'Social';
    return 'Referral';
   };
   const getAttribution=()=>{
@@ -234,7 +234,7 @@ export default function App(){
     if(saved)return JSON.parse(saved);
    }catch{}
    let referrerHost='';
-   try{if(document.referrer)referrerHost=new URL(document.referrer).hostname.replace(/^www\\./,'').slice(0,180)}catch{}
+   try{if(document.referrer)referrerHost=new URL(document.referrer).hostname.replace(/^www\./,'').slice(0,180)}catch{}
    return {source:classifySource(referrerHost),utm_source:'',utm_medium:'',utm_campaign:''};
   };
   const visitorId=getId('mrsa_visitor_id',window.localStorage);
@@ -248,11 +248,11 @@ export default function App(){
   const onDocumentClick=event=>{
    const link=event.target?.closest?.('a[href]');
    if(!link)return;
-   try{const host=new URL(link.href,window.location.href).hostname.toLowerCase();if(/(^|\\.)wa\\.me$|whatsapp\\.com$/.test(host))recordWhatsAppClick(link.dataset.trackTarget||'website_whatsapp_link')}catch{}
+   try{const host=new URL(link.href,window.location.href).hostname.toLowerCase();if(/(^|\.)wa\.me$|whatsapp\.com$/.test(host))recordWhatsAppClick(link.dataset.trackTarget||'website_whatsapp_link')}catch{}
   };
   document.addEventListener('click',onDocumentClick,true);
   try{
-   const referrerHost=document.referrer?new URL(document.referrer).hostname.replace(/^www\\./,'').slice(0,180):null;
+   const referrerHost=document.referrer?new URL(document.referrer).hostname.replace(/^www\./,'').slice(0,180):null;
    const agent=navigator.userAgent||'';
    const deviceType=/ipad|tablet/i.test(agent)?'Tablet':/mobile|android|iphone/i.test(agent)?'Mobile':'Desktop';
    supabase.from('website_page_views').insert({visitor_id:visitorId,session_id:sessionId,path:location.pathname.slice(0,300),referrer_host:referrerHost,traffic_source:attribution.source,device_type:deviceType,utm_source:attribution.utm_source||null,utm_medium:attribution.utm_medium||null,utm_campaign:attribution.utm_campaign||null}).then(({error})=>{if(error)console.warn('Website visitor tracking is not enabled yet:',error.message)});
