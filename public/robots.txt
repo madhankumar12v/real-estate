@@ -9,5 +9,8 @@ Disallow: /crm
 Disallow: /activity
 Disallow: /partners
 Disallow: /saved
+Disallow: /enquire/
+Disallow: /reset-password
+Disallow: /forgot-password
 
 Sitemap: https://mrsa.mrsaproperties.workers.dev/sitemap.xml
