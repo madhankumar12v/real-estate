@@ -1805,9 +1805,9 @@ footer > span {
 @media(max-width:620px){.public-plot-inventory{padding:16px}.public-plot-heading{align-items:flex-start;flex-direction:column}.public-plot-heading h2{font-size:24px}.public-selected-plot{gap:9px}.public-plot-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 /* Compact plot availability summary on existing property detail pages. */
-.plot-availability-compact{display:flex;flex-wrap:wrap;align-items:center;gap:7px 14px;margin:13px 0;padding:9px 11px;border:1px solid var(--line);border-radius:7px;background:#fafcfb;font-size:11px;line-height:1.4;color:#536273}
+.plot-availability-compact{display:flex;flex-wrap:wrap;align-items:center;gap:7px 14px;margin:13px 0;padding:10px 12px;border:1px solid var(--line);border-radius:7px;background:#fafcfb;font-size:15px;line-height:1.4;color:#536273}
 .plot-availability-compact span{white-space:nowrap}
-.plot-availability-compact b{font-size:11px;margin-left:3px}
+.plot-availability-compact b{font-size:20px;font-weight:800;margin-left:4px}
 .plot-availability-total{color:var(--navy)}
 .plot-availability-available{color:#16734e}
 .plot-availability-reserved{color:#946000}
@@ -1822,7 +1822,7 @@ footer > span {
 .plot-count-total{min-width:65px;display:grid;gap:4px;color:var(--navy)}
 .plot-count-total small{font-size:11px;color:var(--muted)}
 .plot-count-total b{font-size:18px}
-@media(max-width:620px){.plot-availability-compact{gap:6px 10px;font-size:10px}.plot-availability-compact b{font-size:10px}.plot-count-fields{gap:8px}.plot-count-fields input{width:82px}.plot-count-fields .btn{padding:10px 13px}}
+@media(max-width:620px){.plot-availability-compact{gap:6px 10px;font-size:13px}.plot-availability-compact b{font-size:18px;font-weight:800}.plot-count-fields{gap:8px}.plot-count-fields input{width:82px}.plot-count-fields .btn{padding:10px 13px}}
 
 
 /* Plot card overall availability status replaces the posted date. */
