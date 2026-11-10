@@ -1823,3 +1823,21 @@ footer > span {
 .plot-count-total small{font-size:11px;color:var(--muted)}
 .plot-count-total b{font-size:18px}
 @media(max-width:620px){.plot-availability-compact{gap:6px 10px;font-size:10px}.plot-availability-compact b{font-size:10px}.plot-count-fields{gap:8px}.plot-count-fields input{width:82px}.plot-count-fields .btn{padding:10px 13px}}
+
+
+/* Plot card overall availability status replaces the posted date. */
+.plot-card-status{
+  display:inline-flex;
+  align-items:center;
+  min-height:23px;
+  padding:4px 8px;
+  border-radius:5px;
+  font-size:10px;
+  line-height:1.25;
+  font-weight:700;
+  letter-spacing:.25px;
+}
+.plot-card-status-available{background:#e8f5ed;color:#176b43}
+.plot-card-status-reserved{background:#fff3dc;color:#8b5b08}
+.plot-card-status-sold{background:#fdebea;color:#a52f2b}
+.plot-card-status-pending{background:#f0f2f3;color:#5e6b75}
