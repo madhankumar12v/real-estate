@@ -184,7 +184,7 @@ export default function PlotInventoryPage() {
                   <article className="plot-count-row" key={listing.id}>
                     <div className="plot-count-title">
                       <b>{listing.title}</b>
-                      <small>{[listing.city, listing.district, listing.status].filter(Boolean).join(' · ')}</small>
+                      <small>{[listing.city, listing.status].filter(Boolean).join(' · ')}</small>
                       <span className={'plot-admin-status plot-admin-status-' + plotStatus}>{statusLabels[plotStatus]}</span>
                     </div>
                     <div className="plot-count-fields">
