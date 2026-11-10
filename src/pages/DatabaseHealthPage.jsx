@@ -38,6 +38,15 @@ export default function DatabaseHealthPage() {
   const tables = report?.tables || []
   const storage = report?.storage || {}
   const buckets = storage.buckets || []
+  // Supabase Free plan allowances; update these if the project moves to another plan.
+  const databaseLimit = 500 * 1024 * 1024
+  const storageLimit = 1 * 1024 * 1024 * 1024
+  const databaseUsed = Number(report?.database_size_bytes || 0)
+  const storageUsed = Number(storage.total_bytes || 0)
+  const usageCards = [
+    { title: 'Database storage', total: databaseLimit, used: databaseUsed, remaining: Math.max(databaseLimit - databaseUsed, 0), percent: Math.min(databaseUsed / databaseLimit * 100, 100) },
+    { title: 'File storage', total: storageLimit, used: storageUsed, remaining: Math.max(storageLimit - storageUsed, 0), percent: Math.min(storageUsed / storageLimit * 100, 100) },
+  ]
   const cards = [
     { label: 'Database size', value: formatBytes(report?.database_size_bytes), icon: Database },
     { label: 'Active connections', value: connections.active ?? '—', icon: Activity },
@@ -53,10 +62,24 @@ export default function DatabaseHealthPage() {
     {error && <div className="notice" role="alert">{error}</div>}
     {busy && !report ? <p className="muted">Loading database health…</p> : report && <>
       <div className="database-health-grid">{cards.map(card => <article className="database-health-card" key={card.label}><span><card.icon size={18}/>{card.label}</span><strong>{card.value}</strong></article>)}</div>
+      <div className="database-capacity-grid">
+        {usageCards.map(item => <article className="database-capacity-card" key={item.title}>
+          <div className="database-capacity-heading"><h2>{item.title}</h2><span>Free plan allowance</span></div>
+          <div className="database-capacity-values">
+            <div><span>Total</span><strong>{formatBytes(item.total)}</strong></div>
+            <div><span>Used</span><strong>{formatBytes(item.used)}</strong></div>
+            <div><span>Remaining</span><strong>{formatBytes(item.remaining)}</strong></div>
+          </div>
+          <div className="database-capacity-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow={item.percent}>
+            <span style={{ width: `${item.percent}%` }} />
+          </div>
+          <p className="database-health-footnote">{item.percent.toFixed(2)}% used · {Math.max(100 - item.percent, 0).toFixed(2)}% available</p>
+        </article>)}
+      </div>
       <div className="database-health-panel database-storage-panel">
         <div className="section-heading"><div><h2><FolderOpen size={20}/> File Storage Usage</h2><p className="muted">Actual stored object sizes across Supabase Storage buckets</p></div><span className="status status-approved">Read only</span></div>
         <div className="database-storage-summary">
-          <div><span>Total file storage used</span><strong>{formatBytes(storage.total_bytes)}</strong></div>
+          <div><span>File storage used</span><strong>{formatBytes(storage.total_bytes)}</strong></div>
           <div><span>Stored files</span><strong>{formatCount(storage.object_count)}</strong></div>
           <div><span>Storage buckets</span><strong>{formatCount(buckets.length)}</strong></div>
         </div>
