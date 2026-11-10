@@ -89,7 +89,7 @@ function HomePage(){
  const scrollPartners=direction=>{const el=partnerScroller.current;if(!el)return;el.scrollBy({left:direction*Math.max(240,el.clientWidth*0.75),behavior:'smooth'})};
  const categories=[['New Launch','New Launch','✨'],['Commercial','Commercial','🏢'],['Plots','Plot','📐'],['Land','Land','🌿'],['Villa / Apartment / House','Residential','🏡']];
  const faqs=[['Is MrSa Properties only for buying and selling?','Yes. MrSa Properties focuses on properties available for purchase. We do not list rental properties.'],['Can I post my property?','Yes. Create an account, submit your property details and photos, and our admin team will review it before publishing.'],['Are all listings verified?','Listings are reviewed before publication, but buyers should independently verify ownership, approvals, title documents and other legal records.'],['How do I enquire about a property?','Open a property listing and use the WhatsApp enquiry option, or send us a message through the enquiry section.'],['Is it free to browse properties?','Yes. You can browse available property listings without creating an account.']];
- const submitEnquiry=async e=>{e.preventDefault();if(enquiryBusy)return;const form=e.currentTarget;const d=new FormData(form);const name=String(d.get('name')||'').trim();const phone=String(d.get('phone')||'').trim();const city=String(d.get('city_town')||'').trim();const budget=String(d.get('budget')||'').trim();const interest=String(d.get('interest')||'General enquiry').trim();const heardAbout=String(d.get('heard_about')||'Not specified').trim();const message=String(d.get('message')||'').trim();const digits=phone.replace(/\D/g,'');if(digits.length<7||digits.length>15){setEnquiryNotice('Please enter a valid mobile number (7–15 digits).');return}const enquiryMessage=`City / Town: ${city}\nInterested in: ${interest}\nBudget range: ${budget}\nHeard about MrSa Properties: ${heardAbout}\nMessage: ${message||'Not provided'}`;const whatsappMessage=`Hello MrSa Properties,\nName: ${name}\nMobile: ${phone}\n${enquiryMessage}`;const whatsappWindow=window.open('about:blank','_blank');setEnquiryBusy(true);setEnquiryNotice('');try{const {data:{user}}=await supabase.auth.getUser();const {error}=await supabase.from('enquiries').insert({listing_id:null,buyer_user_id:user?.id||null,buyer_name:name,buyer_phone:phone,buyer_email:null,city_town:city,budget_range:budget,interest,heard_about:heardAbout==='Not specified'?null:heardAbout,message:message||null,source:'website'});if(error)throw error;setEnquiryNotice('Your enquiry has been saved. WhatsApp is opening…');form.reset();if(whatsappWindow){whatsappWindow.location.href=waLink('918838037689',whatsappMessage);whatsappWindow.opener=null}}catch(error){if(whatsappWindow)whatsappWindow.close();setEnquiryNotice('Could not save your enquiry: '+(error.message||'Please try again.'))}finally{setEnquiryBusy(false)}};
+ const submitEnquiry=async e=>{e.preventDefault();if(enquiryBusy)return;const form=e.currentTarget;const d=new FormData(form);const name=String(d.get('name')||'').trim();const phone=String(d.get('phone')||'').trim();const city=String(d.get('city_town')||'').trim();const budget=String(d.get('budget')||'').trim();const interest=String(d.get('interest')||'General enquiry').trim();const heardAbout=String(d.get('heard_about')||'Not specified').trim();const message=String(d.get('message')||'').trim();const digits=phone.replace(/\D/g,'');if(digits.length<7||digits.length>15){setEnquiryNotice('Please enter a valid mobile number (7–15 digits).');return}const enquiryMessage=`City / Town: ${city}\nInterested in: ${interest}\nBudget range: ${budget}\nHeard about MrSa Properties: ${heardAbout}\nMessage: ${message||'Not provided'}`;const whatsappMessage=`Hello MrSa Properties,\nName: ${name}\nMobile: ${phone}\n${enquiryMessage}`;const whatsappWindow=window.open('about:blank','_blank');setEnquiryBusy(true);setEnquiryNotice('');try{const {data:{user}}=await supabase.auth.getUser();const {error}=await supabase.from('enquiries').insert({listing_id:null,buyer_user_id:user?.id||null,buyer_name:name,buyer_phone:phone,buyer_email:null,city_town:city,budget_range:budget,interest,heard_about:heardAbout==='Not specified'?null:heardAbout,message:message||null,source:'website'});if(error)throw error;setEnquiryNotice('Your enquiry has been saved. WhatsApp is opening…');form.reset();window.mrsaTrackWhatsAppClick?.('home_enquiry_form');if(whatsappWindow){whatsappWindow.location.href=waLink('918838037689',whatsappMessage);whatsappWindow.opener=null}}catch(error){if(whatsappWindow)whatsappWindow.close();setEnquiryNotice('Could not save your enquiry: '+(error.message||'Please try again.'))}finally{setEnquiryBusy(false)}};
  return <><section className="hero hero-light"><div className="hero-copy"><span className="eyebrow">A CLEARER WAY TO FIND PROPERTY</span><h1>Find a place to<br/><em>build your future.</em></h1><p>Explore handpicked opportunities in homes, plots, land and commercial spaces. Buy with clarity. Move with confidence.</p>
  <div className="search-panel search-panel-simple"><label><span>City / Town</span><select value={filters.city} onChange={e=>setFilters({...filters,city:e.target.value})}><option value="">All Cities / Towns</option>{cityTowns.map(city=><option key={city}>{city}</option>)}</select></label><label><span>Locality / Area</span><input value={filters.locality} onChange={e=>setFilters({...filters,locality:e.target.value})} placeholder="e.g. Latheri, Katpadi" aria-label="Search locality or area"/></label><label><span>Property type</span><select value={filters.type} onChange={e=>setFilters({...filters,type:e.target.value})}><option value="">All property types</option><option value="Plot">Plots</option><option value="Land">Land</option><option value="Commercial">Commercial</option><option value="Villa">Villa</option><option value="Apartment">Apartment</option><option value="Independent House">Independent House</option></select></label><button className="btn btn-primary" onClick={search}>Search properties <Search size={16}/></button></div>
  <div className="hero-trust"><span><ShieldCheck size={17}/> Admin-reviewed listings</span><span><MapPin size={17}/> Tamil Nadu property focus</span></div></div><div className="hero-art"><img src="/images/entrance.png" alt="MrSa Properties residential entrance" fetchPriority="high" decoding="async" onError={e=>{e.currentTarget.onerror=null;e.currentTarget.src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200"}}/><div className="hero-note"><b>Find the right space.</b><span>Make your next move matter.</span></div></div></section>
@@ -202,20 +202,65 @@ export default function App(){
   // Exclude private account/admin areas so staff activity does not inflate public visitor figures.
   const privatePrefixes=['/admin','/crm','/dashboard','/partners','/post','/activity','/login','/register','/forgot-password','/reset-password','/saved'];
   if(privatePrefixes.some(prefix=>location.pathname===prefix||location.pathname.startsWith(prefix+'/')))return;
+  const getId=(key,storage)=>{
+   let value=storage.getItem(key);
+   if(!value){value=window.crypto?.randomUUID?.()||'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,char=>{const random=Math.random()*16|0;return(char==='x'?random:(random&3|8)).toString(16)});storage.setItem(key,value)}
+   return value;
+  };
+  const classifySource=(raw)=>{
+   const source=String(raw||'').toLowerCase().replace(/^www\\./,'');
+   if(!source)return 'Direct';
+   if(/whatsapp|wa\\.me/.test(source))return 'WhatsApp';
+   if(/instagram/.test(source))return 'Instagram';
+   if(/facebook|fb\\.com/.test(source))return 'Facebook';
+   if(/youtube|youtu\\.be/.test(source))return 'YouTube';
+   if(/linkedin/.test(source))return 'LinkedIn';
+   if(/google|bing|yahoo|duckduckgo|search/.test(source))return 'Search';
+   if(/tiktok|twitter|(^|\\.)x\\.com/.test(source))return 'Social';
+   return 'Referral';
+  };
+  const getAttribution=()=>{
+   const params=new URLSearchParams(window.location.search);
+   const utmSource=params.get('utm_source');
+   const utmMedium=params.get('utm_medium');
+   const utmCampaign=params.get('utm_campaign');
+   if(utmSource){
+    const attribution={source:classifySource(utmSource),utm_source:utmSource.slice(0,120),utm_medium:(utmMedium||'').slice(0,120),utm_campaign:(utmCampaign||'').slice(0,160)};
+    try{window.sessionStorage.setItem('mrsa_traffic_attribution',JSON.stringify(attribution))}catch{}
+    return attribution;
+   }
+   try{
+    const saved=window.sessionStorage.getItem('mrsa_traffic_attribution');
+    if(saved)return JSON.parse(saved);
+   }catch{}
+   let referrerHost='';
+   try{if(document.referrer)referrerHost=new URL(document.referrer).hostname.replace(/^www\\./,'').slice(0,180)}catch{}
+   return {source:classifySource(referrerHost),utm_source:'',utm_medium:'',utm_campaign:''};
+  };
+  const visitorId=getId('mrsa_visitor_id',window.localStorage);
+  const sessionId=getId('mrsa_session_id',window.sessionStorage);
+  const attribution=getAttribution();
+  const recordWhatsAppClick=(target='whatsapp_link')=>{
+   if(!supabase)return;
+   supabase.from('website_events').insert({visitor_id:visitorId,session_id:sessionId,event_type:'whatsapp_click',path:window.location.pathname.slice(0,300),target:String(target).slice(0,120),traffic_source:attribution.source,utm_source:attribution.utm_source||null,utm_medium:attribution.utm_medium||null,utm_campaign:attribution.utm_campaign||null}).then(({error})=>{if(error)console.warn('WhatsApp click tracking is not enabled yet:',error.message)});
+  };
+  window.mrsaTrackWhatsAppClick=recordWhatsAppClick;
+  const onDocumentClick=event=>{
+   const link=event.target?.closest?.('a[href]');
+   if(!link)return;
+   try{const host=new URL(link.href,window.location.href).hostname.toLowerCase();if(/(^|\\.)wa\\.me$|whatsapp\\.com$/.test(host))recordWhatsAppClick(link.dataset.trackTarget||'website_whatsapp_link')}catch{}
+  };
+  document.addEventListener('click',onDocumentClick,true);
   try{
-   const getId=(key,storage)=>{
-    let value=storage.getItem(key);
-    if(!value){value=window.crypto?.randomUUID?.()||'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,char=>{const random=Math.random()*16|0;return(char==='x'?random:(random&3|8)).toString(16)});storage.setItem(key,value)}
-    return value;
-   };
-   const visitorId=getId('mrsa_visitor_id',window.localStorage);
-   const sessionId=getId('mrsa_session_id',window.sessionStorage);
-   let referrerHost=null;let trafficSource='Direct';
-   if(document.referrer){try{referrerHost=new URL(document.referrer).hostname.replace(/^www\\./,'').slice(0,180);const host=referrerHost.toLowerCase();if(/google|bing|yahoo|duckduckgo|search/.test(host))trafficSource='Search';else if(/facebook|instagram|youtube|linkedin|tiktok|x\\.com|twitter/.test(host))trafficSource='Social';else trafficSource='Referral'}catch{}}
+   const referrerHost=document.referrer?new URL(document.referrer).hostname.replace(/^www\\./,'').slice(0,180):null;
    const agent=navigator.userAgent||'';
    const deviceType=/ipad|tablet/i.test(agent)?'Tablet':/mobile|android|iphone/i.test(agent)?'Mobile':'Desktop';
-   supabase.from('website_page_views').insert({visitor_id:visitorId,session_id:sessionId,path:location.pathname.slice(0,300),referrer_host:referrerHost,traffic_source:trafficSource,device_type:deviceType}).then(({error})=>{if(error)console.warn('Website visitor tracking is not enabled yet:',error.message)});
+   supabase.from('website_page_views').insert({visitor_id:visitorId,session_id:sessionId,path:location.pathname.slice(0,300),referrer_host:referrerHost,traffic_source:attribution.source,device_type:deviceType,utm_source:attribution.utm_source||null,utm_medium:attribution.utm_medium||null,utm_campaign:attribution.utm_campaign||null}).then(({error})=>{if(error)console.warn('Website visitor tracking is not enabled yet:',error.message)});
   }catch(error){console.warn('Website visitor tracking unavailable:',error)}
+  return()=>{
+   document.removeEventListener('click',onDocumentClick,true);
+   if(window.mrsaTrackWhatsAppClick===recordWhatsAppClick)delete window.mrsaTrackWhatsAppClick;
+  };
  },[location.pathname]);
 
  const logout=async()=>{await supabase.auth.signOut();navigate('/')}
