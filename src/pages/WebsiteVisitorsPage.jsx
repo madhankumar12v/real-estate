@@ -14,6 +14,9 @@ const exportCsv = (data, range) => {
     ['Metric', 'Count'],
     ['Visitors in period', data.summary?.period_visitors || 0],
     ['Page views in period', data.summary?.period_page_views || 0],
+    ['Sessions in period', data.summary?.period_sessions || 0],
+    ['Returning visitors', data.summary?.returning_visitors || 0],
+    ['Pages per session', data.summary?.pages_per_session || 0],
     ['WhatsApp button clicks in period', data.summary?.period_whatsapp_clicks || 0],
     ['All-time WhatsApp button clicks', data.summary?.total_whatsapp_clicks || 0],
     ['All-time visitors', data.summary?.total_visitors || 0],
@@ -25,8 +28,14 @@ const exportCsv = (data, range) => {
     ['Traffic source', 'Views'],
     ...(data.sources || []).map(row => [row.label, row.views]),
     [],
-    ['Device', 'Views'],
-    ...(data.devices || []).map(row => [row.label, row.views])
+    ['Entry page', 'Sessions'],
+    ...(data.entry_pages || []).map(row => [row.label, row.sessions]),
+    [],
+    ['Referring website', 'Visitors', 'Views'],
+    ...(data.top_referrers || []).map(row => [row.label, row.visitors, row.views]),
+    [],
+    ['Device', 'Visitors', 'Views'],
+    ...(data.devices || []).map(row => [row.label, row.visitors, row.views])
   ]
   const blob = new Blob(['\\uFEFF' + rows.map(row => row.map(csvCell).join(',')).join('\\r\\n')], { type: 'text/csv;charset=utf-8' })
   const url = URL.createObjectURL(blob)
@@ -38,7 +47,7 @@ const exportCsv = (data, range) => {
 }
 
 function Metric({ icon: Icon, label, value, note }) {
-  return <article className="visitor-metric"><span><Icon size={18}/></span><small>{label}</small><strong>{number(value)}</strong><em>{note}</em></article>
+  return <article className="visitor-metric"><span><Icon size={18}/></span><small>{label}</small><strong>{typeof value === 'string' ? value : number(value)}</strong><em>{note}</em></article>
 }
 function Breakdown({ title, rows, empty }) {
   const max = Math.max(1, ...(rows || []).map(row => Number(row.views) || 0))
@@ -93,13 +102,16 @@ export default function WebsiteVisitorsPage() {
   const maxDaily = Math.max(1, ...daily.map(row => Number(row.views) || 0))
 
   return <section className="section page-section website-visitors-page">
-    <div className="visitor-heading"><div><span className="eyebrow">MRSA PROPERTIES · ADMIN</span><h1>Website Visitors</h1><p className="muted">See visitors from social media, search, WhatsApp and other websites, plus WhatsApp enquiry clicks.</p></div><div className="analytics-actions"><button className="btn btn-outline" onClick={load} disabled={busy}><RefreshCw size={15}/> Refresh</button><button className="btn btn-primary" onClick={() => exportCsv(data || {}, periodLabel)} disabled={busy || !data}><FileSpreadsheet size={15}/> Export CSV</button></div></div>
+    <div className="visitor-heading"><div><span className="eyebrow">MRSA PROPERTIES · ADMIN</span><h1>Website Visitors</h1><p className="muted">Understand visitor journeys: sessions, repeat visits, page interest, referral websites, visit times and WhatsApp actions.</p></div><div className="analytics-actions"><button className="btn btn-outline" onClick={load} disabled={busy}><RefreshCw size={15}/> Refresh</button><button className="btn btn-primary" onClick={() => exportCsv(data || {}, periodLabel)} disabled={busy || !data}><FileSpreadsheet size={15}/> Export CSV</button></div></div>
     <div className="visitor-toolbar"><label><CalendarDays size={16}/> Report period<select value={range} onChange={event => setRange(event.target.value)}><option value="today">Today</option><option value="week">This week</option><option value="month">This month</option><option value="30days">Last 30 days</option><option value="year">This year</option><option value="custom">Custom dates</option><option value="all">All time</option></select></label>{range === 'custom' && <><label>From<input type="date" value={fromDate} max={toDate || undefined} onChange={event => setFromDate(event.target.value)}/></label><label>To<input type="date" value={toDate} min={fromDate || undefined} onChange={event => setToDate(event.target.value)}/></label></>}<small>{updatedAt ? 'Updated ' + updatedAt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : 'Waiting for data'}</small></div>
     {error && <div className="analytics-error" role="alert"><span>{error}</span><button className="btn btn-outline" onClick={load}>Try again</button></div>}
     {busy ? <div className="analytics-loading">Loading visitor statistics…</div> : !error && <>
       <div className="visitor-metrics">
         <Metric icon={Users} label="Unique visitors" value={data?.summary?.period_visitors} note={periodLabel}/>
         <Metric icon={Eye} label="Page views" value={data?.summary?.period_page_views} note={periodLabel}/>
+        <Metric icon={MonitorSmartphone} label="Sessions" value={data?.summary?.period_sessions} note="Visits to the website"/>
+        <Metric icon={Users} label="Returning visitors" value={data?.summary?.returning_visitors} note="Previously seen visitors"/>
+        <Metric icon={Activity} label="Pages per session" value={String(data?.summary?.pages_per_session ?? 0)} note="Average pages viewed per visit"/>
         <Metric icon={MessageCircle} label="WhatsApp clicks" value={data?.summary?.period_whatsapp_clicks} note={periodLabel}/>
         <Metric icon={Users} label="Visitors today" value={data?.summary?.today_visitors} note="Unique visitors today"/>
         <Metric icon={Activity} label="All-time visitors" value={data?.summary?.total_visitors} note="Since tracking began"/>
@@ -107,9 +119,9 @@ export default function WebsiteVisitorsPage() {
         <article className="visitor-metric"><span><Clock size={18}/></span><small>Total engagement</small><strong>{duration(data?.summary?.total_engagement_seconds)}</strong><em>Combined active browsing time</em></article>
       </div>
       <div className="visitor-chart-panel visitor-panel"><div className="visitor-panel-heading"><div><h2>Daily page views</h2><p>Traffic trend for {periodLabel.toLowerCase()}</p></div><span>{number(data?.summary?.period_page_views)} views</span></div>{daily.length ? <div className="visitor-daily-chart">{daily.map(row => <div className="visitor-day" key={row.day} title={row.day + ': ' + number(row.views) + ' views'}><span style={{ height: Math.max(3, (Number(row.views) || 0) / maxDaily * 100) + '%' }}/><small>{new Date(row.day + 'T00:00:00').toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</small></div>)}</div> : <p className="visitor-empty">No visitor activity recorded for this period yet. Once tracking is enabled, page views will appear here.</p>}</div>
-      <div className="visitor-breakdown-grid"><Breakdown title="Most visited pages" rows={data?.top_pages} empty="No page views recorded yet."/><Breakdown title="Most-engaged pages (minutes)" rows={(data?.top_engaged_pages || []).map(row => ({label:row.path,views:Math.round((Number(row.seconds)||0)/60)}))} empty="Engagement details will appear after visitors browse."/><Breakdown title="Peak engagement hours (IST)" rows={(data?.peak_hours || []).map(row => ({label:row.hour_label,views:row.seconds}))} empty="Peak hours will appear after engagement is recorded."/><Breakdown title="Traffic sources" rows={data?.sources} empty="Traffic sources will appear here."/><Breakdown title="Visitor devices" rows={data?.devices} empty="Device details will appear here."/></div>
+      <div className="visitor-breakdown-grid"><Breakdown title="Most visited pages" rows={data?.top_pages} empty="No page views recorded yet."/><Breakdown title="Popular entry pages" rows={(data?.entry_pages || []).map(row => ({label:row.label,views:row.sessions}))} empty="Entry pages will appear as visits are recorded."/><Breakdown title="Most-engaged pages (minutes)" rows={(data?.top_engaged_pages || []).map(row => ({label:row.path,views:Math.round((Number(row.seconds)||0)/60)}))} empty="Engagement details will appear after visitors browse."/><Breakdown title="Peak engagement hours (IST)" rows={(data?.peak_hours || []).map(row => ({label:row.hour_label,views:row.seconds}))} empty="Peak hours will appear after engagement is recorded."/><Breakdown title="Visitor arrival times (IST)" rows={(data?.hourly_visits || []).map(row => ({label:row.hour_label,views:row.sessions}))} empty="Visit times will appear as sessions are recorded."/><Breakdown title="Traffic sources" rows={data?.sources} empty="Traffic sources will appear here."/><Breakdown title="Referring websites" rows={data?.top_referrers} empty="External referral websites will appear here. Direct visits have no referrer."/><Breakdown title="Visitor devices" rows={data?.devices} empty="Device details will appear here."/><Breakdown title="WhatsApp click locations" rows={(data?.event_targets || []).map(row => ({label:row.label,views:row.clicks}))} empty="WhatsApp button clicks will appear here."/></div>
       <div className="visitor-privacy-note"><b>Privacy-friendly tracking</b><p>MrSa records anonymous visitor and session IDs, page path, referring website, broad device type, source category, WhatsApp button clicks and active page engagement duration. It does not store IP addresses, names, phone numbers or email addresses. Admin pages and account areas are excluded.</p></div>
     </>}
-    <div className="analytics-footer"><span>Visitor tracking starts after the SQL setup is run and the website is redeployed.</span><Link to="/admin">← Back to Admin dashboard</Link></div>
+    <div className="analytics-footer"><span>Expanded visitor insights require the latest supabase/website_visitors.sql script and Cloudflare deployment.</span><Link to="/admin">← Back to Admin dashboard</Link></div>
   </section>
 }
