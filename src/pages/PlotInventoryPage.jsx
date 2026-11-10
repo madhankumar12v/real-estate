@@ -97,7 +97,7 @@ export default function PlotInventoryPage(){
  const bulkStatus=async status=>{
   const ids=visiblePlots.map(p=>p.id);if(!ids.length)return
   if(!window.confirm('Change '+ids.length+' visible plots to '+statusLabel(status)+'?'))return
-  setBusy(true);const {error}=await supabase.from('project_plots').update({status,updated_at:new Date().toISOString()}).in('id',ids)
+  setBusy(true);const now=new Date().toISOString();const {error}=await supabase.from('project_plots').update({status,updated_at:now,reserved_at:status==='reserved'?now:null,sold_at:status==='sold'?now:null}).in('id',ids)
   if(error)setMessage(error.message);else{setMessage(ids.length+' plots updated.');await loadPlots(selected)}setBusy(false)
  }
  const addPlot=async e=>{
