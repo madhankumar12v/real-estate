@@ -27,6 +27,23 @@ begin
       from pg_stat_activity
       where datname = current_database()
     ),
+    'storage', jsonb_build_object(
+      'total_bytes', coalesce((select sum(coalesce((o.metadata->>'size')::bigint, 0)) from storage.objects o), 0),
+      'object_count', (select count(*) from storage.objects),
+      'buckets', coalesce((
+        select jsonb_agg(jsonb_build_object(
+          'bucket_id', b.id,
+          'object_count', coalesce(s.object_count, 0),
+          'total_bytes', coalesce(s.total_bytes, 0)
+        ) order by coalesce(s.total_bytes, 0) desc)
+        from storage.buckets b
+        left join (
+          select bucket_id, count(*) as object_count,
+                 sum(coalesce((metadata->>'size')::bigint, 0)) as total_bytes
+          from storage.objects group by bucket_id
+        ) s on s.bucket_id = b.id
+      ), '[]'::jsonb)
+    ),
     'tables', coalesce((
       select jsonb_agg(
         jsonb_build_object(
