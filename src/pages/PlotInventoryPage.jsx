@@ -32,7 +32,7 @@ export default function PlotInventoryPage() {
   const load = async () => {
     setLoading(true)
     const [{ data: rows, error: listingError }, { data: values, error: valueError }] = await Promise.all([
-      supabase.from('listings').select('id,title,city,district,status').eq('property_type', 'Plot').order('created_at', { ascending: false }),
+      supabase.from('listings').select('id,title,city,status').eq('property_type', 'Plot').order('created_at', { ascending: false }),
       supabase.from('plot_availability').select('*')
     ])
     if (listingError || valueError) throw listingError || valueError
