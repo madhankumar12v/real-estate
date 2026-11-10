@@ -125,7 +125,7 @@ export default function MarketingPage() {
       <div className="visitor-panel" style={{marginTop:16}}>
         <h2>Channel performance</h2>
         <p className="muted">Compare unique visitors with actual submitted enquiries. Clicks are shown separately.</p>
-        {sourcePerformance.length ? <div className="table-scroll"><table className="data-table"><thead><tr><th>Source</th><th>Visitors</th><th>Enquiries</th><th>WhatsApp clicks</th><th>Enquiry rate</th></tr></thead><tbody>{sourcePerformance.map(row=><tr key={row.label}><td><b>{row.label}</b></td><td>{number(row.visitors)}</td><td>{number(row.enquiries)}</td><td>{number(row.clicks)}</td><td>{row.visitors?row.conversion.toFixed(1)+'%':'—'}</td></tr>)}</tbody></table></div> : <p className="visitor-empty">Channel data will appear when visits and enquiries are recorded.</p>}
+        {sourcePerformance.length ? <div className="source-performance-scroll"><table className="source-performance-table"><thead><tr><th>Source</th><th>Visitors</th><th>Enquiries</th><th>WhatsApp clicks</th><th>Enquiry rate</th></tr></thead><tbody>{sourcePerformance.map(row=><tr key={row.label}><td><b>{row.label}</b></td><td>{number(row.visitors)}</td><td>{number(row.enquiries)}</td><td>{number(row.clicks)}</td><td>{row.visitors?row.conversion.toFixed(1)+'%':'—'}</td></tr>)}</tbody></table></div> : <p className="visitor-empty">Channel data will appear when visits and enquiries are recorded.</p>}
         <p className="muted">The channel enquiry rate is indicative: it compares enquiries attributed to a source with visitors recorded for that source. Unattributed enquiries are kept separate.</p>
       </div>
       <div className="visitor-breakdown-grid">
