@@ -117,31 +117,78 @@ begin
       and (p_from is null or created_at >= p_from)
       and (p_to is null or created_at <= p_to)
   ), engagement_filtered as (
-    select * from public.website_engagements where (p_from is null or engaged_at >= p_from) and (p_to is null or engaged_at <= p_to)
+    select * from public.website_engagements
+    where (p_from is null or engaged_at >= p_from)
+      and (p_to is null or engaged_at <= p_to)
   ), engaged_pages as (
-    select path, sum(engaged_seconds) as seconds from engagement_filtered group by path order by seconds desc, path limit 10
+    select path, sum(engaged_seconds) as seconds
+    from engagement_filtered group by path order by seconds desc, path limit 10
   ), peak_hours as (
-    select extract(hour from engaged_at at time zone 'Asia/Kolkata')::integer as hour, sum(engaged_seconds) as seconds from engagement_filtered group by 1 order by seconds desc
+    select extract(hour from engaged_at at time zone 'Asia/Kolkata')::integer as hour,
+           sum(engaged_seconds) as seconds
+    from engagement_filtered group by 1 order by seconds desc
   ), daily as (
-    select date_trunc('day', viewed_at)::date as day, count(*) as views,
-           count(distinct visitor_id) as visitors
+    select (viewed_at at time zone 'Asia/Kolkata')::date as day,
+           count(*) as views, count(distinct visitor_id) as visitors,
+           count(distinct session_id) as sessions
     from filtered group by 1 order by 1
   ), pages as (
-    select path, count(*) as views from filtered group by path order by views desc, path limit 10
+    select path, count(*) as views, count(distinct visitor_id) as visitors
+    from filtered group by path order by views desc, path limit 10
   ), sources as (
-    select traffic_source as label, count(*) as views from filtered group by traffic_source order by views desc
+    select traffic_source as label, count(*) as views,
+           count(distinct visitor_id) as visitors,
+           count(distinct session_id) as sessions
+    from filtered group by traffic_source order by views desc
   ), devices as (
-    select device_type as label, count(*) as views from filtered group by device_type order by views desc
-  ), campaigns as (
-    select coalesce(nullif(utm_campaign,''), nullif(utm_source,''), 'Unlabelled campaign') as label,
-           count(*) as views
-    from filtered where coalesce(utm_campaign,utm_source) is not null
-    group by 1 order by views desc limit 10
+    select device_type as label, count(*) as views,
+           count(distinct visitor_id) as visitors
+    from filtered group by device_type order by views desc
+  ), referrers as (
+    select referrer_host as label, count(*) as views,
+           count(distinct visitor_id) as visitors
+    from filtered
+    where nullif(referrer_host, '') is not null
+    group by referrer_host order by views desc limit 12
+  ), entry_pages as (
+    select path as label, count(*) as sessions
+    from (
+      select distinct on (visitor_id, session_id) visitor_id, session_id, path
+      from filtered order by visitor_id, session_id, viewed_at asc
+    ) first_pages
+    group by path order by sessions desc limit 10
+  ), hourly_visits as (
+    select extract(hour from viewed_at at time zone 'Asia/Kolkata')::integer as hour,
+           count(distinct session_id) as sessions
+    from filtered group by 1 order by sessions desc
+  ), source_clicks as (
+    select traffic_source as label, count(*) as clicks
+    from filtered_events group by traffic_source
+  ), source_details as (
+    select s.label, s.views, s.visitors, s.sessions,
+           coalesce(c.clicks, 0) as whatsapp_clicks
+    from sources s left join source_clicks c on c.label = s.label
+  ), event_targets as (
+    select coalesce(nullif(target,''), path) as label, count(*) as clicks
+    from filtered_events group by 1 order by clicks desc limit 10
   )
   select jsonb_build_object(
     'summary', jsonb_build_object(
       'period_visitors', (select count(distinct visitor_id) from filtered),
+      'period_sessions', (select count(distinct session_id) from filtered),
       'period_page_views', (select count(*) from filtered),
+      'pages_per_session', coalesce((select round(count(*)::numeric / nullif(count(distinct session_id),0), 2) from filtered), 0),
+      'returning_visitors', (
+        select count(distinct f.visitor_id) from filtered f
+        where (p_from is null and exists (
+          select 1 from filtered again
+          where again.visitor_id = f.visitor_id
+          group by again.visitor_id having count(*) > 1
+        )) or (p_from is not null and exists (
+          select 1 from public.website_page_views old
+          where old.visitor_id = f.visitor_id and old.viewed_at < p_from
+        ))
+      ),
       'period_whatsapp_clicks', (select count(*) from filtered_events),
       'total_visitors', (select count(distinct visitor_id) from public.website_page_views),
       'total_page_views', (select count(*) from public.website_page_views),
@@ -151,13 +198,17 @@ begin
       'avg_engagement_seconds', coalesce((select round(avg(engaged_seconds)) from engagement_filtered), 0),
       'total_engagement_seconds', coalesce((select sum(engaged_seconds) from engagement_filtered), 0)
     ),
-    'daily', coalesce((select jsonb_agg(jsonb_build_object('day', day, 'views', views, 'visitors', visitors) order by day) from daily), '[]'::jsonb),
+    'daily', coalesce((select jsonb_agg(jsonb_build_object('day', day, 'views', views, 'visitors', visitors, 'sessions', sessions) order by day) from daily), '[]'::jsonb),
     'top_engaged_pages', coalesce((select jsonb_agg(jsonb_build_object('path', path, 'seconds', seconds) order by seconds desc) from engaged_pages), '[]'::jsonb),
     'peak_hours', coalesce((select jsonb_agg(jsonb_build_object('hour_label', lpad(hour::text,2,'0') || ':00', 'seconds', seconds) order by seconds desc) from peak_hours), '[]'::jsonb),
-    'top_pages', coalesce((select jsonb_agg(jsonb_build_object('path', path, 'views', views) order by views desc) from pages), '[]'::jsonb),
-    'sources', coalesce((select jsonb_agg(jsonb_build_object('label', label, 'views', views) order by views desc) from sources), '[]'::jsonb),
-    'devices', coalesce((select jsonb_agg(jsonb_build_object('label', label, 'views', views) order by views desc) from devices), '[]'::jsonb),
-    'campaigns', coalesce((select jsonb_agg(jsonb_build_object('label', label, 'views', views) order by views desc) from campaigns), '[]'::jsonb)
+    'hourly_visits', coalesce((select jsonb_agg(jsonb_build_object('hour_label', lpad(hour::text,2,'0') || ':00', 'sessions', sessions) order by hour) from hourly_visits), '[]'::jsonb),
+    'top_pages', coalesce((select jsonb_agg(jsonb_build_object('path', path, 'views', views, 'visitors', visitors) order by views desc) from pages), '[]'::jsonb),
+    'entry_pages', coalesce((select jsonb_agg(jsonb_build_object('label', label, 'sessions', sessions) order by sessions desc) from entry_pages), '[]'::jsonb),
+    'sources', coalesce((select jsonb_agg(jsonb_build_object('label', label, 'views', views, 'visitors', visitors, 'sessions', sessions) order by views desc) from sources), '[]'::jsonb),
+    'source_details', coalesce((select jsonb_agg(jsonb_build_object('label', label, 'views', views, 'visitors', visitors, 'sessions', sessions, 'whatsapp_clicks', whatsapp_clicks) order by views desc) from source_details), '[]'::jsonb),
+    'devices', coalesce((select jsonb_agg(jsonb_build_object('label', label, 'views', views, 'visitors', visitors) order by views desc) from devices), '[]'::jsonb),
+    'top_referrers', coalesce((select jsonb_agg(jsonb_build_object('label', label, 'views', views, 'visitors', visitors) order by views desc) from referrers), '[]'::jsonb),
+    'event_targets', coalesce((select jsonb_agg(jsonb_build_object('label', label, 'clicks', clicks) order by clicks desc) from event_targets), '[]'::jsonb)
   ) into result;
   return result;
 end;
