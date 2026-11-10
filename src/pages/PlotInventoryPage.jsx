@@ -26,13 +26,13 @@ export default function PlotInventoryPage() {
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [districtFilter, setDistrictFilter] = useState('all')
+  const [cityFilter, setCityFilter] = useState('all')
   const [availabilityFilter, setAvailabilityFilter] = useState('all')
 
   const load = async () => {
     setLoading(true)
     const [{ data: rows, error: listingError }, { data: values, error: valueError }] = await Promise.all([
-      supabase.from('listings').select('id,title,city,district,status').eq('property_type', 'Plot').order('created_at', { ascending: false }),
+      supabase.from('listings').select('id,title,city,status').eq('property_type', 'Plot').order('created_at', { ascending: false }),
       supabase.from('plot_availability').select('*')
     ])
     if (listingError || valueError) throw listingError || valueError
@@ -57,8 +57,8 @@ export default function PlotInventoryPage() {
     })
   }, [])
 
-  const districts = useMemo(() => (
-    [...new Set(listings.map(item => item.district).filter(Boolean))].sort((a, b) => a.localeCompare(b))
+  const cities = useMemo(() => (
+    [...new Set(listings.map(item => item.city).filter(Boolean))].sort((a, b) => a.localeCompare(b))
   ), [listings])
 
   const summary = useMemo(() => listings.reduce((result, listing) => {
@@ -74,16 +74,16 @@ export default function PlotInventoryPage() {
   const filteredListings = useMemo(() => {
     const query = search.trim().toLowerCase()
     return listings.filter(listing => {
-      const matchesSearch = !query || [listing.title, listing.city, listing.district, listing.id]
+      const matchesSearch = !query || [listing.title, listing.city, listing.id]
         .some(value => String(value || '').toLowerCase().includes(query))
-      const matchesDistrict = districtFilter === 'all' || listing.district === districtFilter
+      const matchesCity = cityFilter === 'all' || listing.city === cityFilter
       const value = { ...empty, ...counts[listing.id] }
       const hasSavedCounts = Boolean(counts[listing.id])
       const matchesAvailability = availabilityFilter === 'all' ||
         getPlotStatus(value, hasSavedCounts) === availabilityFilter
-      return matchesSearch && matchesDistrict && matchesAvailability
+      return matchesSearch && matchesCity && matchesAvailability
     })
-  }, [listings, counts, search, districtFilter, availabilityFilter])
+  }, [listings, counts, search, cityFilter, availabilityFilter])
 
   const change = (id, key, value) => {
     const number = Math.max(0, Math.floor(Number(value) || 0))
@@ -109,7 +109,7 @@ export default function PlotInventoryPage() {
 
   const resetFilters = () => {
     setSearch('')
-    setDistrictFilter('all')
+    setCityFilter('all')
     setAvailabilityFilter('all')
   }
 
@@ -145,14 +145,14 @@ export default function PlotInventoryPage() {
                 type="search"
                 value={search}
                 onChange={event => setSearch(event.target.value)}
-                placeholder="Search by plot name, ID, city or district"
+                placeholder="Search by plot name, ID or city"
               />
             </label>
             <label>
-              District
-              <select value={districtFilter} onChange={event => setDistrictFilter(event.target.value)}>
-                <option value="all">All districts</option>
-                {districts.map(district => <option key={district} value={district}>{district}</option>)}
+              City / Town
+              <select value={cityFilter} onChange={event => setCityFilter(event.target.value)}>
+                <option value="all">All cities / towns</option>
+                {cities.map(city => <option key={city} value={city}>{city}</option>)}
               </select>
             </label>
             <label>
@@ -184,7 +184,7 @@ export default function PlotInventoryPage() {
                   <article className="plot-count-row" key={listing.id}>
                     <div className="plot-count-title">
                       <b>{listing.title}</b>
-                      <small>{[listing.city, listing.district, listing.status].filter(Boolean).join(' · ')}</small>
+                      <small>{[listing.city, listing.status].filter(Boolean).join(' · ')}</small>
                       <span className={'plot-admin-status plot-admin-status-' + plotStatus}>{statusLabels[plotStatus]}</span>
                     </div>
                     <div className="plot-count-fields">
