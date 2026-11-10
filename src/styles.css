@@ -1841,3 +1841,83 @@ footer > span {
 .plot-card-status-reserved{background:#fff3dc;color:#8b5b08}
 .plot-card-status-sold{background:#fdebea;color:#a52f2b}
 .plot-card-status-pending{background:#f0f2f3;color:#5e6b75}
+
+
+/* Admin-only Plot Availability filters and compact summary. */
+.plot-inventory-summary{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:10px;
+  margin:18px 0;
+}
+.plot-inventory-summary>div{
+  display:grid;
+  gap:4px;
+  padding:12px 14px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:#fbfcfb;
+}
+.plot-inventory-summary span{font-size:12px;color:#596b79}
+.plot-inventory-summary b{font-size:21px;line-height:1.2;color:var(--navy)}
+.plot-inventory-filters{
+  display:grid;
+  grid-template-columns:minmax(220px,2fr) minmax(150px,1fr) minmax(180px,1.2fr) auto;
+  gap:12px;
+  align-items:end;
+  padding:14px;
+  margin:20px 0 10px;
+  border:1px solid var(--line);
+  border-radius:9px;
+  background:#fbfcfb;
+}
+.plot-inventory-filters label{
+  display:grid;
+  gap:6px;
+  color:#405568;
+  font-size:13px;
+  font-weight:600;
+}
+.plot-inventory-filters input,
+.plot-inventory-filters select{
+  width:100%;
+  min-width:0;
+  min-height:42px;
+  padding:9px 11px;
+  border:1px solid #dfe6e8;
+  border-radius:7px;
+  background:#fff;
+  color:#263b4c;
+  font-size:14px;
+}
+.plot-filter-reset{min-height:42px;white-space:nowrap}
+.plot-filter-result{margin:10px 2px 14px;color:#596b79;font-size:13px}
+.plot-filter-result b{color:var(--navy)}
+.plot-admin-status{
+  display:inline-flex;
+  width:max-content;
+  max-width:100%;
+  margin-top:7px;
+  padding:4px 8px;
+  border-radius:5px;
+  font-size:11px;
+  line-height:1.35;
+  font-weight:700;
+}
+.plot-admin-status-available{background:#e8f5ed;color:#176b43}
+.plot-admin-status-reserved{background:#fff3dc;color:#8b5b08}
+.plot-admin-status-sold{background:#fdebea;color:#a52f2b}
+.plot-admin-status-not-updated{background:#f0f2f3;color:#5e6b75}
+@media(max-width:760px){
+  .plot-inventory-summary{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .plot-inventory-summary>div{padding:10px}
+  .plot-inventory-summary b{font-size:18px}
+  .plot-inventory-filters{grid-template-columns:1fr 1fr;gap:10px;padding:12px}
+  .plot-inventory-search{grid-column:1/-1}
+  .plot-filter-reset{width:100%}
+}
+@media(max-width:420px){
+  .plot-inventory-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .plot-inventory-filters{grid-template-columns:1fr}
+  .plot-inventory-search{grid-column:auto}
+}
