@@ -1921,3 +1921,26 @@ footer > span {
   .plot-inventory-filters{grid-template-columns:1fr}
   .plot-inventory-search{grid-column:auto}
 }
+
+
+/* Admin database health */
+.database-health-page .database-health-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:28px 0}
+.database-health-card{border:1px solid var(--line);border-radius:12px;padding:20px;background:#fff;display:grid;gap:15px}
+.database-health-card>span{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px}
+.database-health-card>span svg{color:var(--green)}
+.database-health-card strong{font-size:27px;color:var(--navy);font-weight:700}
+.database-health-panel{border:1px solid var(--line);border-radius:14px;padding:22px;background:#fff}
+.database-health-panel .section-heading{margin-bottom:18px}
+.database-health-panel h2{display:flex;align-items:center;gap:9px;font:600 24px 'Playfair Display';margin:0;color:var(--navy)}
+.database-health-table-wrap{overflow-x:auto}
+.database-health-table{width:100%;border-collapse:collapse;text-align:left;font-size:13px}
+.database-health-table th{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);background:#f7faf9}
+.database-health-table th,.database-health-table td{padding:13px 15px;border-bottom:1px solid var(--line)}
+.database-health-table td{color:#344b5b}
+.database-health-table td:nth-child(n+2){font-variant-numeric:tabular-nums}
+.database-health-footnote{font-size:11px;color:var(--muted);margin:12px 2px}
+.database-health-note{margin-top:24px;padding:18px 20px;background:#f7faf9;border:1px solid var(--line);border-radius:12px;font-size:12px;color:#536477}
+.database-health-note p{line-height:1.7}
+.database-health-note a{color:var(--green);font-weight:700}
+@media(max-width:800px){.database-health-page .database-health-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.database-health-page .database-health-grid{gap:9px}.database-health-card{padding:14px}.database-health-card strong{font-size:22px}.database-health-panel{padding:14px}.database-health-table th,.database-health-table td{padding:11px 9px;font-size:11px}}
