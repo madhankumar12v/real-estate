@@ -253,6 +253,23 @@ export default function App(){
    try{const host=new URL(link.href,window.location.href).hostname.toLowerCase();if(/(^|\.)wa\.me$|whatsapp\.com$/.test(host))recordWhatsAppClick(link.dataset.trackTarget||'website_whatsapp_link')}catch{}
   };
   document.addEventListener('click',onDocumentClick,true);
+  // Count only time while the visitor's browser tab is visible.
+  const engagementStartedAt = new Date();
+  let activeMilliseconds = 0;
+  let visibleSince = document.visibilityState === 'visible' ? Date.now() : null;
+  let engagementSaved = false;
+  const stopVisiblePeriod = () => { if (visibleSince !== null) { activeMilliseconds += Math.max(0, Date.now() - visibleSince); visibleSince = null; } };
+  const onVisibilityChange = () => { if (document.visibilityState === 'visible') { if (visibleSince === null) visibleSince = Date.now(); } else stopVisiblePeriod(); };
+  const saveEngagement = () => {
+   if (engagementSaved) return;
+   stopVisiblePeriod();
+   const seconds = Math.min(86400, Math.round(activeMilliseconds / 1000));
+   engagementSaved = true;
+   if (seconds < 2) return;
+   supabase.from('website_engagements').insert({ visitor_id: visitorId, session_id: sessionId, path: location.pathname.slice(0, 300), engaged_seconds: seconds, engaged_at: engagementStartedAt.toISOString() }).then(({ error }) => { if (error) console.warn('Website engagement tracking is not enabled yet:', error.message); });
+  };
+  document.addEventListener('visibilitychange', onVisibilityChange);
+  window.addEventListener('pagehide', saveEngagement);
   try{
    const referrerHost=document.referrer?new URL(document.referrer).hostname.replace(/^www\./,'').slice(0,180):null;
    const agent=navigator.userAgent||'';
@@ -260,6 +277,9 @@ export default function App(){
    supabase.from('website_page_views').insert({visitor_id:visitorId,session_id:sessionId,path:location.pathname.slice(0,300),referrer_host:referrerHost,traffic_source:attribution.source,device_type:deviceType,utm_source:attribution.utm_source||null,utm_medium:attribution.utm_medium||null,utm_campaign:attribution.utm_campaign||null}).then(({error})=>{if(error)console.warn('Website visitor tracking is not enabled yet:',error.message)});
   }catch(error){console.warn('Website visitor tracking unavailable:',error)}
   return()=>{
+   saveEngagement();
+   document.removeEventListener('visibilitychange', onVisibilityChange);
+   window.removeEventListener('pagehide', saveEngagement);
    document.removeEventListener('click',onDocumentClick,true);
    if(window.mrsaTrackWhatsAppClick===recordWhatsAppClick)delete window.mrsaTrackWhatsAppClick;
   };
