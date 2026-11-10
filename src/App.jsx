@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Routes, Route, Link, useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom'
-import { Search, MapPin, ShieldCheck, MessageCircle, Plus, CheckCircle, XCircle, Trash2, Upload, Filter, Heart, Share2, RotateCcw, Building2, Activity, ChevronLeft, ChevronRight, Info, FileText, Scale, IndianRupee, ReceiptText, Headset, UserCheck } from 'lucide-react'
+import { Search, MapPin, ShieldCheck, MessageCircle, Plus, CheckCircle, XCircle, Trash2, Upload, Filter, Heart, Share2, RotateCcw, Building2, Activity, ChevronLeft, ChevronRight, Info, FileText, Scale, IndianRupee, ReceiptText, Headset, UserCheck, Eye } from 'lucide-react'
 import { supabase, configured } from './lib/supabase'
 import { cityTowns, districtForCity, money, waLink, placeholder } from './lib/helpers'
 import Header from './components/Header'
