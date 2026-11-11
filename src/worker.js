@@ -62,6 +62,11 @@ async function graphPost(url,params){
     if(response.status>=500||response.status===429) failure.uncertain=true;
     throw failure;
   }
+  if(!data.id){
+    const uncertain=new Error("Meta returned no confirmation ID. The request may have succeeded; verify Meta before retrying.");
+    uncertain.uncertain=true;
+    throw uncertain;
+  }
   return data;
 }
 async function publishInstagram(env,post){
