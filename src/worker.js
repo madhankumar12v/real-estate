@@ -314,7 +314,7 @@ async function handleApi(request,env){
     const rows=await supabaseRequest(env,token,"facebook_posts?select=id,listing_id,caption,image_url,status,approved_at,approved_by&id=eq."+encodeURIComponent(fbPublishMatch[1])+"&limit=1");
     const post=rows?.[0];
     if(!post) throw new HttpError("Facebook draft not found.",404);
-    if(post.status!=="approved") throw new HttpError("Only an approved post can be published.",409);
+    if(post.status!=="approved"||!post.approved_at||!post.approved_by) throw new HttpError("This post needs explicit administrator approval before publishing.",409);
     const listingRows=await supabaseRequest(env,token,"listings?select=id,status&id=eq."+encodeURIComponent(post.listing_id)+"&limit=1");
     if(!listingRows?.length||listingRows[0].status!=="approved") throw new HttpError("This property is no longer approved. Publishing has been blocked.",409);
     const claimed=await supabaseRequest(env,token,"facebook_posts?id=eq."+encodeURIComponent(post.id)+"&status=eq.approved&approved_at=not.is.null&approved_by=not.is.null",{method:"PATCH",prefer:"return=representation",body:{status:"publishing",last_error:null}});
