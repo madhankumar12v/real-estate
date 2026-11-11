@@ -372,11 +372,21 @@ async function handleApi(request,env){
 
   throw new HttpError("Social publishing API route not found.",404);
 }
+async function generateDailySocialDrafts(env){
+  return serviceRequest(env,"rpc/generate_daily_social_drafts",{method:"POST",body:{}});
+}
+
 export default {
   async scheduled(controller,env,ctx){
     const clock=getIndiaClock(new Date(controller.scheduledTime||Date.now()));
     if(clock.minute!==0||clock.hour<10||clock.hour>=22) return;
-    ctx.waitUntil(runSocialAutomation(env).catch(error=>console.error("MrSa social automation:",error?.message||error)));
+    ctx.waitUntil((async()=>{
+      if(clock.hour===10){
+        const batch=await generateDailySocialDrafts(env);
+        console.log("MrSa 10:00 IST daily draft batch:",JSON.stringify(batch));
+      }
+      await runSocialAutomation(env);
+    })().catch(error=>console.error("MrSa social automation:",error?.message||error)));
   },
   async fetch(request,env){
     const url=new URL(request.url);
