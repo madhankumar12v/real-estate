@@ -61,20 +61,20 @@ export default function SocialAutomationPage({user}){
       const {data,error}=await supabase.from('social_automation_settings').update({enabled,updated_by:user?.id||null,updated_at:new Date().toISOString()}).eq('id',1).select('enabled,updated_at').single()
       if(error)throw error
       setSettings(data)
-      setNotice(enabled?'Automatic publishing enabled. Newly approved properties will be queued for Facebook and Instagram.':'Automatic publishing paused. No queued posts will be sent until you resume.')
+      setNotice(enabled?'Automatic publishing enabled. New property approvals create drafts only; each platform post still requires your approval.':'Automatic publishing paused. No queued posts will be sent until you resume.')
     }catch(err){setError(err.message||'Could not update the automation setting.')}
     finally{setSaving(false)}
   }
   return <section className="section page-section instagram-publishing-page">
     <div className="instagram-publishing-heading">
-      <div><span className="eyebrow">MRSA PROPERTIES · ADMIN</span><h1>Auto Marketing 2.0</h1><p className="muted">Automatically publish approved property listings to Facebook and Instagram. Admin approval remains mandatory.</p></div>
+      <div><span className="eyebrow">MRSA PROPERTIES · ADMIN</span><h1>Auto Marketing 2.0</h1><p className="muted">Prepare Facebook and Instagram posts for each approved property. Every individual social post requires a separate admin approval before publishing.</p></div>
       <div className="instagram-publishing-actions"><button className="btn btn-outline" onClick={load} disabled={loading}><RefreshCw size={15}/> Refresh</button><Link className="btn btn-outline" to="/admin">← Admin dashboard</Link></div>
     </div>
     {notice&&<div className="instagram-publishing-notice" role="status">{notice}</div>}
     {error&&<div className="instagram-publishing-error" role="alert">{error}</div>}
     <article className="instagram-publishing-panel" style={{maxWidth:760,margin:'0 auto'}}>
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:16,flexWrap:'wrap'}}>
-        <div><span className="eyebrow">MASTER CONTROL</span><h2 style={{margin:'8px 0'}}>Automatic publishing</h2><p className="muted">{settings?.enabled?'Newly approved properties are queued automatically.':'Publishing is paused. New approvals will not be queued.'}</p></div>
+        <div><span className="eyebrow">MASTER CONTROL</span><h2 style={{margin:'8px 0'}}>Automatic publishing</h2><p className="muted">{settings?.enabled?'New property approvals create social post drafts. Each Facebook and Instagram post must be approved separately before publishing.':'Publishing is paused. New approvals will not be queued.'}</p></div>
         <span className={'instagram-status instagram-status-'+(settings?.enabled?'published':'draft')}>{loading?'Loading':settings?.enabled?'Active':'Paused'}</span>
       </div>
       <button className={'btn '+(settings?.enabled?'btn-outline':'btn-primary')} style={{marginTop:18}} disabled={loading||saving||!settings||(!settings.enabled&&(!runtime?.serviceRoleConfigured||!runtime?.facebookConfigured||!runtime?.instagramConfigured))} onClick={toggle}>

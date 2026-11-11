@@ -92,7 +92,7 @@ export default function InstagramPublishingPage(){
         </form>
       </article>
       <article className="instagram-publishing-panel">
-        <h2>Publishing queue</h2><p>Auto-generated posts publish automatically after listing approval. Manual drafts still require approval and a publish action.</p>
+        <h2>Publishing queue</h2><p>Every post stays in the queue until an administrator approves that specific Instagram post. Property approval alone never authorizes social publishing.</p>
         {loading?<div className="instagram-empty">Loading Instagram queue…</div>:posts.length?<div className="instagram-post-list">{posts.map(post=><article className="instagram-post-card" key={post.id}>
           {post.image_url?<img src={post.image_url} alt="Property post"/>:<div/>}
           <div className="instagram-post-content">
@@ -101,12 +101,12 @@ export default function InstagramPublishingPage(){
             <div className="instagram-post-meta">{post.created_at?new Date(post.created_at).toLocaleString('en-IN'):''}{post.last_error?' · '+post.last_error:''}</div>
             {post.permalink&&<a className="text-link" href={post.permalink} target="_blank" rel="noreferrer">View Instagram post <ExternalLink size={13}/></a>}
             <div className="instagram-post-actions">
-              {post.status==='draft'&&<button className="btn btn-outline" title="Approve" aria-label="Approve Instagram post" disabled={workingId===post.id} onClick={()=>act(post.id,'approve')}><Check size={15}/></button>}
-              {post.status==='approved'&&post.auto_generated&&<span className="instagram-post-meta">Automatic queue · Attempt {post.attempt_count||0}/5 · Next check {post.next_attempt_at?new Date(post.next_attempt_at).toLocaleString('en-IN'):'soon'}</span>}
-              {post.status==='approved'&&!post.auto_generated&&<button className="btn btn-primary" disabled={workingId===post.id} onClick={()=>act(post.id,'publish')}><Send size={13}/>{workingId===post.id?'Publishing…':'Publish to Instagram'}</button>}
-              {post.status==='failed'&&<span className="instagram-post-meta">{post.auto_generated?'Automatic publishing stopped after a permanent error or 5 attempts. Review the error above.':'Fix the issue, then create a new draft for review.'}</span>}
-              {!['published','publishing','rejected'].includes(post.status)&&<button className="btn btn-outline" title="Reject" aria-label="Reject Instagram post" disabled={workingId===post.id} onClick={()=>act(post.id,'reject')}><X size={15}/></button>}
-              {!['published','publishing'].includes(post.status)&&<button className="btn btn-outline" title="Delete" aria-label="Delete Instagram queue item" disabled={workingId===post.id} onClick={()=>act(post.id,'delete')}><Trash2 size={15}/></button>}
+              {['draft','failed'].includes(post.status)||(post.status==='approved'&&(!post.approved_at||!post.approved_by))?<button className="btn btn-outline" title="Approve this post" aria-label="Approve Instagram post" disabled={workingId===post.id} onClick={()=>act(post.id,'approve')}><Check size={15}/></button>:post.status==='approved'?<button className="btn btn-outline" title="Approved by admin" aria-label="Instagram post approved" disabled><Check size={15}/></button>:null}
+              {post.status==='approved'&&post.auto_generated&&<span className="instagram-post-meta">Admin approved · Attempt {post.attempt_count||0}/5 · Next check {post.next_attempt_at?new Date(post.next_attempt_at).toLocaleString('en-IN'):'soon'}</span>}
+              {post.status==='approved'&&post.approved_at&&post.approved_by&&!post.auto_generated&&<button className="btn btn-primary" disabled={workingId===post.id} onClick={()=>act(post.id,'publish')}><Send size={13}/>{workingId===post.id?'Publishing…':'Publish to Instagram'}</button>}
+              {post.status==='failed'&&<span className="instagram-post-meta">Publishing failed. Review the error before approving again.</span>}
+              {post.status!=='published'&&post.status!=='publishing'&&<button className="btn btn-outline" title="Reject" aria-label="Reject Instagram post" disabled={workingId===post.id||post.status==='rejected'} onClick={()=>act(post.id,'reject')}><X size={15}/></button>}
+              {post.status!=='published'&&post.status!=='publishing'&&<button className="btn btn-outline" title="Delete" aria-label="Delete Instagram queue item" disabled={workingId===post.id} onClick={()=>act(post.id,'delete')}><Trash2 size={15}/></button>}
               {post.status==='rejected'&&<span className="instagram-post-meta">Rejected · Not scheduled for publishing</span>}
             </div>
           </div>
