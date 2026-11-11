@@ -283,7 +283,7 @@ async function handleApi(request,env){
   }
   const fbApproveMatch=path.match(/^\/api\/facebook\/posts\/([0-9a-f-]+)\/approve$/i);
   if(request.method==="POST"&&fbApproveMatch){
-    const updated=await supabaseRequest(env,token,"facebook_posts?id=eq."+encodeURIComponent(fbApproveMatch[1])+"&status=eq.draft",{method:"PATCH",prefer:"return=representation",body:{status:"approved",approved_by:user.id,approved_at:new Date().toISOString(),next_attempt_at:new Date().toISOString(),last_error:null}});
+    const updated=await supabaseRequest(env,token,"facebook_posts?id=eq."+encodeURIComponent(fbApproveMatch[1])+"&status=in.(draft,approved,failed)",{method:"PATCH",prefer:"return=representation",body:{status:"approved",approved_by:user.id,approved_at:new Date().toISOString(),next_attempt_at:new Date().toISOString(),attempt_count:0,last_error:null}});
     if(!updated?.length) throw new HttpError("Draft not found or it has already been reviewed.",409);
     return json({post:updated[0]});
   }
