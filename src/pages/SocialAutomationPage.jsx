@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { PauseCircle, PlayCircle, RefreshCw, ShieldCheck, Facebook, Instagram, Check, X, Trash2, ExternalLink } from 'lucide-react'
+import { PauseCircle, PlayCircle, RefreshCw, ShieldCheck, Facebook, Instagram, Check, X, Trash2, ExternalLink, CalendarDays, Eye, MessageCircle, Users } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 export default function SocialAutomationPage({user, platformFilter = null, overviewOnly = false}){
@@ -9,6 +9,7 @@ export default function SocialAutomationPage({user, platformFilter = null, overv
   const [counts,setCounts]=useState({facebookQueued:0,instagramQueued:0,facebookFailed:0,instagramFailed:0,facebookRejected:0,instagramRejected:0,facebookReview:0,instagramReview:0,facebookPublished:0,instagramPublished:0})
   const [propertyHistory,setPropertyHistory]=useState({facebook:[],instagram:[]})
   const [queuePosts,setQueuePosts]=useState({facebook:[],instagram:[]})
+  const [dailyReport,setDailyReport]=useState({visitors:0,sessions:0,pageViews:0,whatsappClicks:0,enquiries:0,facebookToday:0,instagramToday:0})
   const [workingPost,setWorkingPost]=useState('')
   const [loading,setLoading]=useState(true)
   const [saving,setSaving]=useState(false)
@@ -48,6 +49,18 @@ export default function SocialAutomationPage({user, platformFilter = null, overv
       ])
       for(const result of [fbQueued,igQueued,fbFailed,igFailed,fbRejected,igRejected,fbReview,igReview,fbPublished,igPublished])if(result.error)throw result.error
       setCounts({facebookQueued:fbQueued.count||0,instagramQueued:igQueued.count||0,facebookFailed:fbFailed.count||0,instagramFailed:igFailed.count||0,facebookRejected:fbRejected.count||0,instagramRejected:igRejected.count||0,facebookReview:fbReview.count||0,instagramReview:igReview.count||0,facebookPublished:fbPublished.count||0,instagramPublished:igPublished.count||0})
+      const dayStart=new Date();dayStart.setHours(0,0,0,0)
+      const dayEnd=new Date(dayStart);dayEnd.setDate(dayEnd.getDate()+1)
+      const from=dayStart.toISOString(),to=dayEnd.toISOString()
+      const [trafficToday,enquiriesToday,facebookToday,instagramToday]=await Promise.all([
+        supabase.rpc('get_admin_website_visitor_stats',{p_from:from,p_to:to}),
+        supabase.from('enquiries').select('id',{count:'exact',head:true}).gte('created_at',from).lt('created_at',to),
+        supabase.from('facebook_posts').select('id',{count:'exact',head:true}).eq('status','published').gte('published_at',from).lt('published_at',to),
+        supabase.from('instagram_posts').select('id',{count:'exact',head:true}).eq('status','published').gte('published_at',from).lt('published_at',to)
+      ])
+      const traffic=trafficToday.data||{}
+      const summary=traffic.summary||{}
+      setDailyReport({visitors:Number(summary.period_visitors)||0,sessions:Number(summary.period_sessions)||0,pageViews:Number(summary.period_page_views)||0,whatsappClicks:Number(summary.period_whatsapp_clicks)||0,enquiries:enquiriesToday.count||0,facebookToday:facebookToday.count||0,instagramToday:instagramToday.count||0})
     }catch(err){setError(err.message||'Could not load automation settings. Run the Auto Marketing 2.0 Supabase migration first.')}
     finally{setLoading(false)}
   }
@@ -165,6 +178,19 @@ export default function SocialAutomationPage({user, platformFilter = null, overv
         <article className="mrsa-status-card"><span><i className="mrsa-status-dot failed"/> Facebook verify first</span><strong>{counts.facebookReview}</strong><small>Check Meta before retrying</small></article>
         <article className="mrsa-status-card"><span><i className="mrsa-status-dot failed"/> Instagram verify first</span><strong>{counts.instagramReview}</strong><small>Check Meta before retrying</small></article>
       </div>
+      <div className="mrsa-daily-report">
+        <div className="mrsa-daily-report-heading"><div><span className="eyebrow"><CalendarDays size={13}/> DAILY MARKETING REPORT</span><h3>Today’s organic marketing activity</h3><p className="muted">Live figures for today · no paid-ad spend included</p></div><Link className="btn btn-outline" to="/admin/marketing">Full traffic report →</Link></div>
+        <div className="mrsa-daily-report-grid">
+          <article><span><Users size={15}/> Unique visitors</span><strong>{dailyReport.visitors}</strong></article>
+          <article><span><Eye size={15}/> Page views</span><strong>{dailyReport.pageViews}</strong></article>
+          <article><span><MessageCircle size={15}/> WhatsApp clicks</span><strong>{dailyReport.whatsappClicks}</strong><small>Clicks, not confirmed enquiries</small></article>
+          <article><span>Actual enquiries</span><strong>{dailyReport.enquiries}</strong><small>Saved in CRM today</small></article>
+          <article><span><Facebook size={15}/> Facebook posts today</span><strong>{dailyReport.facebookToday}</strong></article>
+          <article><span><Instagram size={15}/> Instagram posts today</span><strong>{dailyReport.instagramToday}</strong></article>
+          <article><span>Website sessions</span><strong>{dailyReport.sessions}</strong></article>
+        </div>
+        <p className="mrsa-daily-report-note">WhatsApp clicks measure link clicks only. They do not confirm that a conversation or property enquiry was completed. Figures refresh with the “Refresh data” button.</p>
+      </div>
       <div className="mrsa-overview-table-head"><div><h3>Property-wise breakdown</h3><p className="muted">Published post count by platform</p></div><span>{propertyRows.length} properties tracked</span></div>
       <div className="mrsa-overview-table-wrap">
         <table className="mrsa-overview-table">
@@ -193,6 +219,18 @@ export default function SocialAutomationPage({user, platformFilter = null, overv
       </div>
       <div className="mrsa-overview-legend"><span><i className="mrsa-legend-facebook"/> Facebook</span><span><i className="mrsa-legend-instagram"/> Instagram</span><small>Only successfully published posts are counted. Drafts, pending approvals and failed posts are excluded.</small></div>
       <style>{`
+        .mrsa-daily-report{margin:26px 0 28px;padding:18px;border:1px solid #e5ece8;border-radius:14px;background:#f8fbf9}
+        .mrsa-daily-report-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:15px}
+        .mrsa-daily-report-heading .eyebrow{display:flex;align-items:center;gap:6px}
+        .mrsa-daily-report-heading h3{margin:7px 0 4px;color:#20364b;font-size:18px}
+        .mrsa-daily-report-heading p{margin:0;font-size:11px}
+        .mrsa-daily-report-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+        .mrsa-daily-report-grid article{display:grid;gap:8px;min-width:0;padding:13px;border:1px solid #e7eeea;border-radius:10px;background:#fff}
+        .mrsa-daily-report-grid article>span{display:flex;align-items:center;gap:6px;color:#687a71;font-size:11px;font-weight:650}
+        .mrsa-daily-report-grid article>strong{color:#20364b;font-size:25px;line-height:1.1;font-variant-numeric:tabular-nums}
+        .mrsa-daily-report-grid article>small{color:#89958f;font-size:9px}
+        .mrsa-daily-report-note{margin:12px 0 0;color:#7a8981;font-size:10px;line-height:1.6}
+        @media(max-width:760px){.mrsa-daily-report-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.mrsa-daily-report{padding:13px}}
         .mrsa-overview-dashboard{padding:clamp(16px,2.5vw,26px);border:1px solid #e5ece8;border-radius:18px;background:linear-gradient(145deg,#fff 0%,#fbfdfc 100%);box-shadow:0 12px 34px #20364b0a}
         .mrsa-overview-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
         .mrsa-overview-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:22px 0 28px}
