@@ -24,7 +24,7 @@ export default function SocialAutomationPage({user}){
       setRuntime(statusData)
       const [fbQueued,igQueued,fbFailed,igFailed,fbPublished,igPublished]=await Promise.all([
         supabase.from('facebook_posts').select('id',{count:'exact',head:true}).eq('auto_generated',true).in('status',['draft','approved','publishing']),
-        supabase.from('instagram_posts').select('id',{count:'exact',head:true}).eq('auto_generated',true).eq('status','approved'),
+        supabase.from('instagram_posts').select('id',{count:'exact',head:true}).eq('auto_generated',true).in('status',['draft','approved','publishing']),
         supabase.from('facebook_posts').select('id',{count:'exact',head:true}).eq('auto_generated',true).eq('status','failed'),
         supabase.from('instagram_posts').select('id',{count:'exact',head:true}).eq('auto_generated',true).eq('status','failed'),
         supabase.from('facebook_posts').select('id',{count:'exact',head:true}).eq('status','published'),
