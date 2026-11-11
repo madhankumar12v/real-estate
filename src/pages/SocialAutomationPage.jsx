@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { PauseCircle, PlayCircle, RefreshCw, ShieldCheck, Facebook, Instagram, Check, X, Trash2, ExternalLink } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
-export default function SocialAutomationPage({user}){
+export default function SocialAutomationPage({user, platformFilter = null}){
   const [settings,setSettings]=useState(null)
   const [runtime,setRuntime]=useState(null)
   const [counts,setCounts]=useState({facebookQueued:0,instagramQueued:0,facebookFailed:0,instagramFailed:0,facebookPublished:0,instagramPublished:0})
@@ -97,7 +97,9 @@ export default function SocialAutomationPage({user}){
     }catch(err){setError(err.message||'Could not update the automation setting.')}
     finally{setSaving(false)}
   }
+  const visibleRows=propertyRows.map(row=>{const posts=[...row.facebook.map(post=>({...post,platform:'facebook'})),...row.instagram.map(post=>({...post,platform:'instagram'}))].filter(post=>!platformFilter||post.platform===platformFilter);const latest=[...posts].filter(post=>post.status==='published'||post.permalink).sort((a,b)=>new Date(b.published_at||b.created_at||0)-new Date(a.published_at||a.created_at||0))[0]||null;return {...row,posts,latest,postedCount:posts.filter(post=>post.status==='published'||post.permalink).length}}).filter(row=>row.posts.length>0)
   return <section className="section page-section instagram-publishing-page">
+    {!platformFilter&&<>
     <div className="instagram-publishing-heading">
       <div><span className="eyebrow">MRSA PROPERTIES · ADMIN</span><h1>Auto Marketing 3.0</h1><p className="muted">Daily queue review at 10:00 AM IST. Individually approved Facebook and Instagram posts publish one per platform per hour, with property rotation.</p></div>
       <div className="instagram-publishing-actions"><button className="btn btn-outline" onClick={load} disabled={loading}><RefreshCw size={15}/> Refresh</button><Link className="btn btn-outline" to="/admin">← Admin dashboard</Link></div>
@@ -129,17 +131,18 @@ export default function SocialAutomationPage({user}){
       <div><b>{counts.facebookFailed+counts.instagramFailed}</b><span>Failed across both platforms</span></div>
     </div>
     <p className="instagram-post-meta" style={{textAlign:'center',marginTop:10}}>Published totals count posts tracked in MrSa's publishing database, including manual and automatic posts.</p>
+    </>}
     <section className="instagram-publishing-panel" style={{marginTop:24}}>
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,flexWrap:'wrap'}}>
         <div><h2 style={{margin:'0 0 6px'}}>Property publishing manager</h2><p className="muted" style={{margin:0}}>Approve, reject or delete individual Facebook and Instagram posts. Published links and counts are shown per property.</p></div>
         <span className="instagram-post-meta">{propertyRows.length} properties in queue / history</span>
       </div>
-      {propertyRows.length?<div style={{overflowX:'auto',marginTop:16}}>
+      {visibleRows.length?<div style={{overflowX:'auto',marginTop:16}}>
         <table style={{width:'100%',minWidth:850,borderCollapse:'collapse',textAlign:'left'}}>
           <thead><tr><th style={{padding:'11px 9px'}}>Property</th><th style={{padding:'11px 9px'}}>Platform</th><th style={{padding:'11px 9px',textAlign:'center'}}>Approve</th><th style={{padding:'11px 9px',textAlign:'center'}}>Reject</th><th style={{padding:'11px 9px',textAlign:'center'}}>Delete</th><th style={{padding:'11px 9px',textAlign:'center'}}>Posted Count</th><th style={{padding:'11px 9px'}}>View</th></tr></thead>
-          <tbody>{propertyRows.map(row=>{
-            const posts=[...row.facebook.map(post=>({...post,platform:'facebook'})),...row.instagram.map(post=>({...post,platform:'instagram'}))]
-            const latest=[...posts].filter(post=>post.status==='published'||post.permalink).sort((a,b)=>new Date(b.published_at||b.created_at||0)-new Date(a.published_at||a.created_at||0))[0]
+          <tbody>{visibleRows.map(row=>{
+            const posts=row.posts
+            const latest=row.latest
             const pending=posts.filter(post=>!['published','publishing','rejected'].includes(post.status))
             const platforms=[...new Set(posts.map(post=>post.platform))]
             return <tr key={row.id} style={{borderTop:'1px solid var(--border-color, #e5e7eb)'}}>
@@ -158,11 +161,11 @@ export default function SocialAutomationPage({user}){
     <section className="instagram-publishing-panel" style={{marginTop:18}}>
       <h2 style={{margin:'0 0 6px'}}>History · Recently posted</h2>
       <p className="muted" style={{margin:0}}>Latest published property posts across both platforms.</p>
-      {[...propertyRows].filter(row=>row.latest).sort((a,b)=>new Date(b.latest.published_at||0)-new Date(a.latest.published_at||0)).slice(0,8).length?<div style={{display:'grid',gap:10,marginTop:14}}>
-        {[...propertyRows].filter(row=>row.latest).sort((a,b)=>new Date(b.latest.published_at||0)-new Date(a.latest.published_at||0)).slice(0,8).map(row=><div key={row.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,padding:'11px 0',borderTop:'1px solid var(--border-color, #e5e7eb)'}}><div><b>{row.title}</b><div className="instagram-post-meta">{row.latest.platform==='facebook'?'Facebook':'Instagram'} · {row.latest.published_at?new Date(row.latest.published_at).toLocaleDateString('en-IN'):''}</div></div><a className="btn btn-outline" href={row.latest.permalink} target="_blank" rel="noreferrer">View more <ExternalLink size={13}/></a></div>)}
+      {[...visibleRows].filter(row=>row.latest).sort((a,b)=>new Date(b.latest.published_at||0)-new Date(a.latest.published_at||0)).slice(0,8).length?<div style={{display:'grid',gap:10,marginTop:14}}>
+        {[...visibleRows].filter(row=>row.latest).sort((a,b)=>new Date(b.latest.published_at||0)-new Date(a.latest.published_at||0)).slice(0,8).map(row=><div key={row.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,padding:'11px 0',borderTop:'1px solid var(--border-color, #e5e7eb)'}}><div><b>{row.title}</b><div className="instagram-post-meta">{row.latest.platform==='facebook'?'Facebook':'Instagram'} · {row.latest.published_at?new Date(row.latest.published_at).toLocaleDateString('en-IN'):''}</div></div><a className="btn btn-outline" href={row.latest.permalink} target="_blank" rel="noreferrer">View more <ExternalLink size={13}/></a></div>)}
       </div>:<div className="instagram-empty" style={{marginTop:14}}>No recently published links found.</div>}
     </section>
-    <div className="instagram-publishing-actions" style={{justifyContent:'center',marginTop:18}}><Link className="btn btn-outline" to="/admin/facebook">Open Facebook queue</Link><Link className="btn btn-outline" to="/admin/instagram">Open Instagram queue</Link></div>
-    <p className="muted" style={{textAlign:'center',marginTop:18}}>Last setting update: {settings?.updated_at?new Date(settings.updated_at).toLocaleString('en-IN'):'—'}</p>
+    {!platformFilter&&<><div className="instagram-publishing-actions" style={{justifyContent:'center',marginTop:18}}><Link className="btn btn-outline" to="/admin/facebook">Open Facebook queue</Link><Link className="btn btn-outline" to="/admin/instagram">Open Instagram queue</Link></div>
+    <p className="muted" style={{textAlign:'center',marginTop:18}}>Last setting update: {settings?.updated_at?new Date(settings.updated_at).toLocaleString('en-IN'):'—'}</p></>}
   </section>
 }
