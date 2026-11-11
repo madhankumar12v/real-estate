@@ -1,6 +1,6 @@
 # Mr SA Properties
 
-Premium buy-and-sell property marketplace for Tamil Nadu.
+Premium buy-and-sell property marketplace for Vellore.
 
 **Tagline:** BUILD ASSETS • GROW WEALTH • CREATE YOUR FUTURE
 
