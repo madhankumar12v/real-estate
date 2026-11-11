@@ -123,54 +123,66 @@ async function publishFacebook(env,post){
 }
 
 
+function getIndiaClock(date=new Date()){
+  const parts=new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Kolkata",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(date);
+  const values=Object.fromEntries(parts.map(part=>[part.type,part.value]));
+  return {hour:Number(values.hour),minute:Number(values.minute)};
+}
+
+async function publishOneForPlatform(env,table,platform){
+  const due=await serviceRequest(env,table+"?select=id,listing_id,caption,image_url,attempt_count,created_at&auto_generated=eq.true&status=eq.approved&approved_at=not.is.null&approved_by=not.is.null&next_attempt_at=lte."+encodeURIComponent(new Date().toISOString())+"&order=created_at.asc&limit=200");
+  if(!due?.length) return {processed:0,platform,empty:true};
+  const history=await serviceRequest(env,table+"?select=listing_id,published_at&status=eq.published&order=published_at.desc&limit=1000");
+  const lastPublishedByProperty=new Map();
+  for(const row of history||[]) if(row.listing_id&&!lastPublishedByProperty.has(row.listing_id)) lastPublishedByProperty.set(row.listing_id,new Date(row.published_at||0).getTime());
+  const selected=[...due].sort((a,b)=>(lastPublishedByProperty.get(a.listing_id)||0)-(lastPublishedByProperty.get(b.listing_id)||0)||new Date(a.created_at||0)-new Date(b.created_at||0))[0];
+  const latest=await serviceRequest(env,"social_automation_settings?select=enabled&id=eq.1&limit=1");
+  if(!latest?.[0]?.enabled) return {processed:0,platform,paused:true};
+  const attempt=(Number(selected.attempt_count)||0)+1;
+  const claim=await serviceRequest(env,table+"?id=eq."+encodeURIComponent(selected.id)+"&status=eq.approved&auto_generated=eq.true&approved_at=not.is.null&approved_by=not.is.null",{
+    method:"PATCH",prefer:"return=representation",
+    body:{status:"publishing",attempt_count:attempt,last_attempt_at:new Date().toISOString(),processing_started_at:new Date().toISOString(),last_error:null}
+  });
+  if(!claim?.length) return {processed:0,platform,claimed:false};
+  let result;
+  try{
+    const listing=await serviceRequest(env,"listings?select=id,status&id=eq."+encodeURIComponent(selected.listing_id)+"&status=eq.approved&limit=1");
+    if(!listing?.length) throw new Error("Property is no longer approved. Automatic publishing was blocked.");
+    result=platform==="facebook"?await publishFacebook(env,selected):await publishInstagram(env,selected);
+  }catch(error){
+    const message=String(error?.message||"Automatic publishing failed.").slice(0,1000);
+    const permanent=/requires a JPEG|permission|not configured|invalid access token|unsupported post|no longer approved|deprecated/i.test(message);
+    const retryMinutes=[60,120,180,240];
+    const exhausted=attempt>=5||permanent;
+    const nextAttempt=new Date(Date.now()+(retryMinutes[Math.min(attempt-1,retryMinutes.length-1)]||240)*60000).toISOString();
+    await serviceRequest(env,table+"?id=eq."+encodeURIComponent(selected.id)+"&status=eq.publishing",{method:"PATCH",body:{status:exhausted?"failed":"approved",last_error:message,next_attempt_at:nextAttempt,processing_started_at:null}}).catch(()=>{});
+    return {processed:1,platform,failed:true,error:message};
+  }
+  const fields=platform==="facebook"
+    ? {status:"published",fb_media_id:result.mediaId,fb_post_id:result.postId,permalink:result.permalink,published_at:new Date().toISOString(),last_error:null,processing_started_at:null,next_attempt_at:null}
+    : {status:"published",ig_container_id:result.containerId,ig_media_id:result.mediaId,permalink:result.permalink,published_at:new Date().toISOString(),last_error:null,processing_started_at:null,next_attempt_at:null};
+  try{
+    await serviceRequest(env,table+"?id=eq."+encodeURIComponent(selected.id)+"&status=eq.publishing",{method:"PATCH",body:fields});
+  }catch(saveError){
+    console.error("Published externally but could not save "+platform+" status for "+selected.id+":",saveError?.message||saveError);
+  }
+  return {processed:1,platform,published:true};
+}
+
 async function runSocialAutomation(env){
   if(!env.SUPABASE_SERVICE_ROLE_KEY) throw new Error("SUPABASE_SERVICE_ROLE_KEY is not configured.");
   const settings=await serviceRequest(env,"social_automation_settings?select=enabled&id=eq.1&limit=1");
   if(!settings?.[0]?.enabled) return {paused:true,processed:0};
+  const clock=getIndiaClock();
+  if(clock.hour<8||clock.hour>=22) return {quietHours:true,processed:0};
+  if(clock.minute!==0) return {waitingForHourlySlot:true,processed:0};
   let processed=0;
-  const now=new Date().toISOString();
   for(const [table,platform] of [["facebook_posts","facebook"],["instagram_posts","instagram"]]){
-    const due=await serviceRequest(env,table+"?select=id,listing_id,caption,image_url,attempt_count&auto_generated=eq.true&status=eq.approved&approved_at=not.is.null&approved_by=not.is.null&next_attempt_at=lte."+encodeURIComponent(now)+"&order=created_at.asc&limit=5");
-    for(const post of due||[]){
-      const latest=await serviceRequest(env,"social_automation_settings?select=enabled&id=eq.1&limit=1");
-      if(!latest?.[0]?.enabled) return {paused:true,processed};
-      const attempt=(Number(post.attempt_count)||0)+1;
-      const claim=await serviceRequest(env,table+"?id=eq."+encodeURIComponent(post.id)+"&status=eq.approved&auto_generated=eq.true&approved_at=not.is.null&approved_by=not.is.null",{
-        method:"PATCH",prefer:"return=representation",
-        body:{status:"publishing",attempt_count:attempt,last_attempt_at:new Date().toISOString(),processing_started_at:new Date().toISOString(),last_error:null}
-      });
-      if(!claim?.length) continue;
-      processed++;
-      let result;
-      try{
-        const listing=await serviceRequest(env,"listings?select=id,status&id=eq."+encodeURIComponent(post.listing_id)+"&status=eq.approved&limit=1");
-        if(!listing?.length) throw new Error("Property is no longer approved. Automatic publishing was blocked.");
-        result=platform==="facebook"?await publishFacebook(env,post):await publishInstagram(env,post);
-      }catch(error){
-        const message=String(error?.message||"Automatic publishing failed.").slice(0,1000);
-        const permanent=/requires a JPEG|permission|not configured|invalid access token|unsupported post|no longer approved|deprecated/i.test(message);
-        const retryMinutes=[5,15,60,180];
-        const exhausted=attempt>=5||permanent;
-        const nextAttempt=new Date(Date.now()+(retryMinutes[Math.min(attempt-1,retryMinutes.length-1)]||180)*60000).toISOString();
-        await serviceRequest(env,table+"?id=eq."+encodeURIComponent(post.id)+"&status=eq.publishing",{
-          method:"PATCH",
-          body:{status:exhausted?"failed":"approved",last_error:message,next_attempt_at:nextAttempt,processing_started_at:null}
-        }).catch(()=>{});
-        continue;
-      }
-      const fields=platform==="facebook"
-        ? {status:"published",fb_media_id:result.mediaId,fb_post_id:result.postId,permalink:result.permalink,published_at:new Date().toISOString(),last_error:null,processing_started_at:null}
-        : {status:"published",ig_container_id:result.containerId,ig_media_id:result.mediaId,permalink:result.permalink,published_at:new Date().toISOString(),last_error:null,processing_started_at:null};
-      // If Meta accepted the post but this database write fails, leave it in "publishing"
-      // for manual reconciliation rather than automatically sending a duplicate.
-      try{
-        await serviceRequest(env,table+"?id=eq."+encodeURIComponent(post.id)+"&status=eq.publishing",{method:"PATCH",body:fields});
-      }catch(saveError){
-        console.error("Published externally but could not save "+platform+" status for "+post.id+":",saveError?.message||saveError);
-      }
-    }
+    const result=await publishOneForPlatform(env,table,platform);
+    processed+=result.processed||0;
+    if(result.paused) return {paused:true,processed};
   }
-  return {paused:false,processed};
+  return {paused:false,processed,timezone:"Asia/Kolkata",quietHours:"22:00-08:00",priority:"property_rotation"};
 }
 
 async function handleApi(request,env){
@@ -334,6 +346,8 @@ async function handleApi(request,env){
 }
 export default {
   async scheduled(controller,env,ctx){
+    const clock=getIndiaClock(new Date(controller.scheduledTime||Date.now()));
+    if(clock.minute!==0||clock.hour<8||clock.hour>=22) return;
     ctx.waitUntil(runSocialAutomation(env).catch(error=>console.error("MrSa social automation:",error?.message||error)));
   },
   async fetch(request,env){
