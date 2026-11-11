@@ -174,7 +174,7 @@ async function runSocialAutomation(env){
   const settings=await serviceRequest(env,"social_automation_settings?select=enabled&id=eq.1&limit=1");
   if(!settings?.[0]?.enabled) return {paused:true,processed:0};
   const clock=getIndiaClock();
-  if(clock.hour<8||clock.hour>=22) return {quietHours:true,processed:0};
+  if(clock.hour<10||clock.hour>=22) return {quietHours:true,processed:0};
   if(clock.minute!==0) return {waitingForHourlySlot:true,processed:0};
   let processed=0;
   for(const [table,platform] of [["facebook_posts","facebook"],["instagram_posts","instagram"]]){
@@ -347,7 +347,7 @@ async function handleApi(request,env){
 export default {
   async scheduled(controller,env,ctx){
     const clock=getIndiaClock(new Date(controller.scheduledTime||Date.now()));
-    if(clock.minute!==0||clock.hour<8||clock.hour>=22) return;
+    if(clock.minute!==0||clock.hour<10||clock.hour>=22) return;
     ctx.waitUntil(runSocialAutomation(env).catch(error=>console.error("MrSa social automation:",error?.message||error)));
   },
   async fetch(request,env){
