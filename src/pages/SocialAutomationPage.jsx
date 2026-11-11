@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase'
 export default function SocialAutomationPage({user}){
   const [settings,setSettings]=useState(null)
   const [runtime,setRuntime]=useState(null)
-  const [counts,setCounts]=useState({facebook:0,instagram:0,failed:0,published:0})
+  const [counts,setCounts]=useState({facebookQueued:0,instagramQueued:0,facebookFailed:0,instagramFailed:0,facebookPublished:0,instagramPublished:0})
   const [loading,setLoading]=useState(true)
   const [saving,setSaving]=useState(false)
   const [error,setError]=useState('')
@@ -22,14 +22,16 @@ export default function SocialAutomationPage({user}){
       const statusData=await statusResponse.json().catch(()=>({}))
       if(!statusResponse.ok)throw new Error(statusData.error||'Could not verify Cloudflare publishing secrets.')
       setRuntime(statusData)
-      const [fb,ig,failed,published]=await Promise.all([
+      const [fbQueued,igQueued,fbFailed,igFailed,fbPublished,igPublished]=await Promise.all([
         supabase.from('facebook_posts').select('id',{count:'exact',head:true}).eq('auto_generated',true).eq('status','approved'),
         supabase.from('instagram_posts').select('id',{count:'exact',head:true}).eq('auto_generated',true).eq('status','approved'),
         supabase.from('facebook_posts').select('id',{count:'exact',head:true}).eq('auto_generated',true).eq('status','failed'),
-        supabase.from('facebook_posts').select('id',{count:'exact',head:true}).eq('auto_generated',true).eq('status','published')
+        supabase.from('instagram_posts').select('id',{count:'exact',head:true}).eq('auto_generated',true).eq('status','failed'),
+        supabase.from('facebook_posts').select('id',{count:'exact',head:true}).eq('status','published'),
+        supabase.from('instagram_posts').select('id',{count:'exact',head:true}).eq('status','published')
       ])
-      for(const result of [fb,ig,failed,published])if(result.error)throw result.error
-      setCounts({facebook:fb.count||0,instagram:ig.count||0,failed:failed.count||0,published:published.count||0})
+      for(const result of [fbQueued,igQueued,fbFailed,igFailed,fbPublished,igPublished])if(result.error)throw result.error
+      setCounts({facebookQueued:fbQueued.count||0,instagramQueued:igQueued.count||0,facebookFailed:fbFailed.count||0,instagramFailed:igFailed.count||0,facebookPublished:fbPublished.count||0,instagramPublished:igPublished.count||0})
     }catch(err){setError(err.message||'Could not load automation settings. Run the Auto Marketing 2.0 Supabase migration first.')}
     finally{setLoading(false)}
   }
@@ -71,11 +73,14 @@ export default function SocialAutomationPage({user}){
       </div>
     </article>
     <div className="admin-stats" style={{marginTop:24}}>
-      <div><b>{counts.facebook}</b><span><Facebook size={14}/> Facebook queued</span></div>
-      <div><b>{counts.instagram}</b><span><Instagram size={14}/> Instagram queued</span></div>
-      <div><b>{counts.published}</b><span>Auto-published (Facebook)</span></div>
-      <div><b>{counts.failed}</b><span>Failed (Facebook)</span></div>
+      <div><b>{counts.facebookQueued}</b><span><Facebook size={14}/> Facebook awaiting publish</span></div>
+      <div><b>{counts.instagramQueued}</b><span><Instagram size={14}/> Instagram awaiting publish</span></div>
+      <div><b>{counts.facebookPublished}</b><span><Facebook size={14}/> Published on Facebook Page</span></div>
+      <div><b>{counts.instagramPublished}</b><span><Instagram size={14}/> Published on Instagram account</span></div>
+      <div><b>{counts.facebookPublished+counts.instagramPublished}</b><span>Combined platform publications</span></div>
+      <div><b>{counts.facebookFailed+counts.instagramFailed}</b><span>Failed across both platforms</span></div>
     </div>
+    <p className="instagram-post-meta" style={{textAlign:'center',marginTop:10}}>Published totals count posts tracked in MrSa's publishing database, including manual and automatic posts.</p>
     <div className="instagram-publishing-actions" style={{justifyContent:'center',marginTop:18}}><Link className="btn btn-outline" to="/admin/facebook">Open Facebook queue</Link><Link className="btn btn-outline" to="/admin/instagram">Open Instagram queue</Link></div>
     <p className="muted" style={{textAlign:'center',marginTop:18}}>Last setting update: {settings?.updated_at?new Date(settings.updated_at).toLocaleString('en-IN'):'—'}</p>
   </section>
