@@ -90,7 +90,7 @@ export default function FacebookPublishingPage(){
         </form>
       </article>
       <article className="instagram-publishing-panel">
-        <h2>Facebook publishing queue</h2><p>Drafts must be approved before the publish action becomes available.</p>
+        <h2>Facebook publishing queue</h2><p>Auto-generated posts publish automatically after listing approval. Manual drafts still require approval and a publish action.</p>
         {loading?<div className="instagram-empty">Loading Facebook queue…</div>:posts.length?<div className="instagram-post-list">{posts.map(post=><article className="instagram-post-card" key={post.id}>
           {post.image_url?<img src={post.image_url} alt="Property post"/>:<div/>}
           <div className="instagram-post-content">
@@ -100,8 +100,8 @@ export default function FacebookPublishingPage(){
             {post.permalink&&<a className="text-link" href={post.permalink} target="_blank" rel="noreferrer">View Facebook post <ExternalLink size={13}/></a>}
             <div className="instagram-post-actions">
               {post.status==='draft'&&<button className="btn btn-outline" disabled={workingId===post.id} onClick={()=>act(post.id,'approve')}>Approve post</button>}
-              {post.status==='approved'&&<button className="btn btn-primary" disabled={workingId===post.id} onClick={()=>act(post.id,'publish')}><Send size={13}/>{workingId===post.id?'Publishing…':'Publish to Facebook'}</button>}
-              {post.status==='failed'&&<span className="instagram-post-meta">Fix the issue, then create a new draft for review.</span>}
+              {post.status==='approved'&&post.auto_generated&&<span className="instagram-post-meta">Automatic queue · Attempt {post.attempt_count||0}/5 · Next check {post.next_attempt_at?new Date(post.next_attempt_at).toLocaleString('en-IN'):'soon'}</span>}{post.status==='approved'&&!post.auto_generated&&<button className="btn btn-primary" disabled={workingId===post.id} onClick={()=>act(post.id,'publish')}><Send size={13}/>{workingId===post.id?'Publishing…':'Publish to Facebook'}</button>}
+              {post.status==='failed'&&<span className="instagram-post-meta">{post.auto_generated?'Automatic publishing stopped after a permanent error or 5 attempts. Review the error above.':'Fix the issue, then create a new draft for review.'}</span>}
             </div>
           </div>
         </article>)}</div>:<div className="instagram-empty">No Facebook drafts yet. Create one from an approved property.</div>}
