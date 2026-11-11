@@ -4,6 +4,7 @@
   "main": "src/worker.js",
   "compatibility_date": "2026-11-06",
   "keep_vars": true,
+  "triggers": { "crons": ["*/5 * * * *"] },
   "vars": {
     "SUPABASE_URL": "https://rapjnxjinkwgksantkhu.supabase.co",
     "SUPABASE_ANON_KEY": "sb_publishable_1A7qgmJP38Sq8g0R3JHhzA_8F_FjAS2",
