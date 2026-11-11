@@ -98,6 +98,12 @@ export default function SocialAutomationPage({user, platformFilter = null, overv
     finally{setSaving(false)}
   }
   const visibleRows=propertyRows.map(row=>{const posts=[...row.facebook.map(post=>({...post,platform:'facebook'})),...row.instagram.map(post=>({...post,platform:'instagram'}))].filter(post=>!platformFilter||post.platform===platformFilter);const latest=[...posts].filter(post=>post.status==='published'||post.permalink).sort((a,b)=>new Date(b.published_at||b.created_at||0)-new Date(a.published_at||a.created_at||0))[0]||null;return {...row,posts,latest,postedCount:posts.filter(post=>post.status==='published'||post.permalink).length}}).filter(row=>row.posts.length>0)
+  const overviewMetrics=useMemo(()=>{
+    const facebook=propertyRows.reduce((sum,row)=>sum+row.facebook.filter(post=>post.status==='published'||post.permalink).length,0)
+    const instagram=propertyRows.reduce((sum,row)=>sum+row.instagram.filter(post=>post.status==='published'||post.permalink).length,0)
+    const activeProperties=propertyRows.filter(row=>row.facebook.some(post=>post.status==='published'||post.permalink)||row.instagram.some(post=>post.status==='published'||post.permalink)).length
+    return {facebook,instagram,total:facebook+instagram,activeProperties}
+  },[propertyRows])
   return <section className="section page-section instagram-publishing-page">
     {!platformFilter&&!overviewOnly&&<>
     <div className="instagram-publishing-heading">
@@ -132,41 +138,91 @@ export default function SocialAutomationPage({user, platformFilter = null, overv
     </div>
     <p className="instagram-post-meta" style={{textAlign:'center',marginTop:10}}>Published totals count posts tracked in MrSa's publishing database, including manual and automatic posts.</p>
     </>}
-    {overviewOnly&&<section className="instagram-publishing-panel" style={{marginTop:8}}>
-      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,flexWrap:'wrap'}}>
-        <div><span className="eyebrow">PUBLISHING PERFORMANCE</span><h2 style={{margin:'7px 0 4px'}}>Property-wise publishing</h2><p className="muted" style={{margin:0}}>Published post count for each property across Facebook and Instagram.</p></div>
-        <button className="btn btn-outline" onClick={load} disabled={loading}><RefreshCw size={15}/> Refresh</button>
+    {overviewOnly&&<section className="instagram-publishing-panel mrsa-overview-dashboard" style={{marginTop:8}}>
+      <div className="mrsa-overview-heading">
+        <div><span className="eyebrow">MRSA PROPERTIES · PERFORMANCE</span><h2 style={{margin:'7px 0 4px'}}>Publishing overview</h2><p className="muted" style={{margin:0}}>Track how each approved property is performing across your social channels.</p></div>
+        <button className="btn btn-outline" onClick={load} disabled={loading}><RefreshCw size={15}/>{loading?'Refreshing…':'Refresh data'}</button>
       </div>
       {error&&<div className="instagram-publishing-error" role="alert" style={{marginTop:14}}>{error}</div>}
-      <div style={{overflowX:'auto',marginTop:18}}>
-        <table style={{width:'100%',minWidth:520,borderCollapse:'collapse',textAlign:'left'}}>
-          <thead><tr style={{background:'#f5f8f6'}}>
-            <th style={{padding:'13px 12px'}}>Property</th>
-            <th style={{padding:'13px 12px',textAlign:'center'}}><span style={{display:'inline-flex',alignItems:'center',gap:6}}><Facebook size={15} color="#1877f2"/> Facebook</span></th>
-            <th style={{padding:'13px 12px',textAlign:'center'}}><span style={{display:'inline-flex',alignItems:'center',gap:6}}><Instagram size={15} color="#b43d83"/> Instagram</span></th>
-            <th style={{padding:'13px 12px',textAlign:'center'}}>Total</th>
+      <div className="mrsa-overview-kpis">
+        <article className="mrsa-overview-kpi mrsa-kpi-total"><span className="mrsa-kpi-label">Total published</span><div><strong>{overviewMetrics.total}</strong><span className="mrsa-kpi-symbol">↗</span></div><small>Across Facebook + Instagram</small></article>
+        <article className="mrsa-overview-kpi"><span className="mrsa-kpi-label"><Facebook size={15} color="#1877f2"/> Facebook</span><strong>{overviewMetrics.facebook}</strong><small>Published posts</small><div className="mrsa-kpi-track"><i style={{width:overviewMetrics.total?overviewMetrics.facebook/overviewMetrics.total*100+'%':'0%'}}/></div></article>
+        <article className="mrsa-overview-kpi"><span className="mrsa-kpi-label"><Instagram size={15} color="#b43d83"/> Instagram</span><strong>{overviewMetrics.instagram}</strong><small>Published posts</small><div className="mrsa-kpi-track mrsa-kpi-instagram"><i style={{width:overviewMetrics.total?overviewMetrics.instagram/overviewMetrics.total*100+'%':'0%'}}/></div></article>
+        <article className="mrsa-overview-kpi"><span className="mrsa-kpi-label">Properties published</span><strong>{overviewMetrics.activeProperties}</strong><small>Unique properties with at least one post</small></article>
+      </div>
+      <div className="mrsa-overview-table-head"><div><h3>Property-wise breakdown</h3><p className="muted">Published post count by platform</p></div><span>{propertyRows.length} properties tracked</span></div>
+      <div className="mrsa-overview-table-wrap">
+        <table className="mrsa-overview-table">
+          <thead><tr>
+            <th>Property</th><th><span><Facebook size={15} color="#1877f2"/> Facebook</span></th><th><span><Instagram size={15} color="#b43d83"/> Instagram</span></th><th>Total posts</th><th>Platform mix</th>
           </tr></thead>
           <tbody>
             {propertyRows.length?propertyRows.map(row=>{
               const facebookCount=row.facebook.filter(post=>post.status==='published'||post.permalink).length;
               const instagramCount=row.instagram.filter(post=>post.status==='published'||post.permalink).length;
-              return <tr key={row.id} style={{borderTop:'1px solid var(--border-color, #e5e7eb)'}}>
-                <td style={{padding:'14px 12px'}}><b>{row.title}</b>{row.city&&<div className="instagram-post-meta">{row.city}</div>}</td>
-                <td style={{padding:'14px 12px',textAlign:'center'}}>{facebookCount}</td>
-                <td style={{padding:'14px 12px',textAlign:'center'}}>{instagramCount}</td>
-                <td style={{padding:'14px 12px',textAlign:'center'}}><b>{facebookCount+instagramCount}</b></td>
+              const total=facebookCount+instagramCount;
+              const latest=[...row.facebook.map(post=>({...post,platform:'Facebook'})),...row.instagram.map(post=>({...post,platform:'Instagram'}))].filter(post=>post.status==='published'||post.permalink).sort((a,b)=>new Date(b.published_at||0)-new Date(a.published_at||0))[0];
+              return <tr key={row.id}>
+                <td><b>{row.title}</b><small>{row.city||'Tamil Nadu'}</small></td>
+                <td><span className="mrsa-count mrsa-count-facebook">{facebookCount}</span></td>
+                <td><span className="mrsa-count mrsa-count-instagram">{instagramCount}</span></td>
+                <td><b className="mrsa-total-count">{total}</b></td>
+                <td><div className="mrsa-mix-track"><i className="mrsa-mix-facebook" style={{width:total?facebookCount/total*100+'%':'0%'}}/><i className="mrsa-mix-instagram" style={{width:total?instagramCount/total*100+'%':'0%'}}/></div><small className="mrsa-last-post">{latest?'Last posted: '+new Date(latest.published_at||latest.created_at).toLocaleDateString('en-IN'):'Not published yet'}</small></td>
               </tr>
-            }):<tr><td colSpan={4} style={{padding:24,textAlign:'center',color:'#718096'}}>{loading?'Loading property publishing data…':'No property publishing data found yet.'}</td></tr>}
+            }):<tr><td colSpan={5} className="mrsa-overview-empty">{loading?'Loading property publishing data…':'No published property posts found yet. Once approved posts are published, they will appear here.'}</td></tr>}
           </tbody>
-          {propertyRows.length>0&&<tfoot><tr style={{borderTop:'2px solid #dce7e1',background:'#f5f8f6',fontWeight:700}}>
-            <td style={{padding:'14px 12px'}}>Total</td>
-            <td style={{padding:'14px 12px',textAlign:'center'}}>{propertyRows.reduce((sum,row)=>sum+row.facebook.filter(post=>post.status==='published'||post.permalink).length,0)}</td>
-            <td style={{padding:'14px 12px',textAlign:'center'}}>{propertyRows.reduce((sum,row)=>sum+row.instagram.filter(post=>post.status==='published'||post.permalink).length,0)}</td>
-            <td style={{padding:'14px 12px',textAlign:'center'}}>{propertyRows.reduce((sum,row)=>sum+row.facebook.filter(post=>post.status==='published'||post.permalink).length+row.instagram.filter(post=>post.status==='published'||post.permalink).length,0)}</td>
+          {propertyRows.length>0&&<tfoot><tr>
+            <td><b>Grand total</b></td><td><b>{overviewMetrics.facebook}</b></td><td><b>{overviewMetrics.instagram}</b></td><td><b>{overviewMetrics.total}</b></td><td><span className="mrsa-total-caption">All published posts</span></td>
           </tr></tfoot>}
         </table>
       </div>
-      <p className="instagram-post-meta" style={{margin:'12px 0 0'}}>Counts include successfully published posts only. Queue drafts, approvals and failed posts are not included.</p>
+      <div className="mrsa-overview-legend"><span><i className="mrsa-legend-facebook"/> Facebook</span><span><i className="mrsa-legend-instagram"/> Instagram</span><small>Only successfully published posts are counted. Drafts, pending approvals and failed posts are excluded.</small></div>
+      <style>{`
+        .mrsa-overview-dashboard{padding:clamp(16px,2.5vw,26px);border:1px solid #e5ece8;border-radius:18px;background:linear-gradient(145deg,#fff 0%,#fbfdfc 100%);box-shadow:0 12px 34px #20364b0a}
+        .mrsa-overview-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+        .mrsa-overview-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:22px 0 28px}
+        .mrsa-overview-kpi{display:flex;flex-direction:column;gap:9px;min-width:0;padding:17px;border:1px solid #e8eeeb;border-radius:13px;background:#fff}
+        .mrsa-overview-kpi>strong,.mrsa-overview-kpi>div>strong{font-size:30px;line-height:1.1;letter-spacing:-1px;color:#20364b}
+        .mrsa-overview-kpi>div{display:flex;align-items:center;justify-content:space-between}
+        .mrsa-kpi-total{background:#203d34;border-color:#203d34;color:#fff}
+        .mrsa-kpi-total>div>strong,.mrsa-kpi-total .mrsa-kpi-label,.mrsa-kpi-total small{color:#fff}
+        .mrsa-kpi-symbol{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#ffffff20;color:#d8f0e3}
+        .mrsa-kpi-label{display:flex;align-items:center;gap:7px;color:#65766f;font-size:12px;font-weight:700}
+        .mrsa-overview-kpi small{color:#829089;font-size:11px}
+        .mrsa-kpi-track,.mrsa-mix-track{display:flex;overflow:hidden;height:6px;border-radius:20px;background:#edf1ef}
+        .mrsa-kpi-track i{display:block;border-radius:20px;background:#2782df}
+        .mrsa-kpi-instagram i{background:#bd4b8a}
+        .mrsa-overview-table-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:12px}
+        .mrsa-overview-table-head h3{margin:0 0 4px;color:#20364b;font-size:17px}
+        .mrsa-overview-table-head p{margin:0;font-size:12px}
+        .mrsa-overview-table-head>span{color:#718078;font-size:11px;font-weight:600}
+        .mrsa-overview-table-wrap{overflow-x:auto;border:1px solid #e7eeea;border-radius:12px;background:#fff}
+        .mrsa-overview-table{width:100%;min-width:680px;border-collapse:separate;border-spacing:0;text-align:left}
+        .mrsa-overview-table th{padding:13px 15px;background:#f5f8f6;color:#6c7b74;font-size:11px;font-weight:700;white-space:nowrap}
+        .mrsa-overview-table th span{display:inline-flex;align-items:center;gap:6px}
+        .mrsa-overview-table td{padding:14px 15px;border-top:1px solid #edf1ef;color:#34483f;font-size:13px}
+        .mrsa-overview-table tbody tr:hover{background:#fbfdfc}
+        .mrsa-overview-table td:first-child b{display:block;color:#20364b;font-size:13px}
+        .mrsa-overview-table td small{display:block;margin-top:4px;color:#89958f;font-size:10px}
+        .mrsa-count{display:inline-grid;place-items:center;min-width:31px;height:29px;padding:0 8px;border-radius:8px;font-weight:700}
+        .mrsa-count-facebook{background:#edf5ff;color:#1769ba}
+        .mrsa-count-instagram{background:#fbf0f6;color:#a43b78}
+        .mrsa-total-count{color:#203d34;font-size:15px}
+        .mrsa-mix-track{width:105px;height:7px}
+        .mrsa-mix-facebook{background:#2782df}
+        .mrsa-mix-instagram{background:#bd4b8a}
+        .mrsa-last-post{white-space:nowrap}
+        .mrsa-overview-table tfoot td{background:#f5f8f6;border-top:2px solid #dce7e1;font-weight:700}
+        .mrsa-total-caption{color:#6f8077;font-size:11px;font-weight:500}
+        .mrsa-overview-empty{text-align:center!important;padding:30px!important;color:#77867f!important}
+        .mrsa-overview-legend{display:flex;align-items:center;gap:15px;flex-wrap:wrap;margin-top:14px}
+        .mrsa-overview-legend>span{display:inline-flex;align-items:center;gap:6px;color:#66766e;font-size:11px}
+        .mrsa-overview-legend i{width:8px;height:8px;border-radius:50%}
+        .mrsa-legend-facebook{background:#2782df}.mrsa-legend-instagram{background:#bd4b8a}
+        .mrsa-overview-legend small{margin-left:auto;color:#89958f;font-size:10px}
+        @media(max-width:900px){.mrsa-overview-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+        @media(max-width:560px){.mrsa-overview-kpis{gap:8px;margin:17px 0 22px}.mrsa-overview-kpi{padding:13px}.mrsa-overview-kpi>strong,.mrsa-overview-kpi>div>strong{font-size:25px}.mrsa-overview-table-head{align-items:flex-start;flex-direction:column}.mrsa-overview-legend small{margin-left:0;width:100%}}
+      `}</style>
     </section>}
     {!overviewOnly&&<>
     <section className="instagram-publishing-panel" style={{marginTop:24}}>
