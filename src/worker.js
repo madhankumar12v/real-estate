@@ -79,7 +79,10 @@ async function publishInstagram(env,post){
 }
 
 async function publishFacebook(env,post){
-  if(!env.FACEBOOK_PAGE_ACCESS_TOKEN||!env.FACEBOOK_PAGE_ID) throw new Error("Facebook publishing is not configured. Add FACEBOOK_PAGE_ACCESS_TOKEN and FACEBOOK_PAGE_ID in Cloudflare.");
+  const missing=[];
+  if(!String(env.FACEBOOK_PAGE_ACCESS_TOKEN||"").trim()) missing.push("FACEBOOK_PAGE_ACCESS_TOKEN");
+  if(!String(env.FACEBOOK_PAGE_ID||"").trim()) missing.push("FACEBOOK_PAGE_ID");
+  if(missing.length) throw new Error("The deployed Worker cannot read: "+missing.join(", ")+". Re-save the missing value under mrsa → Production → Settings → Variables and Secrets, then redeploy.");
   const imageUrl=new URL(post.image_url);
   if(imageUrl.protocol!=="https:") throw new Error("Facebook requires a publicly accessible HTTPS image URL.");
   const imageCheck=await fetch(imageUrl.toString(),{method:"HEAD"});
@@ -154,6 +157,9 @@ async function handleApi(request,env){
     }
   }
 
+  if(request.method==="GET"&&path==="/api/facebook/config"){
+    return json({facebookPageIdConfigured:Boolean(String(env.FACEBOOK_PAGE_ID||"").trim()),facebookPageAccessTokenConfigured:Boolean(String(env.FACEBOOK_PAGE_ACCESS_TOKEN||"").trim())});
+  }
   if(request.method==="GET"&&path==="/api/facebook/listings"){
     const listings=await supabaseRequest(env,token,"listings?select=id,title,city,district,locality,property_type,price_per_sqft,description,images:listing_images(url)&status=eq.approved&order=created_at.desc&limit=100");
     return json({listings:listings||[]});
