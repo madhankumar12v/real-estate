@@ -48,9 +48,20 @@ async function requireAdmin(request,env){
   return {token,user};
 }
 async function graphPost(url,params){
-  const response=await fetch(url,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:params.toString()});
+  let response;
+  try{
+    response=await fetch(url,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:params.toString()});
+  }catch(error){
+    const uncertain=new Error("Meta did not return a response. The post may have been accepted; verify it in Meta before retrying.");
+    uncertain.uncertain=true;
+    throw uncertain;
+  }
   const data=await response.json().catch(()=>({}));
-  if(!response.ok||data.error) throw new Error(data.error?.message||"Meta Graph API request failed.");
+  if(!response.ok||data.error){
+    const failure=new Error(data.error?.message||"Meta Graph API request failed.");
+    if(response.status>=500||response.status===429) failure.uncertain=true;
+    throw failure;
+  }
   return data;
 }
 async function publishInstagram(env,post){
@@ -151,6 +162,10 @@ async function publishOneForPlatform(env,table,platform){
     result=platform==="facebook"?await publishFacebook(env,selected):await publishInstagram(env,selected);
   }catch(error){
     const message=String(error?.message||"Automatic publishing failed.").slice(0,1000);
+    if(error?.uncertain){
+      await serviceRequest(env,table+"?id=eq."+encodeURIComponent(selected.id)+"&status=eq.publishing",{method:"PATCH",body:{status:"review_required",last_error:message,next_attempt_at:null,processing_started_at:null}}).catch(()=>{});
+      return {processed:1,platform,reviewRequired:true,error:message};
+    }
     const permanent=/requires a JPEG|permission|not configured|invalid access token|unsupported post|no longer approved|deprecated/i.test(message);
     const retryMinutes=[60,120,180,240];
     const exhausted=attempt>=5||permanent;
@@ -162,9 +177,13 @@ async function publishOneForPlatform(env,table,platform){
     ? {status:"published",fb_media_id:result.mediaId,fb_post_id:result.postId,permalink:result.permalink,published_at:new Date().toISOString(),last_error:null,processing_started_at:null,next_attempt_at:null}
     : {status:"published",ig_container_id:result.containerId,ig_media_id:result.mediaId,permalink:result.permalink,published_at:new Date().toISOString(),last_error:null,processing_started_at:null,next_attempt_at:null};
   try{
-    await serviceRequest(env,table+"?id=eq."+encodeURIComponent(selected.id)+"&status=eq.publishing",{method:"PATCH",body:fields});
+    const saved=await serviceRequest(env,table+"?id=eq."+encodeURIComponent(selected.id)+"&status=eq.publishing",{method:"PATCH",prefer:"return=representation",body:fields});
+    if(!saved?.length) throw new Error("MrSa could not confirm the saved publishing record.");
   }catch(saveError){
+    const message=("Meta accepted the post, but MrSa could not confirm the saved post ID. Verify Meta before retrying. "+String(saveError?.message||"")).slice(0,1000);
+    await serviceRequest(env,table+"?id=eq."+encodeURIComponent(selected.id)+"&status=eq.publishing",{method:"PATCH",body:{status:"review_required",last_error:message,next_attempt_at:null,processing_started_at:null}}).catch(()=>{});
     console.error("Published externally but could not save "+platform+" status for "+selected.id+":",saveError?.message||saveError);
+    return {processed:1,platform,published:true,reviewRequired:true};
   }
   return {processed:1,platform,published:true};
 }
@@ -224,7 +243,7 @@ async function handleApi(request,env){
   }
   const approveMatch=path.match(/^\/api\/instagram\/posts\/([0-9a-f-]+)\/approve$/i);
   if(request.method==="POST"&&approveMatch){
-    const updated=await supabaseRequest(env,token,"instagram_posts?id=eq."+encodeURIComponent(approveMatch[1])+"&status=in.(draft,approved,failed)",{method:"PATCH",prefer:"return=representation",body:{status:"approved",approved_by:user.id,approved_at:new Date().toISOString(),next_attempt_at:new Date().toISOString(),attempt_count:0,last_error:null}});
+    const updated=await supabaseRequest(env,token,"instagram_posts?id=eq."+encodeURIComponent(approveMatch[1])+"&status=in.(draft,failed)",{method:"PATCH",prefer:"return=representation",body:{status:"approved",approved_by:user.id,approved_at:new Date().toISOString(),next_attempt_at:new Date().toISOString(),attempt_count:0,last_error:null}});
     if(!updated?.length) throw new HttpError("Draft not found or it has already been reviewed.",409);
     return json({post:updated[0]});
   }
@@ -295,7 +314,7 @@ async function handleApi(request,env){
   }
   const fbApproveMatch=path.match(/^\/api\/facebook\/posts\/([0-9a-f-]+)\/approve$/i);
   if(request.method==="POST"&&fbApproveMatch){
-    const updated=await supabaseRequest(env,token,"facebook_posts?id=eq."+encodeURIComponent(fbApproveMatch[1])+"&status=in.(draft,approved,failed)",{method:"PATCH",prefer:"return=representation",body:{status:"approved",approved_by:user.id,approved_at:new Date().toISOString(),next_attempt_at:new Date().toISOString(),attempt_count:0,last_error:null}});
+    const updated=await supabaseRequest(env,token,"facebook_posts?id=eq."+encodeURIComponent(fbApproveMatch[1])+"&status=in.(draft,failed)",{method:"PATCH",prefer:"return=representation",body:{status:"approved",approved_by:user.id,approved_at:new Date().toISOString(),next_attempt_at:new Date().toISOString(),attempt_count:0,last_error:null}});
     if(!updated?.length) throw new HttpError("Draft not found or it has already been reviewed.",409);
     return json({post:updated[0]});
   }
