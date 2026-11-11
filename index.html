@@ -10,7 +10,7 @@
     <link rel="apple-touch-icon" href="/mrsa-logo.png" />
     <meta
       name="description"
-      content="Buy and sell plots, land, villas, apartments, houses and commercial properties across Vellore with MrSa Properties. Explore property listings and enquire directly."
+      content="Buy and sell plots, land, villas, apartments, houses and commercial properties across Vellore, Katpadi, Gudiyatham, Ranipet, Arcot, Anaicut and Walajah with MrSa Properties. Explore property listings and enquire directly."
     />
     <meta name="robots" content="index,follow" />
     <link rel="canonical" href="https://mrsa.mrsaproperties.workers.dev/" />
@@ -25,7 +25,7 @@
     <meta property="og:title" content="MrSa Properties | Buy • Sell • Discover" />
     <meta
       property="og:description"
-      content="Find plots, land, houses, villas and commercial properties across Vellore. Explore listings and connect with property owners and agents."
+      content="Find plots, land, houses, villas and commercial properties across Vellore, Katpadi, Gudiyatham, Ranipet, Arcot, Anaicut and Walajah. Explore listings and connect with property owners and agents."
     />
     <meta property="og:type" content="website" />
     <meta
@@ -39,7 +39,7 @@
     <meta property="og:image:type" content="image/png" />
     <meta
       property="og:image:alt"
-      content="MrSa Properties – Buy, Sell and Discover properties across Vellore"
+      content="MrSa Properties – Buy, Sell and Discover properties across Vellore, Katpadi, Gudiyatham, Ranipet, Arcot, Anaicut and Walajah"
     />
 
     <!-- Large image preview for X/Twitter and compatible platforms -->
@@ -47,7 +47,7 @@
     <meta name="twitter:title" content="MrSa Properties | Buy • Sell • Discover" />
     <meta
       name="twitter:description"
-      content="Find plots, land, houses, villas and commercial properties across Vellore."
+      content="Find plots, land, houses, villas and commercial properties across Vellore, Katpadi, Gudiyatham, Ranipet, Arcot, Anaicut and Walajah."
     />
     <meta
       name="twitter:image"
@@ -55,7 +55,7 @@
     />
     <meta
       name="twitter:image:alt"
-      content="MrSa Properties – Buy, Sell and Discover properties across Vellore"
+      content="MrSa Properties – Buy, Sell and Discover properties across Vellore, Katpadi, Gudiyatham, Ranipet, Arcot, Anaicut and Walajah"
     />
 
     <title>Properties for Sale in Vellore | MrSa Properties</title>
@@ -71,15 +71,8 @@
             "logo": "https://mrsa.mrsaproperties.workers.dev/mrsa-logo.png",
             "email": "mrsasolutions2@gmail.com",
             "telephone": "+91-88380-37689",
-            "areaServed": {
-              "@type": "City",
-              "name": "Vellore",
-              "containedInPlace": {
-                "@type": "Country",
-                "name": "India"
-              }
-            },
-            "description": "A property listing and enquiry platform for buying and selling plots, land, houses, villas, apartments and commercial properties in Vellore."
+            "areaServed": ["Vellore", "Katpadi", "Gudiyatham", "Ranipet", "Arcot", "Anaicut", "Walajah"].map(name => ({ "@type": "City", "name": name, "containedInPlace": { "@type": "Country", "name": "India" } })),
+            "description": "A property listing and enquiry platform for buying and selling plots, land, houses, villas, apartments and commercial properties in Vellore, Katpadi, Gudiyatham, Ranipet, Arcot, Anaicut and Walajah."
           },
           {
             "@type": "WebSite",
