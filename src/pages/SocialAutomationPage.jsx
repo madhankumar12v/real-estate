@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase'
 export default function SocialAutomationPage({user, platformFilter = null, overviewOnly = false}){
   const [settings,setSettings]=useState(null)
   const [runtime,setRuntime]=useState(null)
-  const [counts,setCounts]=useState({facebookQueued:0,instagramQueued:0,facebookFailed:0,instagramFailed:0,facebookRejected:0,instagramRejected:0,facebookPublished:0,instagramPublished:0})
+  const [counts,setCounts]=useState({facebookQueued:0,instagramQueued:0,facebookFailed:0,instagramFailed:0,facebookRejected:0,instagramRejected:0,facebookReview:0,instagramReview:0,facebookPublished:0,instagramPublished:0})
   const [propertyHistory,setPropertyHistory]=useState({facebook:[],instagram:[]})
   const [queuePosts,setQueuePosts]=useState({facebook:[],instagram:[]})
   const [workingPost,setWorkingPost]=useState('')
@@ -34,18 +34,20 @@ export default function SocialAutomationPage({user, platformFilter = null, overv
       if(!fbQueueResponse.ok)throw new Error(fbQueueData.error||'Could not load Facebook approval queue.')
       if(!igQueueResponse.ok)throw new Error(igQueueData.error||'Could not load Instagram approval queue.')
       setQueuePosts({facebook:fbQueueData.posts||[],instagram:igQueueData.posts||[]})
-      const [fbQueued,igQueued,fbFailed,igFailed,fbRejected,igRejected,fbPublished,igPublished]=await Promise.all([
+      const [fbQueued,igQueued,fbFailed,igFailed,fbRejected,igRejected,fbReview,igReview,fbPublished,igPublished]=await Promise.all([
         supabase.from('facebook_posts').select('id',{count:'exact',head:true}).eq('auto_generated',true).in('status',['draft','approved','publishing']),
         supabase.from('instagram_posts').select('id',{count:'exact',head:true}).eq('auto_generated',true).in('status',['draft','approved','publishing']),
         supabase.from('facebook_posts').select('id',{count:'exact',head:true}).eq('auto_generated',true).eq('status','failed'),
         supabase.from('instagram_posts').select('id',{count:'exact',head:true}).eq('auto_generated',true).eq('status','failed'),
         supabase.from('facebook_posts').select('id',{count:'exact',head:true}).eq('auto_generated',true).eq('status','rejected'),
         supabase.from('instagram_posts').select('id',{count:'exact',head:true}).eq('auto_generated',true).eq('status','rejected'),
+        supabase.from('facebook_posts').select('id',{count:'exact',head:true}).eq('auto_generated',true).eq('status','review_required'),
+        supabase.from('instagram_posts').select('id',{count:'exact',head:true}).eq('auto_generated',true).eq('status','review_required'),
         supabase.from('facebook_posts').select('id',{count:'exact',head:true}).eq('status','published'),
         supabase.from('instagram_posts').select('id',{count:'exact',head:true}).eq('status','published')
       ])
-      for(const result of [fbQueued,igQueued,fbFailed,igFailed,fbRejected,igRejected,fbPublished,igPublished])if(result.error)throw result.error
-      setCounts({facebookQueued:fbQueued.count||0,instagramQueued:igQueued.count||0,facebookFailed:fbFailed.count||0,instagramFailed:igFailed.count||0,facebookRejected:fbRejected.count||0,instagramRejected:igRejected.count||0,facebookPublished:fbPublished.count||0,instagramPublished:igPublished.count||0})
+      for(const result of [fbQueued,igQueued,fbFailed,igFailed,fbRejected,igRejected,fbReview,igReview,fbPublished,igPublished])if(result.error)throw result.error
+      setCounts({facebookQueued:fbQueued.count||0,instagramQueued:igQueued.count||0,facebookFailed:fbFailed.count||0,instagramFailed:igFailed.count||0,facebookRejected:fbRejected.count||0,instagramRejected:igRejected.count||0,facebookReview:fbReview.count||0,instagramReview:igReview.count||0,facebookPublished:fbPublished.count||0,instagramPublished:igPublished.count||0})
     }catch(err){setError(err.message||'Could not load automation settings. Run the Auto Marketing 2.0 Supabase migration first.')}
     finally{setLoading(false)}
   }
@@ -152,7 +154,7 @@ export default function SocialAutomationPage({user, platformFilter = null, overv
         <article className="mrsa-overview-kpi"><span className="mrsa-kpi-label"><Instagram size={15} color="#b43d83"/> Instagram published</span><strong>{overviewMetrics.instagram}</strong><small>Successfully published</small><div className="mrsa-kpi-track mrsa-kpi-instagram"><i style={{width:overviewMetrics.total?overviewMetrics.instagram/overviewMetrics.total*100+'%':'0%'}}/></div></article>
         <article className="mrsa-overview-kpi"><span className="mrsa-kpi-label">Properties published</span><strong>{overviewMetrics.activeProperties}</strong><small>Unique properties with posts</small></article>
       </div>
-      <div className="mrsa-overview-table-head mrsa-status-heading"><div><h3>Queue &amp; post status</h3><p className="muted">Platform-wise counts to help you manage pending work and resolve issues.</p></div><span>{counts.facebookQueued+counts.instagramQueued} queued · {counts.facebookFailed+counts.instagramFailed} failed · {counts.facebookRejected+counts.instagramRejected} rejected</span></div>
+      <div className="mrsa-overview-table-head mrsa-status-heading"><div><h3>Queue &amp; post status</h3><p className="muted">Platform-wise counts to help you manage pending work and resolve issues.</p></div><span>{counts.facebookQueued+counts.instagramQueued} queued · {counts.facebookFailed+counts.instagramFailed} failed · {counts.facebookRejected+counts.instagramRejected} rejected · {counts.facebookReview+counts.instagramReview} verify</span></div>
       <div className="mrsa-status-grid">
         <article className="mrsa-status-card"><span><i className="mrsa-status-dot queue"/> Facebook queue</span><strong>{counts.facebookQueued}</strong><small>Draft + approved + publishing</small></article>
         <article className="mrsa-status-card"><span><i className="mrsa-status-dot queue"/> Instagram queue</span><strong>{counts.instagramQueued}</strong><small>Draft + approved + publishing</small></article>
@@ -160,6 +162,8 @@ export default function SocialAutomationPage({user, platformFilter = null, overv
         <article className="mrsa-status-card"><span><i className="mrsa-status-dot failed"/> Instagram failed</span><strong>{counts.instagramFailed}</strong><small>Needs review or retry</small></article>
         <article className="mrsa-status-card"><span><i className="mrsa-status-dot rejected"/> Facebook rejected</span><strong>{counts.facebookRejected}</strong><small>Not approved for publishing</small></article>
         <article className="mrsa-status-card"><span><i className="mrsa-status-dot rejected"/> Instagram rejected</span><strong>{counts.instagramRejected}</strong><small>Not approved for publishing</small></article>
+        <article className="mrsa-status-card"><span><i className="mrsa-status-dot failed"/> Facebook verify first</span><strong>{counts.facebookReview}</strong><small>Check Meta before retrying</small></article>
+        <article className="mrsa-status-card"><span><i className="mrsa-status-dot failed"/> Instagram verify first</span><strong>{counts.instagramReview}</strong><small>Check Meta before retrying</small></article>
       </div>
       <div className="mrsa-overview-table-head"><div><h3>Property-wise breakdown</h3><p className="muted">Published post count by platform</p></div><span>{propertyRows.length} properties tracked</span></div>
       <div className="mrsa-overview-table-wrap">
