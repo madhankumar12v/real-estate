@@ -177,6 +177,13 @@ async function handleApi(request,env){
   const url=new URL(request.url);
   const path=url.pathname;
   const {token,user}=await requireAdmin(request,env);
+  if(request.method==="GET"&&path==="/api/social-automation/property-history"){
+    const [facebook,instagram]=await Promise.all([
+      supabaseRequest(env,token,"facebook_posts?select=id,listing_id,fb_post_id,permalink,published_at,listing:listings(title,city)&status=eq.published&order=published_at.desc&limit=1000"),
+      supabaseRequest(env,token,"instagram_posts?select=id,listing_id,ig_media_id,permalink,published_at,listing:listings(title,city)&status=eq.published&order=published_at.desc&limit=1000")
+    ]);
+    return json({facebook:facebook||[],instagram:instagram||[]});
+  }
   if(request.method==="GET"&&path==="/api/social-automation/status"){
     return json({
       serviceRoleConfigured:Boolean(String(env.SUPABASE_SERVICE_ROLE_KEY||"").trim()),
