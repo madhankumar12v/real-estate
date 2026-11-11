@@ -2019,3 +2019,18 @@ footer > span {
 .source-performance-table td{color:#526575;font-variant-numeric:tabular-nums}
 .source-performance-table td:first-child{color:var(--navy)}
 .source-performance-table tr:last-child td{border-bottom:0}
+
+/* Homepage: admin-curated featured listings and simple How MrSa Works steps */
+.featured-properties-section{background:#fbfcfb}
+.featured-admin-label{display:inline-flex;margin-top:7px;padding:5px 8px;border-radius:20px;background:#edf6f1;color:#287b68;font-size:10px;font-weight:700}
+.how-it-works-section{padding:72px 25px;background:#f5faf8}
+.how-it-works-inner{max-width:1160px;margin:auto;display:grid;grid-template-columns:.8fr 1.2fr;gap:70px;align-items:center}
+.how-heading h2{font:600 clamp(30px,4vw,42px)/1.15 'Playfair Display',serif;color:#20364b;margin:13px 0}
+.how-heading p{max-width:370px;color:#71808b;font-size:13px;line-height:1.8}
+.how-steps{display:grid;grid-template-columns:1fr;gap:0}
+.how-steps article{display:flex;align-items:flex-start;gap:20px;padding:19px 0;border-bottom:1px solid #e1ebe7}
+.how-steps article:last-child{border-bottom:0}
+.how-steps article>span{flex:0 0 42px;width:42px;height:42px;display:grid;place-items:center;border-radius:50%;background:#e5f1ec;color:#287b68;font:600 14px 'DM Sans'}
+.how-steps b{color:#263e4e;font-size:15px}
+.how-steps p{margin:6px 0 0;color:#71808b;font-size:12px;line-height:1.7}
+@media(max-width:700px){.how-it-works-section{padding:48px 20px}.how-it-works-inner{grid-template-columns:1fr;gap:18px}.how-steps article{gap:14px}}
