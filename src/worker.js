@@ -94,6 +94,8 @@ async function handleApi(request,env){
     if(String(body.caption).length>2200) throw new HttpError("Instagram captions cannot exceed 2,200 characters.");
     const listingRows=await supabaseRequest(env,token,"listings?select=id,status&id=eq."+encodeURIComponent(body.listing_id)+"&limit=1");
     if(!listingRows?.length||listingRows[0].status!=="approved") throw new HttpError("Only currently approved property listings can be posted.",409);
+    const imageRows=await supabaseRequest(env,token,"listing_images?select=id&listing_id=eq."+encodeURIComponent(body.listing_id)+"&url=eq."+encodeURIComponent(String(body.image_url))+"&limit=1");
+    if(!imageRows?.length) throw new HttpError("Choose a photo attached to the selected property listing.",409);
     const created=await supabaseRequest(env,token,"instagram_posts",{method:"POST",prefer:"return=representation",body:{listing_id:body.listing_id,caption:String(body.caption).trim(),image_url:String(body.image_url),status:"draft",created_by:user.id}});
     return json({post:created?.[0]||null},201);
   }
