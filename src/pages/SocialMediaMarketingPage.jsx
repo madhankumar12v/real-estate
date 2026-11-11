@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Facebook, Instagram, LayoutDashboard, History, ArrowUpRight, ShieldCheck, Clock3, RotateCw } from 'lucide-react'
+import { Facebook, Instagram, LayoutDashboard, History, ShieldCheck } from 'lucide-react'
 import FacebookPublishingPage from './FacebookPublishingPage'
 import InstagramPublishingPage from './InstagramPublishingPage'
 import SocialAutomationPage from './SocialAutomationPage'
@@ -32,28 +32,7 @@ export default function SocialMediaMarketingPage({ user }) {
     </nav>
 
     <div className="social-marketing-content">
-      {activeTab === 'overview' && <>
-        <section className="social-platform-intro">
-          <div><span className="eyebrow">PUBLISHING CHANNELS</span><h2>Manage both platforms together</h2><p className="muted">Each channel has its own drafts, approval queue and publishing history. Select a platform to create and review posts.</p></div>
-          <div className="social-rules-chip"><Clock3 size={15}/> 10 AM–10 PM IST <span>·</span> <RotateCw size={15}/> 1 post / hour / platform</div>
-        </section>
-
-        <div className="social-platform-grid">
-          <button type="button" className="social-platform-card facebook-card" onClick={() => openPlatform('facebook')}>
-            <span className="social-platform-icon"><Facebook size={25}/></span>
-            <span className="social-platform-copy"><b>Facebook Page</b><small>Create posts · Review approvals · Track published links</small><em>Open Facebook manager <ArrowUpRight size={15}/></em></span>
-            <span className="social-platform-arrow"><ArrowUpRight size={19}/></span>
-          </button>
-          <button type="button" className="social-platform-card instagram-card" onClick={() => openPlatform('instagram')}>
-            <span className="social-platform-icon"><Instagram size={25}/></span>
-            <span className="social-platform-copy"><b>Instagram</b><small>Create posts · Review approvals · Track published links</small><em>Open Instagram manager <ArrowUpRight size={15}/></em></span>
-            <span className="social-platform-arrow"><ArrowUpRight size={19}/></span>
-          </button>
-        </div>
-
-        <div className="social-overview-divider"><span>Automation & performance</span></div>
-        <SocialAutomationPage user={user}/>
-      </>}
+      {activeTab === 'overview' && <SocialAutomationPage user={user}/>}
 
       {activeTab === 'facebook' && <SocialAutomationPage user={user} platformFilter="facebook" />}
       {activeTab === 'instagram' && <SocialAutomationPage user={user} platformFilter="instagram" />}
