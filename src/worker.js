@@ -141,17 +141,14 @@ async function runSocialAutomation(env){
       });
       if(!claim?.length) continue;
       processed++;
+      let result;
       try{
         const listing=await serviceRequest(env,"listings?select=id,status&id=eq."+encodeURIComponent(post.listing_id)+"&status=eq.approved&limit=1");
         if(!listing?.length) throw new Error("Property is no longer approved. Automatic publishing was blocked.");
-        const result=platform==="facebook"?await publishFacebook(env,post):await publishInstagram(env,post);
-        const fields=platform==="facebook"
-          ? {status:"published",fb_media_id:result.mediaId,fb_post_id:result.postId,permalink:result.permalink,published_at:new Date().toISOString(),last_error:null,processing_started_at:null}
-          : {status:"published",ig_container_id:result.containerId,ig_media_id:result.mediaId,permalink:result.permalink,published_at:new Date().toISOString(),last_error:null,processing_started_at:null};
-        await serviceRequest(env,table+"?id=eq."+encodeURIComponent(post.id)+"&status=eq.publishing",{method:"PATCH",body:fields});
+        result=platform==="facebook"?await publishFacebook(env,post):await publishInstagram(env,post);
       }catch(error){
         const message=String(error?.message||"Automatic publishing failed.").slice(0,1000);
-        const permanent=/requires a JPEG|permission|not configured|invalid access token|unsupported post|no longer approved|could not access the property image/i.test(message);
+        const permanent=/requires a JPEG|permission|not configured|invalid access token|unsupported post|no longer approved|could not access the property image|deprecated/i.test(message);
         const retryMinutes=[5,15,60,180];
         const exhausted=attempt>=5||permanent;
         const nextAttempt=new Date(Date.now()+(retryMinutes[Math.min(attempt-1,retryMinutes.length-1)]||180)*60000).toISOString();
@@ -159,6 +156,17 @@ async function runSocialAutomation(env){
           method:"PATCH",
           body:{status:exhausted?"failed":"approved",last_error:message,next_attempt_at:nextAttempt,processing_started_at:null}
         }).catch(()=>{});
+        continue;
+      }
+      const fields=platform==="facebook"
+        ? {status:"published",fb_media_id:result.mediaId,fb_post_id:result.postId,permalink:result.permalink,published_at:new Date().toISOString(),last_error:null,processing_started_at:null}
+        : {status:"published",ig_container_id:result.containerId,ig_media_id:result.mediaId,permalink:result.permalink,published_at:new Date().toISOString(),last_error:null,processing_started_at:null};
+      // If Meta accepted the post but this database write fails, leave it in "publishing"
+      // for manual reconciliation rather than automatically sending a duplicate.
+      try{
+        await serviceRequest(env,table+"?id=eq."+encodeURIComponent(post.id)+"&status=eq.publishing",{method:"PATCH",body:fields});
+      }catch(saveError){
+        console.error("Published externally but could not save "+platform+" status for "+post.id+":",saveError?.message||saveError);
       }
     }
   }
