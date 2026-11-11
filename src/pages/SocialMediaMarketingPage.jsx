@@ -55,8 +55,8 @@ export default function SocialMediaMarketingPage({ user }) {
         <SocialAutomationPage user={user}/>
       </>}
 
-      {activeTab === 'facebook' && <FacebookPublishingPage />}
-      {activeTab === 'instagram' && <InstagramPublishingPage />}
+      {activeTab === 'facebook' && <SocialAutomationPage user={user} platformFilter="facebook" />}
+      {activeTab === 'instagram' && <SocialAutomationPage user={user} platformFilter="instagram" />}
       {activeTab === 'history' && <div className="social-marketing-history">
         <h2>Publishing history</h2>
         <p className="muted">Review published links, post status and any errors for both channels.</p>
