@@ -6,7 +6,7 @@
   "keep_vars": true,
   "vars": {
     "SUPABASE_URL": "https://rapjnxjinkwgksantkhu.supabase.co",
-    "SUPABASE_ANON_KEY": "sb_publishable_1A7qgmJP38Sq8g0R3JJhzA_8F_FjAS2",
+    "SUPABASE_ANON_KEY": "sb_publishable_1A7qgmJP38Sq8g0R3JHhzA_8F_FjAS2",
     "INSTAGRAM_ACCOUNT_ID": "17841423033091291",
     "FACEBOOK_PAGE_ID": "600423969819506"
   },
