@@ -254,12 +254,15 @@ async function handleApi(request,env){
   }
   const instagramRejectMatch=path.match(/^\/api\/instagram\/posts\/([0-9a-f-]+)\/reject$/i);
   if(request.method==="POST"&&instagramRejectMatch){
+    const body=await request.json().catch(()=>({}));
+    const reason=String(body?.reason||"").trim().slice(0,500);
+    if(reason.length<3) throw new HttpError("Please enter a rejection reason (at least 3 characters).");
     const id=encodeURIComponent(instagramRejectMatch[1]);
     const rows=await supabaseRequest(env,token,"instagram_posts?select=id,status&id=eq."+id+"&limit=1");
     const post=rows?.[0];
     if(!post) throw new HttpError("Instagram queue item not found.",404);
     if(["published","publishing"].includes(post.status)) throw new HttpError("Published or currently publishing posts cannot be rejected.",409);
-    const updated=await supabaseRequest(env,token,"instagram_posts?id=eq."+id+"&status=in.(draft,approved,failed,rejected)",{method:"PATCH",prefer:"return=representation",body:{status:"rejected",last_error:null,next_attempt_at:null,processing_started_at:null}});
+    const updated=await supabaseRequest(env,token,"instagram_posts?id=eq."+id+"&status=in.(draft,approved,failed,rejected)",{method:"PATCH",prefer:"return=representation",body:{status:"rejected",last_error:reason,next_attempt_at:null,processing_started_at:null}});
     if(!updated?.length) throw new HttpError("This Instagram item can no longer be rejected.",409);
     return json({post:updated[0]});
   }
@@ -327,12 +330,15 @@ async function handleApi(request,env){
   }
   const fbRejectMatch=path.match(/^\/api\/facebook\/posts\/([0-9a-f-]+)\/reject$/i);
   if(request.method==="POST"&&fbRejectMatch){
+    const body=await request.json().catch(()=>({}));
+    const reason=String(body?.reason||"").trim().slice(0,500);
+    if(reason.length<3) throw new HttpError("Please enter a rejection reason (at least 3 characters).");
     const id=encodeURIComponent(fbRejectMatch[1]);
     const rows=await supabaseRequest(env,token,"facebook_posts?select=id,status&id=eq."+id+"&limit=1");
     const post=rows?.[0];
     if(!post) throw new HttpError("Facebook queue item not found.",404);
     if(["published","publishing"].includes(post.status)) throw new HttpError("Published or currently publishing posts cannot be rejected.",409);
-    const updated=await supabaseRequest(env,token,"facebook_posts?id=eq."+id+"&status=in.(draft,approved,failed,rejected)",{method:"PATCH",prefer:"return=representation",body:{status:"rejected",last_error:null,next_attempt_at:null,processing_started_at:null}});
+    const updated=await supabaseRequest(env,token,"facebook_posts?id=eq."+id+"&status=in.(draft,approved,failed,rejected)",{method:"PATCH",prefer:"return=representation",body:{status:"rejected",last_error:reason,next_attempt_at:null,processing_started_at:null}});
     if(!updated?.length) throw new HttpError("This Facebook item can no longer be rejected.",409);
     return json({post:updated[0]});
   }
