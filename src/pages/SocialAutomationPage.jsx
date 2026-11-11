@@ -179,7 +179,7 @@ export default function SocialAutomationPage({user, platformFilter = null, overv
         <article className="mrsa-status-card"><span><i className="mrsa-status-dot failed"/> Instagram verify first</span><strong>{counts.instagramReview}</strong><small>Check Meta before retrying</small></article>
       </div>
       <div className="mrsa-daily-report">
-        <div className="mrsa-daily-report-heading"><div><span className="eyebrow"><CalendarDays size={13}/> DAILY MARKETING REPORT</span><h3>Today’s organic marketing activity</h3><p className="muted">Live figures for today · no paid-ad spend included</p></div><Link className="btn btn-outline" to="/admin/marketing">Full traffic report →</Link></div>
+        <div className="mrsa-daily-report-heading"><div><span className="eyebrow"><CalendarDays size={13}/> DAILY MARKETING REPORT</span><h3>Today’s organic marketing activity</h3><p className="muted">Live figures for today · no paid-ad spend included</p></div><Link className="btn btn-outline" to="/admin/traffic-sources">Full traffic report →</Link></div>
         <div className="mrsa-daily-report-grid">
           <article><span><Users size={15}/> Unique visitors</span><strong>{dailyReport.visitors}</strong></article>
           <article><span><Eye size={15}/> Page views</span><strong>{dailyReport.pageViews}</strong></article>
