@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { PauseCircle, PlayCircle, RefreshCw, ShieldCheck, Facebook, Instagram } from 'lucide-react'
+import { PauseCircle, PlayCircle, RefreshCw, ShieldCheck, Facebook, Instagram, Check, X, Trash2, ExternalLink } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 export default function SocialAutomationPage({user}){
@@ -8,6 +8,8 @@ export default function SocialAutomationPage({user}){
   const [runtime,setRuntime]=useState(null)
   const [counts,setCounts]=useState({facebookQueued:0,instagramQueued:0,facebookFailed:0,instagramFailed:0,facebookPublished:0,instagramPublished:0})
   const [propertyHistory,setPropertyHistory]=useState({facebook:[],instagram:[]})
+  const [queuePosts,setQueuePosts]=useState({facebook:[],instagram:[]})
+  const [workingPost,setWorkingPost]=useState('')
   const [loading,setLoading]=useState(true)
   const [saving,setSaving]=useState(false)
   const [error,setError]=useState('')
@@ -27,6 +29,11 @@ export default function SocialAutomationPage({user}){
       const historyData=await historyResponse.json().catch(()=>({}))
       if(!historyResponse.ok)throw new Error(historyData.error||'Could not load property publishing history.')
       setPropertyHistory({facebook:historyData.facebook||[],instagram:historyData.instagram||[]})
+      const [fbQueueResponse,igQueueResponse]=await Promise.all([fetch('/api/facebook/posts',{headers:{Authorization:'Bearer '+(sessionData.session?.access_token||'')}}),fetch('/api/instagram/posts',{headers:{Authorization:'Bearer '+(sessionData.session?.access_token||'')}})])
+      const [fbQueueData,igQueueData]=await Promise.all([fbQueueResponse.json().catch(()=>({})),igQueueResponse.json().catch(()=>({}))])
+      if(!fbQueueResponse.ok)throw new Error(fbQueueData.error||'Could not load Facebook approval queue.')
+      if(!igQueueResponse.ok)throw new Error(igQueueData.error||'Could not load Instagram approval queue.')
+      setQueuePosts({facebook:fbQueueData.posts||[],instagram:igQueueData.posts||[]})
       const [fbQueued,igQueued,fbFailed,igFailed,fbPublished,igPublished]=await Promise.all([
         supabase.from('facebook_posts').select('id',{count:'exact',head:true}).eq('auto_generated',true).in('status',['draft','approved','publishing']),
         supabase.from('instagram_posts').select('id',{count:'exact',head:true}).eq('auto_generated',true).in('status',['draft','approved','publishing']),
@@ -46,12 +53,37 @@ export default function SocialAutomationPage({user}){
     for(const [platform,rows] of [['facebook',propertyHistory.facebook],['instagram',propertyHistory.instagram]]){
       for(const post of rows){
         const key=post.listing_id||post.id
-        if(!grouped.has(key))grouped.set(key,{id:key,title:post.listing?.title||'Property listing',city:post.listing?.city||'',facebook:[],instagram:[]})
-        grouped.get(key)[platform].push(post)
+        if(!grouped.has(key))grouped.set(key,{id:key,title:post.listing?.title||'Property listing',city:post.listing?.city||post.listing?.district||'',facebook:[],instagram:[],postedCount:0,latest:null})
+        const row=grouped.get(key)
+        row[platform].push(post)
+        row.postedCount+=1
+        if(!row.latest||new Date(post.published_at||0)>new Date(row.latest.published_at||0))row.latest={...post,platform}
       }
     }
-    return [...grouped.values()].sort((a,b)=>(b.facebook.length+b.instagram.length)-(a.facebook.length+a.instagram.length))
-  },[propertyHistory])
+    for(const [platform,rows] of [['facebook',queuePosts.facebook],['instagram',queuePosts.instagram]]){
+      for(const post of rows){
+        const key=post.listing_id||post.listing?.id||post.id
+        if(!grouped.has(key))grouped.set(key,{id:key,title:post.listing?.title||'Property listing',city:post.listing?.city||post.listing?.district||'',facebook:[],instagram:[],postedCount:0,latest:null})
+        const row=grouped.get(key)
+        if(!row[platform].some(item=>item.id===post.id))row[platform].push(post)
+      }
+    }
+    return [...grouped.values()].sort((a,b)=>a.title.localeCompare(b.title))
+  },[propertyHistory,queuePosts])
+  const actOnPost=async(platform,id,action)=>{
+    if(action==='delete'&&!window.confirm('Delete this '+platform+' queue item? This will not delete the property listing.'))return
+    const key=platform+':'+id
+    setWorkingPost(key);setError('');setNotice('')
+    try{
+      const {data:sessionData}=await supabase.auth.getSession()
+      const response=await fetch('/api/'+platform+'/posts/'+encodeURIComponent(id)+'/'+action,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+(sessionData.session?.access_token||'')},body:'{}'})
+      const result=await response.json().catch(()=>({}))
+      if(!response.ok)throw new Error(result.error||'Could not '+action+' '+platform+' post.')
+      setNotice(action==='approve'?platform+' post approved.':action==='reject'?platform+' post rejected.':platform+' queue item deleted.')
+      await load()
+    }catch(err){setError(err.message||'The post action failed.')}
+    finally{setWorkingPost('')}
+  }
   const toggle=async()=>{
     if(!settings)return
     const enabled=!settings.enabled
@@ -99,25 +131,36 @@ export default function SocialAutomationPage({user}){
     <p className="instagram-post-meta" style={{textAlign:'center',marginTop:10}}>Published totals count posts tracked in MrSa's publishing database, including manual and automatic posts.</p>
     <section className="instagram-publishing-panel" style={{marginTop:24}}>
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,flexWrap:'wrap'}}>
-        <div><h2 style={{margin:'0 0 6px'}}>Property-wise publishing history</h2><p className="muted" style={{margin:0}}>Successful posts per property on each platform.</p></div>
-        <span className="instagram-post-meta">{propertyRows.length} properties posted</span>
+        <div><h2 style={{margin:'0 0 6px'}}>Property publishing manager</h2><p className="muted" style={{margin:0}}>Approve, reject or delete individual Facebook and Instagram posts. Published links and counts are shown per property.</p></div>
+        <span className="instagram-post-meta">{propertyRows.length} properties in queue / history</span>
       </div>
       {propertyRows.length?<div style={{overflowX:'auto',marginTop:16}}>
-        <table style={{width:'100%',borderCollapse:'collapse',textAlign:'left'}}>
-          <thead><tr><th style={{padding:'10px 8px'}}>Property</th><th style={{padding:'10px 8px',textAlign:'center'}}><Facebook size={15}/> Facebook</th><th style={{padding:'10px 8px',textAlign:'center'}}><Instagram size={15}/> Instagram</th><th style={{padding:'10px 8px',textAlign:'center'}}>Total</th><th style={{padding:'10px 8px'}}>Latest post</th></tr></thead>
+        <table style={{width:'100%',minWidth:850,borderCollapse:'collapse',textAlign:'left'}}>
+          <thead><tr><th style={{padding:'11px 9px'}}>Property</th><th style={{padding:'11px 9px'}}>Platform</th><th style={{padding:'11px 9px',textAlign:'center'}}>Approve</th><th style={{padding:'11px 9px',textAlign:'center'}}>Reject</th><th style={{padding:'11px 9px',textAlign:'center'}}>Delete</th><th style={{padding:'11px 9px',textAlign:'center'}}>Posted Count</th><th style={{padding:'11px 9px'}}>View</th></tr></thead>
           <tbody>{propertyRows.map(row=>{
-            const all=[...row.facebook.map(p=>({...p,platform:'Facebook'})),...row.instagram.map(p=>({...p,platform:'Instagram'}))].sort((x,y)=>new Date(y.published_at||0)-new Date(x.published_at||0))
-            const latest=all[0]
+            const posts=[...row.facebook.map(post=>({...post,platform:'facebook'})),...row.instagram.map(post=>({...post,platform:'instagram'}))]
+            const latest=[...posts].filter(post=>post.status==='published'||post.permalink).sort((a,b)=>new Date(b.published_at||b.created_at||0)-new Date(a.published_at||a.created_at||0))[0]
+            const pending=posts.filter(post=>!['published','publishing','rejected'].includes(post.status))
+            const platforms=[...new Set(posts.map(post=>post.platform))]
             return <tr key={row.id} style={{borderTop:'1px solid var(--border-color, #e5e7eb)'}}>
-              <td style={{padding:'12px 8px'}}><b>{row.title}</b>{row.city&&<div className="instagram-post-meta">{row.city}</div>}</td>
-              <td style={{padding:'12px 8px',textAlign:'center'}}>{row.facebook.length}</td>
-              <td style={{padding:'12px 8px',textAlign:'center'}}>{row.instagram.length}</td>
-              <td style={{padding:'12px 8px',textAlign:'center'}}><b>{row.facebook.length+row.instagram.length}</b></td>
-              <td style={{padding:'12px 8px'}}>{latest?.permalink?<a className="text-link" href={latest.permalink} target="_blank" rel="noreferrer">View {latest.platform} <span className="instagram-post-meta">{latest.published_at?new Date(latest.published_at).toLocaleDateString('en-IN'):''}</span></a>:'—'}</td>
+              <td style={{padding:'13px 9px'}}><b>{row.title}</b>{row.city&&<div className="instagram-post-meta">{row.city}</div>}</td>
+              <td style={{padding:'13px 9px'}}><div style={{display:'flex',gap:8,alignItems:'center'}}>{platforms.includes('facebook')&&<span title="Facebook"><Facebook size={18} color="#1877f2"/></span>}{platforms.includes('instagram')&&<span title="Instagram"><Instagram size={18} color="#b43d83"/></span>}{!platforms.length?'—':null}</div><div className="instagram-post-meta">{posts.map(post=><span key={post.platform+post.id} style={{display:'block'}}>{post.platform==='facebook'?'Facebook':'Instagram'} · {post.status}</span>)}</div></td>
+              <td style={{padding:'13px 9px',textAlign:'center'}}>{pending.filter(post=>['draft','failed','approved'].includes(post.status)).map(post=><button key={post.platform+post.id} className="icon-btn success" title={'Approve '+post.platform+' post'} aria-label={'Approve '+post.platform+' post'} disabled={workingPost===post.platform+':'+post.id||post.status==='approved'&&post.approved_at&&post.approved_by} onClick={()=>actOnPost(post.platform,post.id,'approve')}><Check size={16}/></button>)}</td>
+              <td style={{padding:'13px 9px',textAlign:'center'}}>{pending.filter(post=>post.status!=='rejected').map(post=><button key={post.platform+post.id} className="icon-btn warning" title={'Reject '+post.platform+' post'} aria-label={'Reject '+post.platform+' post'} disabled={workingPost===post.platform+':'+post.id} onClick={()=>actOnPost(post.platform,post.id,'reject')}><X size={16}/></button>)}</td>
+              <td style={{padding:'13px 9px',textAlign:'center'}}>{posts.filter(post=>!['published','publishing'].includes(post.status)).map(post=><button key={post.platform+post.id} className="icon-btn danger" title={'Delete '+post.platform+' queue item'} aria-label={'Delete '+post.platform+' queue item'} disabled={workingPost===post.platform+':'+post.id} onClick={()=>actOnPost(post.platform,post.id,'delete')}><Trash2 size={16}/></button>)}</td>
+              <td style={{padding:'13px 9px',textAlign:'center'}}><b>{row.postedCount}</b></td>
+              <td style={{padding:'13px 9px'}}>{latest?.permalink?<a className="text-link" href={latest.permalink} target="_blank" rel="noreferrer">View {latest.platform==='facebook'?'Facebook':'Instagram'} <ExternalLink size={13}/> <span className="instagram-post-meta">{latest.published_at?new Date(latest.published_at).toLocaleDateString('en-IN'):''}</span></a>:'—'}</td>
             </tr>
           })}</tbody>
         </table>
-      </div>:<div className="instagram-empty" style={{marginTop:14}}>No successful property posts recorded yet.</div>}
+      </div>:<div className="instagram-empty" style={{marginTop:14}}>No property posts or queue items found.</div>}
+    </section>
+    <section className="instagram-publishing-panel" style={{marginTop:18}}>
+      <h2 style={{margin:'0 0 6px'}}>History · Recently posted</h2>
+      <p className="muted" style={{margin:0}}>Latest published property posts across both platforms.</p>
+      {[...propertyRows].filter(row=>row.latest).sort((a,b)=>new Date(b.latest.published_at||0)-new Date(a.latest.published_at||0)).slice(0,8).length?<div style={{display:'grid',gap:10,marginTop:14}}>
+        {[...propertyRows].filter(row=>row.latest).sort((a,b)=>new Date(b.latest.published_at||0)-new Date(a.latest.published_at||0)).slice(0,8).map(row=><div key={row.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,padding:'11px 0',borderTop:'1px solid var(--border-color, #e5e7eb)'}}><div><b>{row.title}</b><div className="instagram-post-meta">{row.latest.platform==='facebook'?'Facebook':'Instagram'} · {row.latest.published_at?new Date(row.latest.published_at).toLocaleDateString('en-IN'):''}</div></div><a className="btn btn-outline" href={row.latest.permalink} target="_blank" rel="noreferrer">View more <ExternalLink size={13}/></a></div>)}
+      </div>:<div className="instagram-empty" style={{marginTop:14}}>No recently published links found.</div>}
     </section>
     <div className="instagram-publishing-actions" style={{justifyContent:'center',marginTop:18}}><Link className="btn btn-outline" to="/admin/facebook">Open Facebook queue</Link><Link className="btn btn-outline" to="/admin/instagram">Open Instagram queue</Link></div>
     <p className="muted" style={{textAlign:'center',marginTop:18}}>Last setting update: {settings?.updated_at?new Date(settings.updated_at).toLocaleString('en-IN'):'—'}</p>
