@@ -2050,3 +2050,17 @@ footer > span {
 .live-property-stat em{color:#89949d;font-size:10px;font-style:normal}
 .live-property-stats-footnote{margin:13px 0 0;text-align:center;color:#89949d;font-size:10px}
 @media(max-width:560px){.live-property-stats-section{padding:30px 17px}.live-property-stats-grid{gap:8px}.live-property-stat{padding:14px 7px 12px;gap:5px}.live-property-stat small{font-size:10px}.live-property-stat strong{font-size:22px}.live-property-stat em{font-size:9px}}
+
+
+/* Compact homepage live statistics cards */
+.live-property-stats-section{padding:25px 25px 27px}
+.live-property-stats-heading{margin-bottom:15px}
+.live-property-stats-heading h2{font-size:26px;margin:5px 0}
+.live-property-stats-grid{max-width:900px;margin:0 auto;gap:11px}
+.live-property-stat{gap:4px;padding:12px 12px 11px;border-radius:9px;box-shadow:none}
+.live-property-stat-icon{width:27px;height:27px;font-size:16px}
+.live-property-stat small{font-size:11px}
+.live-property-stat strong{font-size:24px}
+.live-property-stat em{font-size:9px}
+.live-property-stats-footnote{margin-top:9px;font-size:9px}
+@media(max-width:560px){.live-property-stats-section{padding:21px 14px}.live-property-stats-heading{margin-bottom:12px}.live-property-stats-heading h2{font-size:22px}.live-property-stats-grid{gap:7px}.live-property-stat{padding:10px 5px 9px}.live-property-stat-icon{width:24px;height:24px;font-size:14px}.live-property-stat small{font-size:9px}.live-property-stat strong{font-size:19px}.live-property-stat em{font-size:8px}}
