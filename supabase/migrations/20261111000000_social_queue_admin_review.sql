@@ -50,3 +50,16 @@ CREATE TRIGGER instagram_posts_require_admin_approval
 BEFORE INSERT ON public.instagram_posts
 FOR EACH ROW
 EXECUTE FUNCTION public.require_social_post_admin_approval();
+
+-- Allow the explicit admin-rejected state while preserving the existing queue states.
+ALTER TABLE public.facebook_posts
+  DROP CONSTRAINT IF EXISTS facebook_posts_status_check;
+ALTER TABLE public.facebook_posts
+  ADD CONSTRAINT facebook_posts_status_check
+  CHECK (status IN ('draft', 'approved', 'publishing', 'published', 'failed', 'rejected'));
+
+ALTER TABLE public.instagram_posts
+  DROP CONSTRAINT IF EXISTS instagram_posts_status_check;
+ALTER TABLE public.instagram_posts
+  ADD CONSTRAINT instagram_posts_status_check
+  CHECK (status IN ('draft', 'approved', 'publishing', 'published', 'failed', 'rejected'));
