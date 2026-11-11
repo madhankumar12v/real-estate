@@ -75,7 +75,7 @@ export default function FacebookPublishingPage(){
   }
   return <section className="section page-section instagram-publishing-page">
     <div className="instagram-publishing-heading">
-      <div><span className="eyebrow">MRSA PROPERTIES · ADMIN</span><h1><Facebook size={27} style={{verticalAlign:'-5px',marginRight:8}}/>Facebook publishing</h1><p className="muted">Prepare posts from approved property listings. Every post requires admin approval and a manual publish action.</p></div>
+      <div><span className="eyebrow">MRSA PROPERTIES · ADMIN</span><h1><Facebook size={27} style={{verticalAlign:'-5px',marginRight:8}}/>Facebook publishing</h1><p className="muted">Review automatically generated posts from approved listings. Approve, reject or delete each queue item; approved automatic posts publish when Auto Marketing is active.</p></div>
       <div className="instagram-publishing-actions"><button className="btn btn-outline" onClick={load} disabled={loading}><RefreshCw size={15}/> Refresh</button><Link className="btn btn-outline" to="/admin">← Admin dashboard</Link></div>
     </div>
     {notice&&<div className="instagram-publishing-notice" role="status">{notice}</div>}
