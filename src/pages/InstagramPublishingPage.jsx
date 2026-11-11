@@ -7,7 +7,7 @@ const money = value => value == null ? 'Price on request' : new Intl.NumberForma
 const defaultCaption = listing => {
   const place = [listing.locality, listing.city, listing.district].filter(Boolean).join(', ')
   const rate = listing.price_per_sqft == null ? 'Price on request' : money(listing.price_per_sqft) + ' per sq.ft.'
-  return listing.title + '\n' + listing.property_type + ' for sale in ' + place + '\nRate: ' + rate + '\n\nதமிழ்நாட்டில் உங்கள் அடுத்த சொத்து வாய்ப்பை MrSa Properties உடன் கண்டறியுங்கள். மேலும் விவரங்கள் மற்றும் பார்வைக்கு எங்களைத் தொடர்புகொள்ளுங்கள்.\n\nProperty details are shared as provided in the listing. Please verify title, approvals and documents independently.\n\n#MrSaProperties #TamilNaduRealEstate #PropertyForSale #VelloreRealEstate'
+  return listing.title + '\n' + listing.property_type + ' for sale in ' + place + '\nRate: ' + rate + '\n\nவேலூரில் உங்கள் அடுத்த சொத்து வாய்ப்பை MrSa Properties உடன் கண்டறியுங்கள். மேலும் விவரங்கள் மற்றும் பார்வைக்கு எங்களைத் தொடர்புகொள்ளுங்கள்.\n\nProperty details are shared as provided in the listing. Please verify title, approvals and documents independently.\n\n#MrSaProperties #VelloreRealEstate #PropertyForSale #VelloreRealEstate'
 }
 async function getSessionToken(){
   const {data,error}=await supabase.auth.getSession()
