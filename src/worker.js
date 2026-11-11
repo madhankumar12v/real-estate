@@ -2,7 +2,7 @@ const API_VERSION = "v25.0";
 const json = (body, status=200) => new Response(JSON.stringify(body), {status,headers:{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store"}});
 class HttpError extends Error { constructor(message,status=400){super(message);this.status=status;} }
 function requiredEnv(env){
-  for(const key of ["SUPABASE_URL","SUPABASE_ANON_KEY","INSTAGRAM_ACCESS_TOKEN","INSTAGRAM_ACCOUNT_ID"]){
+  for(const key of ["SUPABASE_URL","SUPABASE_ANON_KEY"]){
     if(!env[key]) throw new HttpError("Worker configuration is missing "+key+".",503);
   }
 }
@@ -39,6 +39,7 @@ async function graphPost(url,params){
   return data;
 }
 async function publishInstagram(env,post){
+  if(!env.INSTAGRAM_ACCESS_TOKEN||!env.INSTAGRAM_ACCOUNT_ID) throw new Error("Instagram publishing is not configured. Add INSTAGRAM_ACCESS_TOKEN and INSTAGRAM_ACCOUNT_ID as Cloudflare secrets/variables.");
   const imageUrl=new URL(post.image_url);
   if(imageUrl.protocol!=="https:") throw new Error("Instagram requires a publicly accessible HTTPS image URL.");
   const imageCheck=await fetch(imageUrl.toString(),{method:"HEAD"});
@@ -76,6 +77,33 @@ async function publishInstagram(env,post){
   }catch{}
   return {containerId:container.id,mediaId:published.id,permalink};
 }
+
+async function publishFacebook(env,post){
+  if(!env.FACEBOOK_PAGE_ACCESS_TOKEN||!env.FACEBOOK_PAGE_ID) throw new Error("Facebook publishing is not configured. Add FACEBOOK_PAGE_ACCESS_TOKEN and FACEBOOK_PAGE_ID in Cloudflare.");
+  const imageUrl=new URL(post.image_url);
+  if(imageUrl.protocol!=="https:") throw new Error("Facebook requires a publicly accessible HTTPS image URL.");
+  const imageCheck=await fetch(imageUrl.toString(),{method:"HEAD"});
+  if(!imageCheck.ok) throw new Error("Facebook could not access the property image. Check that the image URL is public.");
+  const contentType=(imageCheck.headers.get("content-type")||"").toLowerCase();
+  if(!contentType.startsWith("image/jpeg")&&!contentType.startsWith("image/png")) throw new Error("Facebook photo publishing requires a JPG/JPEG or PNG image. This listing image is "+(contentType||"an unknown format")+".");
+  const base="https://graph.facebook.com/"+(env.FACEBOOK_GRAPH_API_VERSION||API_VERSION);
+  const params=new URLSearchParams({url:post.image_url,caption:post.caption,access_token:env.FACEBOOK_PAGE_ACCESS_TOKEN});
+  const published=await graphPost(base+"/"+env.FACEBOOK_PAGE_ID+"/photos",params);
+  const mediaId=published.id||null;
+  const postId=published.post_id||mediaId;
+  if(!postId) throw new Error("Meta did not return a Facebook post ID.");
+  let permalink=null;
+  try{
+    const postUrl=new URL(base+"/"+postId);
+    postUrl.searchParams.set("fields","permalink_url");
+    postUrl.searchParams.set("access_token",env.FACEBOOK_PAGE_ACCESS_TOKEN);
+    const response=await fetch(postUrl.toString());
+    const data=await response.json();
+    if(response.ok) permalink=data.permalink_url||null;
+  }catch{}
+  return {mediaId,postId,permalink};
+}
+
 async function handleApi(request,env){
   const url=new URL(request.url);
   const path=url.pathname;
@@ -125,12 +153,59 @@ async function handleApi(request,env){
       throw new HttpError(message,502);
     }
   }
-  throw new HttpError("Instagram API route not found.",404);
+
+  if(request.method==="GET"&&path==="/api/facebook/listings"){
+    const listings=await supabaseRequest(env,token,"listings?select=id,title,city,district,locality,property_type,price_per_sqft,description,images:listing_images(url)&status=eq.approved&order=created_at.desc&limit=100");
+    return json({listings:listings||[]});
+  }
+  if(request.method==="GET"&&path==="/api/facebook/posts"){
+    const posts=await supabaseRequest(env,token,"facebook_posts?select=id,listing_id,caption,image_url,status,fb_media_id,fb_post_id,permalink,last_error,created_at,published_at,listing:listings(title,city,district,status)&order=created_at.desc&limit=50");
+    return json({posts:posts||[]});
+  }
+  if(request.method==="POST"&&path==="/api/facebook/posts"){
+    const body=await request.json().catch(()=>null);
+    if(!body?.listing_id||!String(body.caption||"").trim()||!body.image_url) throw new HttpError("Choose an approved property, photo and caption.");
+    if(String(body.caption).length>5000) throw new HttpError("Facebook post text cannot exceed 5,000 characters.");
+    const listingRows=await supabaseRequest(env,token,"listings?select=id,status&id=eq."+encodeURIComponent(body.listing_id)+"&limit=1");
+    if(!listingRows?.length||listingRows[0].status!=="approved") throw new HttpError("Only currently approved property listings can be posted.",409);
+    const imageRows=await supabaseRequest(env,token,"listing_images?select=id&listing_id=eq."+encodeURIComponent(body.listing_id)+"&url=eq."+encodeURIComponent(String(body.image_url))+"&limit=1");
+    if(!imageRows?.length) throw new HttpError("Choose a photo attached to the selected property listing.",409);
+    const created=await supabaseRequest(env,token,"facebook_posts",{method:"POST",prefer:"return=representation",body:{listing_id:body.listing_id,caption:String(body.caption).trim(),image_url:String(body.image_url),status:"draft",created_by:user.id}});
+    return json({post:created?.[0]||null},201);
+  }
+  const fbApproveMatch=path.match(/^\\/api\\/facebook\\/posts\\/([0-9a-f-]+)\\/approve$/i);
+  if(request.method==="POST"&&fbApproveMatch){
+    const updated=await supabaseRequest(env,token,"facebook_posts?id=eq."+encodeURIComponent(fbApproveMatch[1])+"&status=eq.draft",{method:"PATCH",prefer:"return=representation",body:{status:"approved",approved_by:user.id,approved_at:new Date().toISOString(),last_error:null}});
+    if(!updated?.length) throw new HttpError("Draft not found or it has already been reviewed.",409);
+    return json({post:updated[0]});
+  }
+  const fbPublishMatch=path.match(/^\\/api\\/facebook\\/posts\\/([0-9a-f-]+)\\/publish$/i);
+  if(request.method==="POST"&&fbPublishMatch){
+    const rows=await supabaseRequest(env,token,"facebook_posts?select=id,listing_id,caption,image_url,status&id=eq."+encodeURIComponent(fbPublishMatch[1])+"&limit=1");
+    const post=rows?.[0];
+    if(!post) throw new HttpError("Facebook draft not found.",404);
+    if(post.status!=="approved") throw new HttpError("Only an approved post can be published.",409);
+    const listingRows=await supabaseRequest(env,token,"listings?select=id,status&id=eq."+encodeURIComponent(post.listing_id)+"&limit=1");
+    if(!listingRows?.length||listingRows[0].status!=="approved") throw new HttpError("This property is no longer approved. Publishing has been blocked.",409);
+    const claimed=await supabaseRequest(env,token,"facebook_posts?id=eq."+encodeURIComponent(post.id)+"&status=eq.approved",{method:"PATCH",prefer:"return=representation",body:{status:"publishing",last_error:null}});
+    if(!claimed?.length) throw new HttpError("This post is already being processed or is no longer approved.",409);
+    try{
+      const result=await publishFacebook(env,post);
+      const saved=await supabaseRequest(env,token,"facebook_posts?id=eq."+encodeURIComponent(post.id),{method:"PATCH",prefer:"return=representation",body:{status:"published",fb_media_id:result.mediaId,fb_post_id:result.postId,permalink:result.permalink,published_at:new Date().toISOString(),last_error:null}});
+      return json({success:true,post:saved?.[0]||null,permalink:result.permalink});
+    }catch(error){
+      const message=String(error?.message||"Facebook publishing failed.").slice(0,1000);
+      await supabaseRequest(env,token,"facebook_posts?id=eq."+encodeURIComponent(post.id),{method:"PATCH",body:{status:"failed",last_error:message}}).catch(()=>{});
+      throw new HttpError(message,502);
+    }
+  }
+
+  throw new HttpError("Social publishing API route not found.",404);
 }
 export default {
   async fetch(request,env){
     const url=new URL(request.url);
-    if(url.pathname.startsWith("/api/instagram/")){
+    if(url.pathname.startsWith("/api/instagram/")||url.pathname.startsWith("/api/facebook/")){
       if(request.method==="OPTIONS") return new Response(null,{status:204,headers:{"Allow":"GET, POST, OPTIONS"}});
       try{return await handleApi(request,env);}
       catch(error){return json({error:error?.message||"Unexpected server error."},error instanceof HttpError?error.status:500);}
