@@ -81,7 +81,7 @@ async function handleApi(request,env){
   const path=url.pathname;
   const {token,user}=await requireAdmin(request,env);
   if(request.method==="GET"&&path==="/api/instagram/listings"){
-    const listings=await supabaseRequest(env,token,"listings?select=id,title,city,district,locality,property_type,price,description,images:listing_images(url)&status=eq.approved&order=created_at.desc&limit=100");
+    const listings=await supabaseRequest(env,token,"listings?select=id,title,city,district,locality,property_type,price_per_sqft,description,images:listing_images(url)&status=eq.approved&order=created_at.desc&limit=100");
     return json({listings:listings||[]});
   }
   if(request.method==="GET"&&path==="/api/instagram/posts"){
