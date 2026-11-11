@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase'
 
 export default function SocialAutomationPage({user}){
   const [settings,setSettings]=useState(null)
+  const [runtime,setRuntime]=useState(null)
   const [counts,setCounts]=useState({facebook:0,instagram:0,failed:0,published:0})
   const [loading,setLoading]=useState(true)
   const [saving,setSaving]=useState(false)
@@ -16,6 +17,11 @@ export default function SocialAutomationPage({user}){
       const {data,error:settingsError}=await supabase.from('social_automation_settings').select('enabled,updated_at').eq('id',1).single()
       if(settingsError)throw settingsError
       setSettings(data)
+      const {data:sessionData}=await supabase.auth.getSession()
+      const statusResponse=await fetch('/api/social-automation/status',{headers:{Authorization:'Bearer '+(sessionData.session?.access_token||'')}})
+      const statusData=await statusResponse.json().catch(()=>({}))
+      if(!statusResponse.ok)throw new Error(statusData.error||'Could not verify Cloudflare publishing secrets.')
+      setRuntime(statusData)
       const [fb,ig,failed,published]=await Promise.all([
         supabase.from('facebook_posts').select('id',{count:'exact',head:true}).eq('auto_generated',true).eq('status','approved'),
         supabase.from('instagram_posts').select('id',{count:'exact',head:true}).eq('auto_generated',true).eq('status','approved'),
@@ -31,6 +37,7 @@ export default function SocialAutomationPage({user}){
   const toggle=async()=>{
     if(!settings)return
     const enabled=!settings.enabled
+    if(enabled&&(!runtime?.serviceRoleConfigured||!runtime?.facebookConfigured||!runtime?.instagramConfigured)){setError('Configure the Supabase service-role, Facebook Page and Instagram credentials in Cloudflare Production Secrets before enabling automation.');return}
     setSaving(true);setError('');setNotice('')
     try{
       const {data,error}=await supabase.from('social_automation_settings').update({enabled,updated_by:user?.id||null,updated_at:new Date().toISOString()}).eq('id',1).select('enabled,updated_at').single()
@@ -52,10 +59,16 @@ export default function SocialAutomationPage({user}){
         <div><span className="eyebrow">MASTER CONTROL</span><h2 style={{margin:'8px 0'}}>Automatic publishing</h2><p className="muted">{settings?.enabled?'Newly approved properties are queued automatically.':'Publishing is paused. New approvals will not be queued.'}</p></div>
         <span className={'instagram-status instagram-status-'+(settings?.enabled?'published':'draft')}>{loading?'Loading':settings?.enabled?'Active':'Paused'}</span>
       </div>
-      <button className={'btn '+(settings?.enabled?'btn-outline':'btn-primary')} style={{marginTop:18}} disabled={loading||saving||!settings} onClick={toggle}>
+      <button className={'btn '+(settings?.enabled?'btn-outline':'btn-primary')} style={{marginTop:18}} disabled={loading||saving||!settings||(!settings.enabled&&(!runtime?.serviceRoleConfigured||!runtime?.facebookConfigured||!runtime?.instagramConfigured))} onClick={toggle}>
         {settings?.enabled?<><PauseCircle size={17}/>{saving?'Pausing…':'Pause automation'}</>:<><PlayCircle size={17}/>{saving?'Resuming…':'Resume automation'}</>}
       </button>
       <div className="instagram-setup-note" style={{marginTop:20}}><b><ShieldCheck size={14} style={{verticalAlign:'-3px'}}/> Publishing rules</b><br/>Only listings approved by an administrator are queued. Facebook and Instagram are processed by the Cloudflare Worker every five minutes. Each platform has a separate duplicate guard and status history. Temporary failures retry automatically; permanent errors are shown in the publishing queues. Pausing stops the scheduler from sending queued posts.</div>
+      <div style={{display:'grid',gap:8,marginTop:16}}>
+        <b>Cloudflare connection checks</b>
+        <div className="instagram-post-meta">Supabase service-role secret: {runtime?.serviceRoleConfigured?'Configured':'Missing'}</div>
+        <div className="instagram-post-meta">Facebook Page credentials: {runtime?.facebookConfigured?'Configured':'Missing'}</div>
+        <div className="instagram-post-meta">Instagram credentials: {runtime?.instagramConfigured?'Configured':'Missing'}</div>
+      </div>
     </article>
     <div className="admin-stats" style={{marginTop:24}}>
       <div><b>{counts.facebook}</b><span><Facebook size={14}/> Facebook queued</span></div>
