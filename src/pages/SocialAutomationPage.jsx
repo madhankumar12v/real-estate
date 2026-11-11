@@ -330,6 +330,11 @@ export default function SocialAutomationPage({user, platformFilter = null, overv
                         <b style={{fontSize:12}}>{post.platform==='facebook'?'Facebook':'Instagram'} · {post.status==='review_required'?'Verify in Meta':post.status}</b>
                         {post.status==='review_required'&&<span className="instagram-post-meta">Locked</span>}
                       </div>
+                      <div className="instagram-post-meta" style={{display:'grid',gap:3,marginTop:6}}>
+                        {post.created_at&&<span>Added to queue: {new Date(post.created_at).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true})} IST</span>}
+                        {post.approved_at&&<span>Approved at: {new Date(post.approved_at).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true})} IST</span>}
+                        {post.published_at&&<span>Published at: {new Date(post.published_at).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true})} IST</span>}
+                      </div>
                       {post.permalink&&<a className="text-link" href={post.permalink} target="_blank" rel="noreferrer">View published post <ExternalLink size={12}/></a>}
                       {post.last_error&&<div className="instagram-post-meta" style={{marginTop:5,color:'#9a5b45'}}>{post.last_error}</div>}
                       {post.status==='rejected'&&post.last_error&&<div className="instagram-post-meta" style={{marginTop:7,color:'#9a5b45'}}><b>Rejection reason:</b> {post.last_error}</div>}
