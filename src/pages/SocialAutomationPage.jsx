@@ -250,26 +250,55 @@ export default function SocialAutomationPage({user, platformFilter = null, overv
     {!overviewOnly&&<>
     <section className="instagram-publishing-panel" style={{marginTop:24}}>
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,flexWrap:'wrap'}}>
-        <div><h2 style={{margin:'0 0 6px'}}>Property publishing manager</h2><p className="muted" style={{margin:0}}>Approve, reject or delete individual Facebook and Instagram posts. Published links and counts are shown per property.</p></div>
-        <span className="instagram-post-meta">{propertyRows.length} properties in queue / history</span>
+        <div><h2 style={{margin:'0 0 6px'}}>Property publishing manager</h2><p className="muted" style={{margin:0}}>One summary row per property. Expand Publishing History to review individual posts without cluttering the overview.</p></div>
+        <span className="instagram-post-meta">{visibleRows.length} properties</span>
       </div>
-      <p className="instagram-post-meta" style={{marginTop:12}}>“Verify in Meta” items are locked from retry and deletion until you confirm whether the post exists on Facebook or Instagram. This prevents accidental duplicate publishing.</p>
+      <p className="instagram-post-meta" style={{marginTop:12}}>Published counts include successful posts only. Failed records remain in history and are not offered for retry here. “Verify in Meta” records stay locked until checked.</p>
       {visibleRows.length?<div style={{overflowX:'auto',marginTop:16}}>
-        <table style={{width:'100%',minWidth:850,borderCollapse:'collapse',textAlign:'left'}}>
-          <thead><tr><th style={{padding:'11px 9px'}}>Property</th><th style={{padding:'11px 9px'}}>Platform</th><th style={{padding:'11px 9px',textAlign:'center'}}>Approve</th><th style={{padding:'11px 9px',textAlign:'center'}}>Reject</th><th style={{padding:'11px 9px',textAlign:'center'}}>Delete</th><th style={{padding:'11px 9px',textAlign:'center'}}>Posted Count</th><th style={{padding:'11px 9px'}}>View</th></tr></thead>
+        <table style={{width:'100%',minWidth:900,borderCollapse:'collapse',textAlign:'left'}}>
+          <thead><tr>
+            <th style={{padding:'11px 9px'}}>Property</th>
+            <th style={{padding:'11px 9px',textAlign:'center'}}>Facebook</th>
+            <th style={{padding:'11px 9px',textAlign:'center'}}>Instagram</th>
+            <th style={{padding:'11px 9px',textAlign:'center'}}>Pending</th>
+            <th style={{padding:'11px 9px',textAlign:'center'}}>Verify</th>
+            <th style={{padding:'11px 9px'}}>Latest published</th>
+            <th style={{padding:'11px 9px'}}>Publishing History</th>
+          </tr></thead>
           <tbody>{visibleRows.map(row=>{
-            const posts=row.posts
-            const latest=row.latest
-            const pending=posts.filter(post=>!['published','publishing','rejected','review_required'].includes(post.status))
-            const platforms=[...new Set(posts.map(post=>post.platform))]
+            const published=platform=>row[platform].filter(post=>post.status==='published'||Boolean(post.permalink));
+            const pending=row.posts.filter(post=>['draft','approved','publishing'].includes(post.status));
+            const review=row.posts.filter(post=>post.status==='review_required');
+            const fbPublished=published('facebook');
+            const igPublished=published('instagram');
+            const latestPublished=[...row.posts].filter(post=>post.status==='published'||post.permalink).sort((a,b)=>new Date(b.published_at||b.created_at||0)-new Date(a.published_at||a.created_at||0))[0];
+            const historyPosts=[...row.posts].sort((a,b)=>new Date(b.published_at||b.created_at||b.last_attempt_at||0)-new Date(a.published_at||a.created_at||a.last_attempt_at||0));
             return <tr key={row.id} style={{borderTop:'1px solid var(--border-color, #e5e7eb)'}}>
               <td style={{padding:'13px 9px'}}><b>{row.title}</b>{row.city&&<div className="instagram-post-meta">{row.city}</div>}</td>
-              <td style={{padding:'13px 9px'}}><div style={{display:'flex',gap:8,alignItems:'center'}}>{platforms.includes('facebook')&&<span title="Facebook"><Facebook size={18} color="#1877f2"/></span>}{platforms.includes('instagram')&&<span title="Instagram"><Instagram size={18} color="#b43d83"/></span>}{!platforms.length?'—':null}</div><div className="instagram-post-meta">{posts.map(post=><span key={post.platform+post.id} style={{display:'block'}}>{post.platform==='facebook'?'Facebook':'Instagram'} · {post.status==='review_required'?'Verify in Meta':post.status}</span>)}</div></td>
-              <td style={{padding:'13px 9px',textAlign:'center'}}>{pending.filter(post=>['draft','failed','approved'].includes(post.status)).map(post=><button key={post.platform+post.id} className="icon-btn success" title={'Approve '+post.platform+' post'} aria-label={'Approve '+post.platform+' post'} disabled={workingPost===post.platform+':'+post.id||post.status==='approved'&&post.approved_at&&post.approved_by} onClick={()=>actOnPost(post.platform,post.id,'approve')}><Check size={16}/></button>)}</td>
-              <td style={{padding:'13px 9px',textAlign:'center'}}>{pending.filter(post=>post.status!=='rejected').map(post=><button key={post.platform+post.id} className="icon-btn warning" title={'Reject '+post.platform+' post'} aria-label={'Reject '+post.platform+' post'} disabled={workingPost===post.platform+':'+post.id} onClick={()=>actOnPost(post.platform,post.id,'reject')}><X size={16}/></button>)}</td>
-              <td style={{padding:'13px 9px',textAlign:'center'}}>{posts.filter(post=>!['published','publishing','review_required'].includes(post.status)).map(post=><button key={post.platform+post.id} className="icon-btn danger" title={'Delete '+post.platform+' queue item'} aria-label={'Delete '+post.platform+' queue item'} disabled={workingPost===post.platform+':'+post.id} onClick={()=>actOnPost(post.platform,post.id,'delete')}><Trash2 size={16}/></button>)}</td>
-              <td style={{padding:'13px 9px',textAlign:'center'}}><b>{row.postedCount}</b></td>
-              <td style={{padding:'13px 9px'}}>{latest?.permalink?<a className="text-link" href={latest.permalink} target="_blank" rel="noreferrer">View {latest.platform==='facebook'?'Facebook':'Instagram'} <ExternalLink size={13}/> <span className="instagram-post-meta">{latest.published_at?new Date(latest.published_at).toLocaleDateString('en-IN'):''}</span></a>:'—'}</td>
+              <td style={{padding:'13px 9px',textAlign:'center'}}><b>{fbPublished.length}</b><div className="instagram-post-meta">published</div></td>
+              <td style={{padding:'13px 9px',textAlign:'center'}}><b>{igPublished.length}</b><div className="instagram-post-meta">published</div></td>
+              <td style={{padding:'13px 9px',textAlign:'center'}}><b>{pending.length}</b></td>
+              <td style={{padding:'13px 9px',textAlign:'center'}}>{review.length?<b style={{color:'#b7791f'}}>{review.length} · Locked</b>:'—'}</td>
+              <td style={{padding:'13px 9px'}}>{latestPublished?.permalink?<a className="text-link" href={latestPublished.permalink} target="_blank" rel="noreferrer">View {latestPublished.platform==='instagram'?'Instagram':'Facebook'} <ExternalLink size={13}/><span className="instagram-post-meta">{latestPublished.published_at?new Date(latestPublished.published_at).toLocaleDateString('en-IN'):''}</span></a>:'—'}</td>
+              <td style={{padding:'13px 9px'}}>
+                <details>
+                  <summary style={{cursor:'pointer',fontWeight:600,color:'var(--link-color, #276749)'}}>View {historyPosts.length} records</summary>
+                  <div style={{minWidth:260,display:'grid',gap:9,padding:'12px 2px'}}>
+                    {historyPosts.map(post=><div key={post.platform+post.id} style={{padding:'9px 10px',border:'1px solid var(--border-color, #e5e7eb)',borderRadius:9}}>
+                      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,flexWrap:'wrap'}}>
+                        <b style={{fontSize:12}}>{post.platform==='facebook'?'Facebook':'Instagram'} · {post.status==='review_required'?'Verify in Meta':post.status}</b>
+                        {post.status==='review_required'&&<span className="instagram-post-meta">Locked</span>}
+                      </div>
+                      {post.permalink&&<a className="text-link" href={post.permalink} target="_blank" rel="noreferrer">View published post <ExternalLink size={12}/></a>}
+                      {post.last_error&&<div className="instagram-post-meta" style={{marginTop:5,color:'#9a5b45'}}>{post.last_error}</div>}
+                      {['draft','approved'].includes(post.status)&&<div style={{display:'flex',gap:7,marginTop:8}}>
+                        <button className="icon-btn success" title="Approve post" aria-label="Approve post" disabled={workingPost===post.platform+':'+post.id||post.status==='approved'&&post.approved_at&&post.approved_by} onClick={()=>actOnPost(post.platform,post.id,'approve')}><Check size={15}/></button>
+                        <button className="icon-btn warning" title="Reject post" aria-label="Reject post" disabled={workingPost===post.platform+':'+post.id} onClick={()=>actOnPost(post.platform,post.id,'reject')}><X size={15}/></button>
+                      </div>}
+                    </div>)}
+                  </div>
+                </details>
+              </td>
             </tr>
           })}</tbody>
         </table>
