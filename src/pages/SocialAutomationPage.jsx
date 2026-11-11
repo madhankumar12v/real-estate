@@ -99,7 +99,7 @@ export default function SocialAutomationPage({user, platformFilter = null, overv
   }
   const visibleRows=propertyRows.map(row=>{const posts=[...row.facebook.map(post=>({...post,platform:'facebook'})),...row.instagram.map(post=>({...post,platform:'instagram'}))].filter(post=>!platformFilter||post.platform===platformFilter);const latest=[...posts].filter(post=>post.status==='published'||post.permalink).sort((a,b)=>new Date(b.published_at||b.created_at||0)-new Date(a.published_at||a.created_at||0))[0]||null;return {...row,posts,latest,postedCount:posts.filter(post=>post.status==='published'||post.permalink).length}}).filter(row=>row.posts.length>0)
   return <section className="section page-section instagram-publishing-page">
-    {!platformFilter&&<>
+    {!platformFilter&&!overviewOnly&&<>
     <div className="instagram-publishing-heading">
       <div><span className="eyebrow">MRSA PROPERTIES · ADMIN</span><h1>Auto Marketing 3.0</h1><p className="muted">Daily queue review at 10:00 AM IST. Individually approved Facebook and Instagram posts publish one per platform per hour, with property rotation.</p></div>
       <div className="instagram-publishing-actions"><button className="btn btn-outline" onClick={load} disabled={loading}><RefreshCw size={15}/> Refresh</button><Link className="btn btn-outline" to="/admin">← Admin dashboard</Link></div>
@@ -132,6 +132,42 @@ export default function SocialAutomationPage({user, platformFilter = null, overv
     </div>
     <p className="instagram-post-meta" style={{textAlign:'center',marginTop:10}}>Published totals count posts tracked in MrSa's publishing database, including manual and automatic posts.</p>
     </>}
+    {overviewOnly&&<section className="instagram-publishing-panel" style={{marginTop:8}}>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,flexWrap:'wrap'}}>
+        <div><span className="eyebrow">PUBLISHING PERFORMANCE</span><h2 style={{margin:'7px 0 4px'}}>Property-wise publishing</h2><p className="muted" style={{margin:0}}>Published post count for each property across Facebook and Instagram.</p></div>
+        <button className="btn btn-outline" onClick={load} disabled={loading}><RefreshCw size={15}/> Refresh</button>
+      </div>
+      {error&&<div className="instagram-publishing-error" role="alert" style={{marginTop:14}}>{error}</div>}
+      <div style={{overflowX:'auto',marginTop:18}}>
+        <table style={{width:'100%',minWidth:520,borderCollapse:'collapse',textAlign:'left'}}>
+          <thead><tr style={{background:'#f5f8f6'}}>
+            <th style={{padding:'13px 12px'}}>Property</th>
+            <th style={{padding:'13px 12px',textAlign:'center'}}><span style={{display:'inline-flex',alignItems:'center',gap:6}}><Facebook size={15} color="#1877f2"/> Facebook</span></th>
+            <th style={{padding:'13px 12px',textAlign:'center'}}><span style={{display:'inline-flex',alignItems:'center',gap:6}}><Instagram size={15} color="#b43d83"/> Instagram</span></th>
+            <th style={{padding:'13px 12px',textAlign:'center'}}>Total</th>
+          </tr></thead>
+          <tbody>
+            {propertyRows.length?propertyRows.map(row=>{
+              const facebookCount=row.facebook.filter(post=>post.status==='published'||post.permalink).length;
+              const instagramCount=row.instagram.filter(post=>post.status==='published'||post.permalink).length;
+              return <tr key={row.id} style={{borderTop:'1px solid var(--border-color, #e5e7eb)'}}>
+                <td style={{padding:'14px 12px'}}><b>{row.title}</b>{row.city&&<div className="instagram-post-meta">{row.city}</div>}</td>
+                <td style={{padding:'14px 12px',textAlign:'center'}}>{facebookCount}</td>
+                <td style={{padding:'14px 12px',textAlign:'center'}}>{instagramCount}</td>
+                <td style={{padding:'14px 12px',textAlign:'center'}}><b>{facebookCount+instagramCount}</b></td>
+              </tr>
+            }):<tr><td colSpan={4} style={{padding:24,textAlign:'center',color:'#718096'}}>{loading?'Loading property publishing data…':'No property publishing data found yet.'}</td></tr>}
+          </tbody>
+          {propertyRows.length>0&&<tfoot><tr style={{borderTop:'2px solid #dce7e1',background:'#f5f8f6',fontWeight:700}}>
+            <td style={{padding:'14px 12px'}}>Total</td>
+            <td style={{padding:'14px 12px',textAlign:'center'}}>{propertyRows.reduce((sum,row)=>sum+row.facebook.filter(post=>post.status==='published'||post.permalink).length,0)}</td>
+            <td style={{padding:'14px 12px',textAlign:'center'}}>{propertyRows.reduce((sum,row)=>sum+row.instagram.filter(post=>post.status==='published'||post.permalink).length,0)}</td>
+            <td style={{padding:'14px 12px',textAlign:'center'}}>{propertyRows.reduce((sum,row)=>sum+row.facebook.filter(post=>post.status==='published'||post.permalink).length+row.instagram.filter(post=>post.status==='published'||post.permalink).length,0)}</td>
+          </tr></tfoot>}
+        </table>
+      </div>
+      <p className="instagram-post-meta" style={{margin:'12px 0 0'}}>Counts include successfully published posts only. Queue drafts, approvals and failed posts are not included.</p>
+    </section>}
     {!overviewOnly&&<>
     <section className="instagram-publishing-panel" style={{marginTop:24}}>
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,flexWrap:'wrap'}}>
