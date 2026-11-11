@@ -43,14 +43,14 @@ export default function SocialMediaMarketingPage({ user }) {
       .social-marketing-header{margin-bottom:20px}
       .social-marketing-header h1{margin:7px 0}
       .social-marketing-tabs{display:flex;gap:8px;flex-wrap:wrap;padding:7px;margin-bottom:22px;border:1px solid #e6ebe8;border-radius:12px;background:#fff}
-      .social-marketing-tab{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;border:0;border-radius:8px;background:transparent;color:#536474;font:600 13px inherit;cursor:pointer}
+      .social-marketing-tab{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;border:0;border-radius:8px;background:transparent;color:#536474;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
       .social-marketing-tab.active{background:#eaf3ee;color:#23694f}
       .social-marketing-content>.instagram-publishing-page{max-width:none;padding:0;margin:0}
       .social-marketing-content .instagram-publishing-heading{display:none}
       .social-marketing-content .instagram-publishing-page>.admin-stats{margin-top:18px}
       .social-marketing-history h2{margin:0 0 6px;color:#20364b}
       .social-marketing-history h3{display:flex;align-items:center;gap:8px;margin:25px 0 12px;color:#20364b;font-size:16px}
-      .social-marketing-history>.instagram-publishing-page{margin-bottom:28px}
+      .social-marketing-history>.instagram-publishing-page{margin-bottom:28px}\n      .social-marketing-history .instagram-publishing-grid{grid-template-columns:minmax(0,1fr)}\n      .social-marketing-history .instagram-publishing-grid>article:first-child{display:none}\n      .social-marketing-history .instagram-publishing-grid>article:last-child{min-width:0}\n      .social-marketing-history .instagram-setup-note{display:none}
       @media(max-width:620px){.social-marketing-tabs{display:grid;grid-template-columns:1fr 1fr}.social-marketing-tab{padding:10px 7px;font-size:12px}}
     `}</style>
   </section>
