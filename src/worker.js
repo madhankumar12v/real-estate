@@ -22,6 +22,21 @@ async function supabaseRequest(env,token,path,options={}){
   if(!response.ok) throw new HttpError(data?.message||data?.hint||"Supabase request failed.",response.status);
   return data;
 }
+
+async function serviceRequest(env,path,options={}){
+  const key=env.SUPABASE_SERVICE_ROLE_KEY;
+  if(!key) throw new Error("SUPABASE_SERVICE_ROLE_KEY is not configured in Cloudflare Worker secrets.");
+  const response=await fetch(env.SUPABASE_URL.replace(/\/$/,"")+"/rest/v1/"+path,{
+    method:options.method||"GET",
+    headers:{"apikey":key,"Authorization":"Bearer "+key,"Content-Type":"application/json","Accept":"application/json",...(options.prefer?{"Prefer":options.prefer}:{})},
+    body:options.body?JSON.stringify(options.body):undefined
+  });
+  const text=await response.text();
+  let data=null;try{data=text?JSON.parse(text):null}catch{data=text}
+  if(!response.ok) throw new Error(data?.message||data?.hint||"Supabase automation queue request failed.");
+  return data;
+}
+
 async function requireAdmin(request,env){
   requiredEnv(env);
   const token=bearer(request);
@@ -105,6 +120,49 @@ async function publishFacebook(env,post){
     if(response.ok) permalink=data.permalink_url||null;
   }catch{}
   return {mediaId,postId,permalink};
+}
+
+
+async function runSocialAutomation(env){
+  if(!env.SUPABASE_SERVICE_ROLE_KEY) throw new Error("SUPABASE_SERVICE_ROLE_KEY is not configured.");
+  const settings=await serviceRequest(env,"social_automation_settings?select=enabled&id=eq.1&limit=1");
+  if(!settings?.[0]?.enabled) return {paused:true,processed:0};
+  let processed=0;
+  const now=new Date().toISOString();
+  for(const [table,platform] of [["facebook_posts","facebook"],["instagram_posts","instagram"]]){
+    const due=await serviceRequest(env,table+"?select=id,listing_id,caption,image_url,attempt_count&auto_generated=eq.true&status=eq.approved&next_attempt_at=lte."+encodeURIComponent(now)+"&order=created_at.asc&limit=5");
+    for(const post of due||[]){
+      const latest=await serviceRequest(env,"social_automation_settings?select=enabled&id=eq.1&limit=1");
+      if(!latest?.[0]?.enabled) return {paused:true,processed};
+      const attempt=(Number(post.attempt_count)||0)+1;
+      const claim=await serviceRequest(env,table+"?id=eq."+encodeURIComponent(post.id)+"&status=eq.approved&auto_generated=eq.true",{
+        method:"PATCH",prefer:"return=representation",
+        body:{status:"publishing",attempt_count:attempt,last_attempt_at:new Date().toISOString(),processing_started_at:new Date().toISOString(),last_error:null}
+      });
+      if(!claim?.length) continue;
+      processed++;
+      try{
+        const listing=await serviceRequest(env,"listings?select=id,status&id=eq."+encodeURIComponent(post.listing_id)+"&status=eq.approved&limit=1");
+        if(!listing?.length) throw new Error("Property is no longer approved. Automatic publishing was blocked.");
+        const result=platform==="facebook"?await publishFacebook(env,post):await publishInstagram(env,post);
+        const fields=platform==="facebook"
+          ? {status:"published",fb_media_id:result.mediaId,fb_post_id:result.postId,permalink:result.permalink,published_at:new Date().toISOString(),last_error:null,processing_started_at:null}
+          : {status:"published",ig_container_id:result.containerId,ig_media_id:result.mediaId,permalink:result.permalink,published_at:new Date().toISOString(),last_error:null,processing_started_at:null};
+        await serviceRequest(env,table+"?id=eq."+encodeURIComponent(post.id)+"&status=eq.publishing",{method:"PATCH",body:fields});
+      }catch(error){
+        const message=String(error?.message||"Automatic publishing failed.").slice(0,1000);
+        const permanent=/requires a JPEG|permission|not configured|invalid access token|unsupported post|no longer approved|could not access the property image/i.test(message);
+        const retryMinutes=[5,15,60,180];
+        const exhausted=attempt>=5||permanent;
+        const nextAttempt=new Date(Date.now()+(retryMinutes[Math.min(attempt-1,retryMinutes.length-1)]||180)*60000).toISOString();
+        await serviceRequest(env,table+"?id=eq."+encodeURIComponent(post.id)+"&status=eq.publishing",{
+          method:"PATCH",
+          body:{status:exhausted?"failed":"approved",last_error:message,next_attempt_at:nextAttempt,processing_started_at:null}
+        }).catch(()=>{});
+      }
+    }
+  }
+  return {paused:false,processed};
 }
 
 async function handleApi(request,env){
@@ -209,6 +267,9 @@ async function handleApi(request,env){
   throw new HttpError("Social publishing API route not found.",404);
 }
 export default {
+  async scheduled(controller,env,ctx){
+    ctx.waitUntil(runSocialAutomation(env).catch(error=>console.error("MrSa social automation:",error?.message||error)));
+  },
   async fetch(request,env){
     const url=new URL(request.url);
     if(url.pathname.startsWith("/api/instagram/")||url.pathname.startsWith("/api/facebook/")){
