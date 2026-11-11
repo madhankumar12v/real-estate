@@ -32,7 +32,7 @@ export default function SocialMediaMarketingPage({ user }) {
     </nav>
 
     <div className="social-marketing-content">
-      {activeTab === 'overview' && <SocialAutomationPage user={user}/>}
+      {activeTab === 'overview' && <SocialAutomationPage user={user} overviewOnly />}
 
       {activeTab === 'facebook' && <SocialAutomationPage user={user} platformFilter="facebook" />}
       {activeTab === 'instagram' && <SocialAutomationPage user={user} platformFilter="instagram" />}
