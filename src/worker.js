@@ -177,6 +177,13 @@ async function handleApi(request,env){
   const url=new URL(request.url);
   const path=url.pathname;
   const {token,user}=await requireAdmin(request,env);
+  if(request.method==="GET"&&path==="/api/social-automation/status"){
+    return json({
+      serviceRoleConfigured:Boolean(String(env.SUPABASE_SERVICE_ROLE_KEY||"").trim()),
+      facebookConfigured:Boolean(String(env.FACEBOOK_PAGE_ID||"").trim()&&String(env.FACEBOOK_PAGE_ACCESS_TOKEN||"").trim()),
+      instagramConfigured:Boolean(String(env.INSTAGRAM_ACCOUNT_ID||"").trim()&&String(env.INSTAGRAM_ACCESS_TOKEN||"").trim())
+    });
+  }
   if(request.method==="GET"&&path==="/api/instagram/listings"){
     const listings=await supabaseRequest(env,token,"listings?select=id,title,city,district,locality,property_type,price_per_sqft,description,images:listing_images(url)&status=eq.approved&order=created_at.desc&limit=100");
     return json({listings:listings||[]});
