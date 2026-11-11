@@ -73,8 +73,8 @@ export default function SocialAutomationPage({user}){
       </div>
     </article>
     <div className="admin-stats" style={{marginTop:24}}>
-      <div><b>{counts.facebookQueued}</b><span><Facebook size={14}/> Facebook awaiting publish</span></div>
-      <div><b>{counts.instagramQueued}</b><span><Instagram size={14}/> Instagram awaiting publish</span></div>
+      <div><b>{counts.facebookQueued}</b><span><Facebook size={14}/> Facebook queue items</span></div>
+      <div><b>{counts.instagramQueued}</b><span><Instagram size={14}/> Instagram queue items</span></div>
       <div><b>{counts.facebookPublished}</b><span><Facebook size={14}/> Published on Facebook Page</span></div>
       <div><b>{counts.instagramPublished}</b><span><Instagram size={14}/> Published on Instagram account</span></div>
       <div><b>{counts.facebookPublished+counts.instagramPublished}</b><span>Combined platform publications</span></div>
