@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { PauseCircle, PlayCircle, RefreshCw, ShieldCheck, Facebook, Instagram, Check, X, Trash2, ExternalLink } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
-export default function SocialAutomationPage({user, platformFilter = null}){
+export default function SocialAutomationPage({user, platformFilter = null, overviewOnly = false}){
   const [settings,setSettings]=useState(null)
   const [runtime,setRuntime]=useState(null)
   const [counts,setCounts]=useState({facebookQueued:0,instagramQueued:0,facebookFailed:0,instagramFailed:0,facebookPublished:0,instagramPublished:0})
@@ -132,6 +132,7 @@ export default function SocialAutomationPage({user, platformFilter = null}){
     </div>
     <p className="instagram-post-meta" style={{textAlign:'center',marginTop:10}}>Published totals count posts tracked in MrSa's publishing database, including manual and automatic posts.</p>
     </>}
+    {!overviewOnly&&<>
     <section className="instagram-publishing-panel" style={{marginTop:24}}>
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,flexWrap:'wrap'}}>
         <div><h2 style={{margin:'0 0 6px'}}>Property publishing manager</h2><p className="muted" style={{margin:0}}>Approve, reject or delete individual Facebook and Instagram posts. Published links and counts are shown per property.</p></div>
@@ -165,6 +166,7 @@ export default function SocialAutomationPage({user, platformFilter = null}){
         {[...visibleRows].filter(row=>row.latest).sort((a,b)=>new Date(b.latest.published_at||0)-new Date(a.latest.published_at||0)).slice(0,8).map(row=><div key={row.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,padding:'11px 0',borderTop:'1px solid var(--border-color, #e5e7eb)'}}><div><b>{row.title}</b><div className="instagram-post-meta">{row.latest.platform==='facebook'?'Facebook':'Instagram'} · {row.latest.published_at?new Date(row.latest.published_at).toLocaleDateString('en-IN'):''}</div></div><a className="btn btn-outline" href={row.latest.permalink} target="_blank" rel="noreferrer">View more <ExternalLink size={13}/></a></div>)}
       </div>:<div className="instagram-empty" style={{marginTop:14}}>No recently published links found.</div>}
     </section>
+    </>}
     {!platformFilter&&<><div className="instagram-publishing-actions" style={{justifyContent:'center',marginTop:18}}><Link className="btn btn-outline" to="/admin/facebook">Open Facebook queue</Link><Link className="btn btn-outline" to="/admin/instagram">Open Instagram queue</Link></div>
     <p className="muted" style={{textAlign:'center',marginTop:18}}>Last setting update: {settings?.updated_at?new Date(settings.updated_at).toLocaleString('en-IN'):'—'}</p></>}
   </section>
