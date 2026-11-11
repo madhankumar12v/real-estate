@@ -133,3 +133,24 @@ create policy "users delete own property photos" on storage.objects for delete t
 -- IMPORTANT: after creating your own account, promote it to admin manually:
 -- update public.profiles set role = 'admin' where id = (select id from auth.users where email = 'YOUR_EMAIL');
 -- Never expose the Supabase service_role key in frontend code.
+
+-- Safe aggregate-only statistics for the public homepage.
+-- This function exposes counts only; it never returns listing or buyer details.
+create or replace function public.get_public_homepage_stats()
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public, pg_temp
+as $$
+  select jsonb_build_object(
+    'total_properties', count(*)::bigint,
+    'city_towns', count(distinct nullif(btrim(city), ''))::bigint,
+    'recently_added', count(*) filter (where created_at >= now() - interval '30 days')::bigint
+  )
+  from public.listings
+  where status = 'approved';
+$$;
+
+revoke all on function public.get_public_homepage_stats() from public;
+grant execute on function public.get_public_homepage_stats() to anon, authenticated;
