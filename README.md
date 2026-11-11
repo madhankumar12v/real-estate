@@ -1,6 +1,6 @@
 # Mr SA Properties
 
-Premium buy-and-sell property marketplace for Vellore.
+Premium buy-and-sell property marketplace serving Vellore, Katpadi, Gudiyatham, Ranipet, Arcot, Anaicut and Walajah.
 
 **Tagline:** BUILD ASSETS • GROW WEALTH • CREATE YOUR FUTURE
 
