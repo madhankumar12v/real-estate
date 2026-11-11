@@ -209,7 +209,7 @@ async function handleApi(request,env){
     if(!updated?.length) throw new HttpError("Draft not found or it has already been reviewed.",409);
     return json({post:updated[0]});
   }
-  const instagramRejectMatch=path.match(/^\\/api\\/instagram\\/posts\\/([0-9a-f-]+)\\/reject$/i);
+  const instagramRejectMatch=path.match(/^\/api\/instagram\/posts\/([0-9a-f-]+)\/reject$/i);
   if(request.method==="POST"&&instagramRejectMatch){
     const id=encodeURIComponent(instagramRejectMatch[1]);
     const rows=await supabaseRequest(env,token,"instagram_posts?select=id,status&id=eq."+id+"&limit=1");
@@ -220,7 +220,7 @@ async function handleApi(request,env){
     if(!updated?.length) throw new HttpError("This Instagram item can no longer be rejected.",409);
     return json({post:updated[0]});
   }
-  const instagramDeleteMatch=path.match(/^\\/api\\/instagram\\/posts\\/([0-9a-f-]+)\\/delete$/i);
+  const instagramDeleteMatch=path.match(/^\/api\/instagram\/posts\/([0-9a-f-]+)\/delete$/i);
   if(request.method==="POST"&&instagramDeleteMatch){
     const id=encodeURIComponent(instagramDeleteMatch[1]);
     const rows=await supabaseRequest(env,token,"instagram_posts?select=id,status&id=eq."+id+"&limit=1");
@@ -280,7 +280,7 @@ async function handleApi(request,env){
     if(!updated?.length) throw new HttpError("Draft not found or it has already been reviewed.",409);
     return json({post:updated[0]});
   }
-  const fbRejectMatch=path.match(/^\\/api\\/facebook\\/posts\\/([0-9a-f-]+)\\/reject$/i);
+  const fbRejectMatch=path.match(/^\/api\/facebook\/posts\/([0-9a-f-]+)\/reject$/i);
   if(request.method==="POST"&&fbRejectMatch){
     const id=encodeURIComponent(fbRejectMatch[1]);
     const rows=await supabaseRequest(env,token,"facebook_posts?select=id,status&id=eq."+id+"&limit=1");
@@ -291,7 +291,7 @@ async function handleApi(request,env){
     if(!updated?.length) throw new HttpError("This Facebook item can no longer be rejected.",409);
     return json({post:updated[0]});
   }
-  const fbDeleteMatch=path.match(/^\\/api\\/facebook\\/posts\\/([0-9a-f-]+)\\/delete$/i);
+  const fbDeleteMatch=path.match(/^\/api\/facebook\/posts\/([0-9a-f-]+)\/delete$/i);
   if(request.method==="POST"&&fbDeleteMatch){
     const id=encodeURIComponent(fbDeleteMatch[1]);
     const rows=await supabaseRequest(env,token,"facebook_posts?select=id,status&id=eq."+id+"&limit=1");
