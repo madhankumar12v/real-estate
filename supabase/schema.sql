@@ -25,6 +25,7 @@ create table if not exists public.listings (
   description text,
   contact_whatsapp text,
   status text not null default 'pending' check (status in ('pending','approved','rejected')),
+  is_featured boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
