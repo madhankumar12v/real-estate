@@ -279,13 +279,15 @@ async function handleApi(request,env){
     if(!listingRows?.length||listingRows[0].status!=="approved") throw new HttpError("This property is no longer approved. Publishing has been blocked.",409);
     const claimed=await supabaseRequest(env,token,"instagram_posts?id=eq."+encodeURIComponent(post.id)+"&status=eq.approved&approved_at=not.is.null&approved_by=not.is.null",{method:"PATCH",prefer:"return=representation",body:{status:"publishing",last_error:null}});
     if(!claimed?.length) throw new HttpError("This post is already being processed or is no longer approved.",409);
+    let metaAccepted=false;
     try{
       const result=await publishInstagram(env,post);
+      metaAccepted=true;
       const saved=await supabaseRequest(env,token,"instagram_posts?id=eq."+encodeURIComponent(post.id),{method:"PATCH",prefer:"return=representation",body:{status:"published",ig_container_id:result.containerId,ig_media_id:result.mediaId,permalink:result.permalink,published_at:new Date().toISOString(),last_error:null}});
       return json({success:true,post:saved?.[0]||null,permalink:result.permalink});
     }catch(error){
       const message=String(error?.message||"Instagram publishing failed.").slice(0,1000);
-      await supabaseRequest(env,token,"instagram_posts?id=eq."+encodeURIComponent(post.id),{method:"PATCH",body:{status:"failed",last_error:message}}).catch(()=>{});
+      await supabaseRequest(env,token,"instagram_posts?id=eq."+encodeURIComponent(post.id),{method:"PATCH",body:{status:(error?.uncertain||metaAccepted)?"review_required":"failed",last_error:message,next_attempt_at:null,processing_started_at:null}}).catch(()=>{});
       throw new HttpError(message,502);
     }
   }
@@ -350,13 +352,15 @@ async function handleApi(request,env){
     if(!listingRows?.length||listingRows[0].status!=="approved") throw new HttpError("This property is no longer approved. Publishing has been blocked.",409);
     const claimed=await supabaseRequest(env,token,"facebook_posts?id=eq."+encodeURIComponent(post.id)+"&status=eq.approved&approved_at=not.is.null&approved_by=not.is.null",{method:"PATCH",prefer:"return=representation",body:{status:"publishing",last_error:null}});
     if(!claimed?.length) throw new HttpError("This post is already being processed or is no longer approved.",409);
+    let metaAccepted=false;
     try{
       const result=await publishFacebook(env,post);
+      metaAccepted=true;
       const saved=await supabaseRequest(env,token,"facebook_posts?id=eq."+encodeURIComponent(post.id),{method:"PATCH",prefer:"return=representation",body:{status:"published",fb_media_id:result.mediaId,fb_post_id:result.postId,permalink:result.permalink,published_at:new Date().toISOString(),last_error:null}});
       return json({success:true,post:saved?.[0]||null,permalink:result.permalink});
     }catch(error){
       const message=String(error?.message||"Facebook publishing failed.").slice(0,1000);
-      await supabaseRequest(env,token,"facebook_posts?id=eq."+encodeURIComponent(post.id),{method:"PATCH",body:{status:"failed",last_error:message}}).catch(()=>{});
+      await supabaseRequest(env,token,"facebook_posts?id=eq."+encodeURIComponent(post.id),{method:"PATCH",body:{status:(error?.uncertain||metaAccepted)?"review_required":"failed",last_error:message,next_attempt_at:null,processing_started_at:null}}).catch(()=>{});
       throw new HttpError(message,502);
     }
   }
