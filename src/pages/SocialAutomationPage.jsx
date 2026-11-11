@@ -11,6 +11,8 @@ export default function SocialAutomationPage({user, platformFilter = null, overv
   const [queuePosts,setQueuePosts]=useState({facebook:[],instagram:[]})
   const [dailyReport,setDailyReport]=useState({visitors:0,sessions:0,pageViews:0,whatsappClicks:0,enquiries:0,facebookToday:0,instagramToday:0})
   const [workingPost,setWorkingPost]=useState('')
+  const [rejectingPost,setRejectingPost]=useState(null)
+  const [rejectReason,setRejectReason]=useState('')
   const [loading,setLoading]=useState(true)
   const [saving,setSaving]=useState(false)
   const [error,setError]=useState('')
@@ -87,16 +89,17 @@ export default function SocialAutomationPage({user, platformFilter = null, overv
     }
     return [...grouped.values()].sort((a,b)=>a.title.localeCompare(b.title))
   },[propertyHistory,queuePosts])
-  const actOnPost=async(platform,id,action)=>{
+  const actOnPost=async(platform,id,action,reason='')=>{
     if(action==='delete'&&!window.confirm('Delete this '+platform+' queue item? This will not delete the property listing.'))return
     const key=platform+':'+id
     setWorkingPost(key);setError('');setNotice('')
     try{
       const {data:sessionData}=await supabase.auth.getSession()
-      const response=await fetch('/api/'+platform+'/posts/'+encodeURIComponent(id)+'/'+action,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+(sessionData.session?.access_token||'')},body:'{}'})
+      const response=await fetch('/api/'+platform+'/posts/'+encodeURIComponent(id)+'/'+action,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+(sessionData.session?.access_token||'')},body:JSON.stringify(action==='reject'?{reason}: {})})
       const result=await response.json().catch(()=>({}))
       if(!response.ok)throw new Error(result.error||'Could not '+action+' '+platform+' post.')
-      setNotice(action==='approve'?platform+' post approved.':action==='reject'?platform+' post rejected.':platform+' queue item deleted.')
+      setNotice(action==='approve'?platform+' post approved and added to the publishing queue.':action==='reject'?platform+' post rejected. Reason saved.':platform+' queue item deleted.')
+      if(action==='reject'){setRejectingPost(null);setRejectReason('')}
       await load()
     }catch(err){setError(err.message||'The post action failed.')}
     finally{setWorkingPost('')}
@@ -329,9 +332,10 @@ export default function SocialAutomationPage({user, platformFilter = null, overv
                       </div>
                       {post.permalink&&<a className="text-link" href={post.permalink} target="_blank" rel="noreferrer">View published post <ExternalLink size={12}/></a>}
                       {post.last_error&&<div className="instagram-post-meta" style={{marginTop:5,color:'#9a5b45'}}>{post.last_error}</div>}
-                      {['draft','approved'].includes(post.status)&&<div style={{display:'flex',gap:7,marginTop:8}}>
-                        <button className="icon-btn success" title="Approve post" aria-label="Approve post" disabled={workingPost===post.platform+':'+post.id||post.status==='approved'&&post.approved_at&&post.approved_by} onClick={()=>actOnPost(post.platform,post.id,'approve')}><Check size={15}/></button>
-                        <button className="icon-btn warning" title="Reject post" aria-label="Reject post" disabled={workingPost===post.platform+':'+post.id} onClick={()=>actOnPost(post.platform,post.id,'reject')}><X size={15}/></button>
+                      {post.status==='rejected'&&post.last_error&&<div className="instagram-post-meta" style={{marginTop:7,color:'#9a5b45'}}><b>Rejection reason:</b> {post.last_error}</div>}
+                      {['draft','approved','failed'].includes(post.status)&&<div style={{display:'flex',gap:8,flexWrap:'wrap',marginTop:10}}>
+                        <button className="btn btn-primary" style={{padding:'8px 13px',fontSize:12}} disabled={workingPost===post.platform+':'+post.id||post.status==='approved'&&post.approved_at&&post.approved_by} onClick={()=>actOnPost(post.platform,post.id,'approve')}><Check size={14}/>{workingPost===post.platform+':'+post.id?'Please wait…':post.status==='approved'?'Approved':'Approve & queue'}</button>
+                        <button className="btn btn-outline" style={{padding:'8px 13px',fontSize:12,color:'#a34e42',borderColor:'#e6c8c3'}} disabled={workingPost===post.platform+':'+post.id} onClick={()=>{setRejectingPost({platform:post.platform,id:post.id,title:row.title});setRejectReason('')}}><X size={14}/>Reject</button>
                       </div>}
                     </div>)}
                   </div>
@@ -350,6 +354,19 @@ export default function SocialAutomationPage({user, platformFilter = null, overv
       </div>:<div className="instagram-empty" style={{marginTop:14}}>No recently published links found.</div>}
     </section>
     </>}
+    {rejectingPost&&<div role="dialog" aria-modal="true" aria-labelledby="mrsa-reject-title" style={{position:'fixed',inset:0,zIndex:1000,background:'#10251dcc',display:'grid',placeItems:'center',padding:18}}>
+      <form onSubmit={e=>{e.preventDefault();if(rejectReason.trim().length<3)return;actOnPost(rejectingPost.platform,rejectingPost.id,'reject',rejectReason.trim())}} style={{width:'min(100%,460px)',padding:22,borderRadius:16,background:'#fff',boxShadow:'0 20px 60px #0003'}}>
+        <h3 id="mrsa-reject-title" style={{margin:'0 0 7px',color:'#20364b'}}>Reject social post</h3>
+        <p className="instagram-post-meta" style={{margin:'0 0 14px'}}>{rejectingPost.platform==='facebook'?'Facebook':'Instagram'} · {rejectingPost.title}</p>
+        <label htmlFor="mrsa-reject-reason" style={{display:'block',fontSize:13,fontWeight:650,marginBottom:7}}>Reason for rejection <span style={{color:'#b34d42'}}>*</span></label>
+        <textarea id="mrsa-reject-reason" value={rejectReason} onChange={e=>setRejectReason(e.target.value)} required minLength={3} maxLength={500} rows={4} placeholder="Example: Incorrect price, outdated image, or missing property details" style={{width:'100%',boxSizing:'border-box',padding:11,border:'1px solid #dce5df',borderRadius:9,font:'inherit',resize:'vertical'}}/>
+        <small style={{display:'block',color:'#829089',marginTop:5}}>This reason will be saved with the rejected post for future reference.</small>
+        <div style={{display:'flex',justifyContent:'flex-end',gap:9,marginTop:17}}>
+          <button type="button" className="btn btn-outline" onClick={()=>{setRejectingPost(null);setRejectReason('')}}>Cancel</button>
+          <button type="submit" className="btn btn-primary" disabled={rejectReason.trim().length<3||Boolean(workingPost)}>Confirm rejection</button>
+        </div>
+      </form>
+    </div>}
     {!platformFilter&&<><div className="instagram-publishing-actions" style={{justifyContent:'center',marginTop:18}}><Link className="btn btn-outline" to="/admin/facebook">Open Facebook queue</Link><Link className="btn btn-outline" to="/admin/instagram">Open Instagram queue</Link></div>
     <p className="muted" style={{textAlign:'center',marginTop:18}}>Last setting update: {settings?.updated_at?new Date(settings.updated_at).toLocaleString('en-IN'):'—'}</p></>}
   </section>
