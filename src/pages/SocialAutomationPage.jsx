@@ -125,13 +125,13 @@ export default function SocialAutomationPage({user, platformFilter = null, overv
     return {facebook,instagram,total:facebook+instagram,activeProperties}
   },[propertyRows])
   return <section className="section page-section instagram-publishing-page">
+    {notice&&<div className="instagram-publishing-notice" role="status">{notice}</div>}
+    {error&&<div className="instagram-publishing-error" role="alert">{error}</div>}
     {!platformFilter&&!overviewOnly&&<>
     <div className="instagram-publishing-heading">
       <div><span className="eyebrow">MRSA PROPERTIES · ADMIN</span><h1>Auto Marketing 3.0</h1><p className="muted">Daily queue review at 10:00 AM IST. Individually approved Facebook and Instagram posts publish one per platform per hour, with property rotation.</p></div>
       <div className="instagram-publishing-actions"><button className="btn btn-outline" onClick={load} disabled={loading}><RefreshCw size={15}/> Refresh</button><Link className="btn btn-outline" to="/admin">← Admin dashboard</Link></div>
     </div>
-    {notice&&<div className="instagram-publishing-notice" role="status">{notice}</div>}
-    {error&&<div className="instagram-publishing-error" role="alert">{error}</div>}
     <article className="instagram-publishing-panel" style={{maxWidth:760,margin:'0 auto'}}>
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:16,flexWrap:'wrap'}}>
         <div><span className="eyebrow">MASTER CONTROL</span><h2 style={{margin:'8px 0'}}>Automatic publishing</h2><p className="muted">{settings?.enabled?'New property approvals create social post drafts. Each Facebook and Instagram post must be approved separately before publishing.':'Publishing is paused. New approvals will not be queued.'}</p></div>
@@ -368,7 +368,7 @@ export default function SocialAutomationPage({user, platformFilter = null, overv
         <small style={{display:'block',color:'#829089',marginTop:5}}>This reason will be saved with the rejected post for future reference.</small>
         <div style={{display:'flex',justifyContent:'flex-end',gap:9,marginTop:17}}>
           <button type="button" className="btn btn-outline" onClick={()=>{setRejectingPost(null);setRejectReason('')}}>Cancel</button>
-          <button type="submit" className="btn btn-primary" disabled={rejectReason.trim().length<3||Boolean(workingPost)}>Confirm rejection</button>
+          <button type="submit" className="btn btn-primary" disabled={rejectReason.trim().length<3||Boolean(workingPost)}>{workingPost?'Rejecting…':'Confirm rejection'}</button>
         </div>
       </form>
     </div>}
