@@ -115,3 +115,18 @@ Do not make an ordinary user an admin from the public website.
 The 4.0 CRM adds date-range performance KPIs, lead-pipeline counts, enquiry-source and district/property-type breakdowns, agent-wise outcomes, overdue and upcoming follow-up queues, corrected Indian WhatsApp number formatting and aggregate CSV export. Admins see enquiries permitted by admin RLS; agents see only enquiries assigned to their own account.
 
 After merging the 4.0 feature branch, run `supabase/migrations/20261108_mrsa_properties_4_0_analytics.sql` once in Supabase SQL Editor, after the 3.0 and Phase 1/Phase 3 migrations. This migration adds reporting indexes and does not change existing records. The dashboard calculates metrics from records returned by Supabase RLS; it does not bypass row-level security or use a service-role key.
+
+## Social publishing — Facebook + Instagram
+
+The admin-only social publishing queues create drafts from currently approved listings. Each platform has a separate queue and status history. A draft must be approved by an administrator, and publishing is a separate manual action. The Worker checks the listing is still approved immediately before publishing; pending, rejected or deleted listings cannot be published.
+
+After merging the social-publishing feature, run `supabase/migrations/20261111_mrsa_facebook_publishing.sql` once in Supabase SQL Editor. The existing Instagram queue migration must already have been applied.
+
+Configure these values in Cloudflare Worker **mrsa → Settings → Variables and Secrets**:
+- `FACEBOOK_PAGE_ID` — Facebook Page ID (ordinary variable).
+- `FACEBOOK_PAGE_ACCESS_TOKEN` — Page access token (encrypted Secret).
+- `INSTAGRAM_ACCOUNT_ID` — Instagram professional account ID (ordinary variable).
+- `INSTAGRAM_ACCESS_TOKEN` — Instagram access token (encrypted Secret).
+- Keep `SUPABASE_URL` and `SUPABASE_ANON_KEY` configured as existing Worker variables.
+
+Never put Meta access tokens in GitHub, frontend variables, or source code. The admin pages are `/admin/facebook` and `/admin/instagram`. The API publishing routes are server-side in `src/worker.js`; no post is published merely by creating or approving a draft.
