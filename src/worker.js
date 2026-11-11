@@ -148,7 +148,7 @@ async function runSocialAutomation(env){
         result=platform==="facebook"?await publishFacebook(env,post):await publishInstagram(env,post);
       }catch(error){
         const message=String(error?.message||"Automatic publishing failed.").slice(0,1000);
-        const permanent=/requires a JPEG|permission|not configured|invalid access token|unsupported post|no longer approved|could not access the property image|deprecated/i.test(message);
+        const permanent=/requires a JPEG|permission|not configured|invalid access token|unsupported post|no longer approved|deprecated/i.test(message);
         const retryMinutes=[5,15,60,180];
         const exhausted=attempt>=5||permanent;
         const nextAttempt=new Date(Date.now()+(retryMinutes[Math.min(attempt-1,retryMinutes.length-1)]||180)*60000).toISOString();
