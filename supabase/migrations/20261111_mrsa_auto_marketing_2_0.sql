@@ -1,5 +1,5 @@
 -- MrSa Auto Marketing 2.0
--- Automatically enqueue Facebook + Instagram posts after an administrator approves a listing.
+-- Queue Facebook + Instagram posts after an administrator approves a listing. The Worker master switch controls sending, not queue creation.
 -- The Cloudflare scheduled Worker publishes approved queue items only while the master switch is enabled.
 
 create table if not exists public.social_automation_settings (
@@ -52,7 +52,6 @@ security definer
 set search_path = public, pg_temp
 as $$
 declare
-  v_enabled boolean := false;
   v_image_url text;
   v_place text;
   v_rate text;
@@ -60,14 +59,6 @@ declare
   v_approver uuid;
 begin
   if new.status <> 'approved' or old.status is not distinct from new.status then
-    return new;
-  end if;
-
-  select enabled into v_enabled
-  from public.social_automation_settings
-  where id = 1;
-
-  if not coalesce(v_enabled, false) then
     return new;
   end if;
 
