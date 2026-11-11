@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase'
 export default function SocialAutomationPage({user, platformFilter = null, overviewOnly = false}){
   const [settings,setSettings]=useState(null)
   const [runtime,setRuntime]=useState(null)
-  const [counts,setCounts]=useState({facebookQueued:0,instagramQueued:0,facebookFailed:0,instagramFailed:0,facebookPublished:0,instagramPublished:0})
+  const [counts,setCounts]=useState({facebookQueued:0,instagramQueued:0,facebookFailed:0,instagramFailed:0,facebookRejected:0,instagramRejected:0,facebookPublished:0,instagramPublished:0})
   const [propertyHistory,setPropertyHistory]=useState({facebook:[],instagram:[]})
   const [queuePosts,setQueuePosts]=useState({facebook:[],instagram:[]})
   const [workingPost,setWorkingPost]=useState('')
@@ -34,16 +34,18 @@ export default function SocialAutomationPage({user, platformFilter = null, overv
       if(!fbQueueResponse.ok)throw new Error(fbQueueData.error||'Could not load Facebook approval queue.')
       if(!igQueueResponse.ok)throw new Error(igQueueData.error||'Could not load Instagram approval queue.')
       setQueuePosts({facebook:fbQueueData.posts||[],instagram:igQueueData.posts||[]})
-      const [fbQueued,igQueued,fbFailed,igFailed,fbPublished,igPublished]=await Promise.all([
+      const [fbQueued,igQueued,fbFailed,igFailed,fbRejected,igRejected,fbPublished,igPublished]=await Promise.all([
         supabase.from('facebook_posts').select('id',{count:'exact',head:true}).eq('auto_generated',true).in('status',['draft','approved','publishing']),
         supabase.from('instagram_posts').select('id',{count:'exact',head:true}).eq('auto_generated',true).in('status',['draft','approved','publishing']),
         supabase.from('facebook_posts').select('id',{count:'exact',head:true}).eq('auto_generated',true).eq('status','failed'),
         supabase.from('instagram_posts').select('id',{count:'exact',head:true}).eq('auto_generated',true).eq('status','failed'),
+        supabase.from('facebook_posts').select('id',{count:'exact',head:true}).eq('auto_generated',true).eq('status','rejected'),
+        supabase.from('instagram_posts').select('id',{count:'exact',head:true}).eq('auto_generated',true).eq('status','rejected'),
         supabase.from('facebook_posts').select('id',{count:'exact',head:true}).eq('status','published'),
         supabase.from('instagram_posts').select('id',{count:'exact',head:true}).eq('status','published')
       ])
-      for(const result of [fbQueued,igQueued,fbFailed,igFailed,fbPublished,igPublished])if(result.error)throw result.error
-      setCounts({facebookQueued:fbQueued.count||0,instagramQueued:igQueued.count||0,facebookFailed:fbFailed.count||0,instagramFailed:igFailed.count||0,facebookPublished:fbPublished.count||0,instagramPublished:igPublished.count||0})
+      for(const result of [fbQueued,igQueued,fbFailed,igFailed,fbRejected,igRejected,fbPublished,igPublished])if(result.error)throw result.error
+      setCounts({facebookQueued:fbQueued.count||0,instagramQueued:igQueued.count||0,facebookFailed:fbFailed.count||0,instagramFailed:igFailed.count||0,facebookRejected:fbRejected.count||0,instagramRejected:igRejected.count||0,facebookPublished:fbPublished.count||0,instagramPublished:igPublished.count||0})
     }catch(err){setError(err.message||'Could not load automation settings. Run the Auto Marketing 2.0 Supabase migration first.')}
     finally{setLoading(false)}
   }
@@ -145,10 +147,19 @@ export default function SocialAutomationPage({user, platformFilter = null, overv
       </div>
       {error&&<div className="instagram-publishing-error" role="alert" style={{marginTop:14}}>{error}</div>}
       <div className="mrsa-overview-kpis">
-        <article className="mrsa-overview-kpi mrsa-kpi-total"><span className="mrsa-kpi-label">Total published</span><div><strong>{overviewMetrics.total}</strong><span className="mrsa-kpi-symbol">↗</span></div><small>Across Facebook + Instagram</small></article>
-        <article className="mrsa-overview-kpi"><span className="mrsa-kpi-label"><Facebook size={15} color="#1877f2"/> Facebook</span><strong>{overviewMetrics.facebook}</strong><small>Published posts</small><div className="mrsa-kpi-track"><i style={{width:overviewMetrics.total?overviewMetrics.facebook/overviewMetrics.total*100+'%':'0%'}}/></div></article>
-        <article className="mrsa-overview-kpi"><span className="mrsa-kpi-label"><Instagram size={15} color="#b43d83"/> Instagram</span><strong>{overviewMetrics.instagram}</strong><small>Published posts</small><div className="mrsa-kpi-track mrsa-kpi-instagram"><i style={{width:overviewMetrics.total?overviewMetrics.instagram/overviewMetrics.total*100+'%':'0%'}}/></div></article>
-        <article className="mrsa-overview-kpi"><span className="mrsa-kpi-label">Properties published</span><strong>{overviewMetrics.activeProperties}</strong><small>Unique properties with at least one post</small></article>
+        <article className="mrsa-overview-kpi mrsa-kpi-total"><span className="mrsa-kpi-label">Total published</span><div><strong>{overviewMetrics.total}</strong><span className="mrsa-kpi-symbol">↗</span></div><small>Facebook + Instagram</small></article>
+        <article className="mrsa-overview-kpi"><span className="mrsa-kpi-label"><Facebook size={15} color="#1877f2"/> Facebook published</span><strong>{overviewMetrics.facebook}</strong><small>Successfully published</small><div className="mrsa-kpi-track"><i style={{width:overviewMetrics.total?overviewMetrics.facebook/overviewMetrics.total*100+'%':'0%'}}/></div></article>
+        <article className="mrsa-overview-kpi"><span className="mrsa-kpi-label"><Instagram size={15} color="#b43d83"/> Instagram published</span><strong>{overviewMetrics.instagram}</strong><small>Successfully published</small><div className="mrsa-kpi-track mrsa-kpi-instagram"><i style={{width:overviewMetrics.total?overviewMetrics.instagram/overviewMetrics.total*100+'%':'0%'}}/></div></article>
+        <article className="mrsa-overview-kpi"><span className="mrsa-kpi-label">Properties published</span><strong>{overviewMetrics.activeProperties}</strong><small>Unique properties with posts</small></article>
+      </div>
+      <div className="mrsa-overview-table-head mrsa-status-heading"><div><h3>Queue &amp; post status</h3><p className="muted">Platform-wise counts to help you manage pending work and resolve issues.</p></div><span>{counts.facebookQueued+counts.instagramQueued} queued · {counts.facebookFailed+counts.instagramFailed} failed · {counts.facebookRejected+counts.instagramRejected} rejected</span></div>
+      <div className="mrsa-status-grid">
+        <article className="mrsa-status-card"><span><i className="mrsa-status-dot queue"/> Facebook queue</span><strong>{counts.facebookQueued}</strong><small>Draft + approved + publishing</small></article>
+        <article className="mrsa-status-card"><span><i className="mrsa-status-dot queue"/> Instagram queue</span><strong>{counts.instagramQueued}</strong><small>Draft + approved + publishing</small></article>
+        <article className="mrsa-status-card"><span><i className="mrsa-status-dot failed"/> Facebook failed</span><strong>{counts.facebookFailed}</strong><small>Needs review or retry</small></article>
+        <article className="mrsa-status-card"><span><i className="mrsa-status-dot failed"/> Instagram failed</span><strong>{counts.instagramFailed}</strong><small>Needs review or retry</small></article>
+        <article className="mrsa-status-card"><span><i className="mrsa-status-dot rejected"/> Facebook rejected</span><strong>{counts.facebookRejected}</strong><small>Not approved for publishing</small></article>
+        <article className="mrsa-status-card"><span><i className="mrsa-status-dot rejected"/> Instagram rejected</span><strong>{counts.instagramRejected}</strong><small>Not approved for publishing</small></article>
       </div>
       <div className="mrsa-overview-table-head"><div><h3>Property-wise breakdown</h3><p className="muted">Published post count by platform</p></div><span>{propertyRows.length} properties tracked</span></div>
       <div className="mrsa-overview-table-wrap">
@@ -193,6 +204,14 @@ export default function SocialAutomationPage({user, platformFilter = null, overv
         .mrsa-kpi-track i{display:block;border-radius:20px;background:#2782df}
         .mrsa-kpi-instagram i{background:#bd4b8a}
         .mrsa-overview-table-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:12px}
+        .mrsa-status-heading{margin-top:28px}
+        .mrsa-status-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 0 28px}
+        .mrsa-status-card{display:grid;gap:8px;padding:15px;border:1px solid #e8eeeb;border-radius:12px;background:#fff}
+        .mrsa-status-card>span{display:flex;align-items:center;gap:7px;color:#607168;font-size:12px;font-weight:700}
+        .mrsa-status-card>strong{color:#20364b;font-size:26px;line-height:1.1}
+        .mrsa-status-card>small{color:#89958f;font-size:10px}
+        .mrsa-status-dot{width:8px;height:8px;border-radius:50%;background:#2782df}
+        .mrsa-status-dot.failed{background:#d97757}.mrsa-status-dot.rejected{background:#9b879f}
         .mrsa-overview-table-head h3{margin:0 0 4px;color:#20364b;font-size:17px}
         .mrsa-overview-table-head p{margin:0;font-size:12px}
         .mrsa-overview-table-head>span{color:#718078;font-size:11px;font-weight:600}
@@ -220,8 +239,8 @@ export default function SocialAutomationPage({user, platformFilter = null, overv
         .mrsa-overview-legend i{width:8px;height:8px;border-radius:50%}
         .mrsa-legend-facebook{background:#2782df}.mrsa-legend-instagram{background:#bd4b8a}
         .mrsa-overview-legend small{margin-left:auto;color:#89958f;font-size:10px}
-        @media(max-width:900px){.mrsa-overview-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
-        @media(max-width:560px){.mrsa-overview-kpis{gap:8px;margin:17px 0 22px}.mrsa-overview-kpi{padding:13px}.mrsa-overview-kpi>strong,.mrsa-overview-kpi>div>strong{font-size:25px}.mrsa-overview-table-head{align-items:flex-start;flex-direction:column}.mrsa-overview-legend small{margin-left:0;width:100%}}
+        @media(max-width:900px){.mrsa-overview-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.mrsa-status-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+        @media(max-width:560px){.mrsa-status-grid{grid-template-columns:1fr 1fr;gap:8px}.mrsa-status-card{padding:12px}.mrsa-status-card>strong{font-size:23px}.mrsa-overview-kpis{gap:8px;margin:17px 0 22px}.mrsa-overview-kpi{padding:13px}.mrsa-overview-kpi>strong,.mrsa-overview-kpi>div>strong{font-size:25px}.mrsa-overview-table-head{align-items:flex-start;flex-direction:column}.mrsa-overview-legend small{margin-left:0;width:100%}}
       `}</style>
     </section>}
     {!overviewOnly&&<>
