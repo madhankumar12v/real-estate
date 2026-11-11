@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Facebook, RefreshCw, Send, CheckCircle2, ShieldCheck, ExternalLink } from 'lucide-react'
+import { Facebook, RefreshCw, Send, CheckCircle2, ShieldCheck, ExternalLink, Check, X, Trash2 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 const money = value => value == null ? 'Price on request' : new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(Number(value)||0)
@@ -63,17 +63,19 @@ export default function FacebookPublishingPage(){
     finally{setSaving(false)}
   }
   const act=async(id,action)=>{
+    if(action==='delete'&&!window.confirm('Delete this Facebook queue item? This will not delete the property listing.'))return
     setWorkingId(id);setError('');setNotice('')
     try{
       const result=await api('/api/facebook/posts/'+encodeURIComponent(id)+'/'+action,{method:'POST',body:'{}'})
-      setNotice(action==='approve'?'Facebook post approved. It is ready for manual publishing.':('Facebook publishing completed.'+(result.permalink?' Open post: '+result.permalink:'')))
+      const messages={approve:'Facebook post approved. Automatic publishing will pick it up when the master switch is active.',reject:'Facebook post rejected. It will not be published.',delete:'Facebook queue item deleted.'}
+      setNotice(messages[action]||'Facebook publishing completed.'+(result.permalink?' Open post: '+result.permalink:''))
       await load()
     }catch(err){setError(err.message||'The action could not be completed.')}
     finally{setWorkingId('')}
   }
   return <section className="section page-section instagram-publishing-page">
     <div className="instagram-publishing-heading">
-      <div><span className="eyebrow">MRSA PROPERTIES · ADMIN</span><h1><Facebook size={27} style={{verticalAlign:'-5px',marginRight:8}}/>Facebook publishing</h1><p className="muted">Prepare posts from approved property listings. Every post requires admin approval and a manual publish action.</p></div>
+      <div><span className="eyebrow">MRSA PROPERTIES · ADMIN</span><h1><Facebook size={27} style={{verticalAlign:'-5px',marginRight:8}}/>Facebook publishing</h1><p className="muted">Review automatically generated posts from approved listings. Approve, reject or delete each queue item; approved automatic posts publish when Auto Marketing is active.</p></div>
       <div className="instagram-publishing-actions"><button className="btn btn-outline" onClick={load} disabled={loading}><RefreshCw size={15}/> Refresh</button><Link className="btn btn-outline" to="/admin">← Admin dashboard</Link></div>
     </div>
     {notice&&<div className="instagram-publishing-notice" role="status">{notice}</div>}
@@ -99,9 +101,13 @@ export default function FacebookPublishingPage(){
             <div className="instagram-post-meta">{post.created_at?new Date(post.created_at).toLocaleString('en-IN'):''}{post.last_error?' · '+post.last_error:''}</div>
             {post.permalink&&<a className="text-link" href={post.permalink} target="_blank" rel="noreferrer">View Facebook post <ExternalLink size={13}/></a>}
             <div className="instagram-post-actions">
-              {post.status==='draft'&&<button className="btn btn-outline" disabled={workingId===post.id} onClick={()=>act(post.id,'approve')}>Approve post</button>}
-              {post.status==='approved'&&post.auto_generated&&<span className="instagram-post-meta">Automatic queue · Attempt {post.attempt_count||0}/5 · Next check {post.next_attempt_at?new Date(post.next_attempt_at).toLocaleString('en-IN'):'soon'}</span>}{post.status==='approved'&&!post.auto_generated&&<button className="btn btn-primary" disabled={workingId===post.id} onClick={()=>act(post.id,'publish')}><Send size={13}/>{workingId===post.id?'Publishing…':'Publish to Facebook'}</button>}
+              {post.status==='draft'&&<button className="btn btn-outline" title="Approve" aria-label="Approve Facebook post" disabled={workingId===post.id} onClick={()=>act(post.id,'approve')}><Check size={15}/></button>}
+              {post.status==='approved'&&post.auto_generated&&<span className="instagram-post-meta">Automatic queue · Attempt {post.attempt_count||0}/5 · Next check {post.next_attempt_at?new Date(post.next_attempt_at).toLocaleString('en-IN'):'soon'}</span>}
+              {post.status==='approved'&&!post.auto_generated&&<button className="btn btn-primary" disabled={workingId===post.id} onClick={()=>act(post.id,'publish')}><Send size={13}/>{workingId===post.id?'Publishing…':'Publish to Facebook'}</button>}
               {post.status==='failed'&&<span className="instagram-post-meta">{post.auto_generated?'Automatic publishing stopped after a permanent error or 5 attempts. Review the error above.':'Fix the issue, then create a new draft for review.'}</span>}
+              {!['published','publishing','rejected'].includes(post.status)&&<button className="btn btn-outline" title="Reject" aria-label="Reject Facebook post" disabled={workingId===post.id} onClick={()=>act(post.id,'reject')}><X size={15}/></button>}
+              {!['published','publishing'].includes(post.status)&&<button className="btn btn-outline" title="Delete" aria-label="Delete Facebook queue item" disabled={workingId===post.id} onClick={()=>act(post.id,'delete')}><Trash2 size={15}/></button>}
+              {post.status==='rejected'&&<span className="instagram-post-meta">Rejected · Not scheduled for publishing</span>}
             </div>
           </div>
         </article>)}</div>:<div className="instagram-empty">No Facebook drafts yet. Create one from an approved property.</div>}
