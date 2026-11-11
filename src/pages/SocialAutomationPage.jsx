@@ -62,7 +62,7 @@ export default function SocialAutomationPage({user}){
       <button className={'btn '+(settings?.enabled?'btn-outline':'btn-primary')} style={{marginTop:18}} disabled={loading||saving||!settings||(!settings.enabled&&(!runtime?.serviceRoleConfigured||!runtime?.facebookConfigured||!runtime?.instagramConfigured))} onClick={toggle}>
         {settings?.enabled?<><PauseCircle size={17}/>{saving?'Pausing…':'Pause automation'}</>:<><PlayCircle size={17}/>{saving?'Resuming…':'Resume automation'}</>}
       </button>
-      <div className="instagram-setup-note" style={{marginTop:20}}><b><ShieldCheck size={14} style={{verticalAlign:'-3px'}}/> Publishing rules</b><br/>Only listings approved by an administrator are queued. Facebook and Instagram are processed by the Cloudflare Worker every five minutes. Each platform has a separate duplicate guard and status history. Temporary failures retry automatically; permanent errors are shown in the publishing queues. Pausing stops the scheduler from sending queued posts.</div>
+      <div className="instagram-setup-note" style={{marginTop:20}}><b><ShieldCheck size={14} style={{verticalAlign:'-3px'}}/> Publishing rules</b><br/>Only listings approved by an administrator are queued. Facebook and Instagram are processed by the Cloudflare Worker every minute. Each platform has a separate duplicate guard and status history. Temporary failures retry automatically; permanent errors are shown in the publishing queues. Pausing stops the scheduler from sending queued posts.</div>
       <div style={{display:'grid',gap:8,marginTop:16}}>
         <b>Cloudflare connection checks</b>
         <div className="instagram-post-meta">Supabase service-role secret: {runtime?.serviceRoleConfigured?'Configured':'Missing'}</div>
