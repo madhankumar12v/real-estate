@@ -209,6 +209,28 @@ async function handleApi(request,env){
     if(!updated?.length) throw new HttpError("Draft not found or it has already been reviewed.",409);
     return json({post:updated[0]});
   }
+  const instagramRejectMatch=path.match(/^\\/api\\/instagram\\/posts\\/([0-9a-f-]+)\\/reject$/i);
+  if(request.method==="POST"&&instagramRejectMatch){
+    const id=encodeURIComponent(instagramRejectMatch[1]);
+    const rows=await supabaseRequest(env,token,"instagram_posts?select=id,status&id=eq."+id+"&limit=1");
+    const post=rows?.[0];
+    if(!post) throw new HttpError("Instagram queue item not found.",404);
+    if(["published","publishing"].includes(post.status)) throw new HttpError("Published or currently publishing posts cannot be rejected.",409);
+    const updated=await supabaseRequest(env,token,"instagram_posts?id=eq."+id+"&status=in.(draft,approved,failed,rejected)",{method:"PATCH",prefer:"return=representation",body:{status:"rejected",last_error:null,next_attempt_at:null,processing_started_at:null}});
+    if(!updated?.length) throw new HttpError("This Instagram item can no longer be rejected.",409);
+    return json({post:updated[0]});
+  }
+  const instagramDeleteMatch=path.match(/^\\/api\\/instagram\\/posts\\/([0-9a-f-]+)\\/delete$/i);
+  if(request.method==="POST"&&instagramDeleteMatch){
+    const id=encodeURIComponent(instagramDeleteMatch[1]);
+    const rows=await supabaseRequest(env,token,"instagram_posts?select=id,status&id=eq."+id+"&limit=1");
+    const post=rows?.[0];
+    if(!post) throw new HttpError("Instagram queue item not found.",404);
+    if(["published","publishing"].includes(post.status)) throw new HttpError("Published or currently publishing posts cannot be deleted. Keep the publishing history.",409);
+    const deleted=await supabaseRequest(env,token,"instagram_posts?id=eq."+id+"&status=in.(draft,approved,failed,rejected)",{method:"DELETE",prefer:"return=representation"});
+    if(!deleted?.length) throw new HttpError("This Instagram item could not be deleted.",409);
+    return json({success:true});
+  }
   const publishMatch=path.match(/^\/api\/instagram\/posts\/([0-9a-f-]+)\/publish$/i);
   if(request.method==="POST"&&publishMatch){
     const rows=await supabaseRequest(env,token,"instagram_posts?select=id,listing_id,caption,image_url,status&id=eq."+encodeURIComponent(publishMatch[1])+"&limit=1");
@@ -257,6 +279,28 @@ async function handleApi(request,env){
     const updated=await supabaseRequest(env,token,"facebook_posts?id=eq."+encodeURIComponent(fbApproveMatch[1])+"&status=eq.draft",{method:"PATCH",prefer:"return=representation",body:{status:"approved",approved_by:user.id,approved_at:new Date().toISOString(),last_error:null}});
     if(!updated?.length) throw new HttpError("Draft not found or it has already been reviewed.",409);
     return json({post:updated[0]});
+  }
+  const fbRejectMatch=path.match(/^\\/api\\/facebook\\/posts\\/([0-9a-f-]+)\\/reject$/i);
+  if(request.method==="POST"&&fbRejectMatch){
+    const id=encodeURIComponent(fbRejectMatch[1]);
+    const rows=await supabaseRequest(env,token,"facebook_posts?select=id,status&id=eq."+id+"&limit=1");
+    const post=rows?.[0];
+    if(!post) throw new HttpError("Facebook queue item not found.",404);
+    if(["published","publishing"].includes(post.status)) throw new HttpError("Published or currently publishing posts cannot be rejected.",409);
+    const updated=await supabaseRequest(env,token,"facebook_posts?id=eq."+id+"&status=in.(draft,approved,failed,rejected)",{method:"PATCH",prefer:"return=representation",body:{status:"rejected",last_error:null,next_attempt_at:null,processing_started_at:null}});
+    if(!updated?.length) throw new HttpError("This Facebook item can no longer be rejected.",409);
+    return json({post:updated[0]});
+  }
+  const fbDeleteMatch=path.match(/^\\/api\\/facebook\\/posts\\/([0-9a-f-]+)\\/delete$/i);
+  if(request.method==="POST"&&fbDeleteMatch){
+    const id=encodeURIComponent(fbDeleteMatch[1]);
+    const rows=await supabaseRequest(env,token,"facebook_posts?select=id,status&id=eq."+id+"&limit=1");
+    const post=rows?.[0];
+    if(!post) throw new HttpError("Facebook queue item not found.",404);
+    if(["published","publishing"].includes(post.status)) throw new HttpError("Published or currently publishing posts cannot be deleted. Keep the publishing history.",409);
+    const deleted=await supabaseRequest(env,token,"facebook_posts?id=eq."+id+"&status=in.(draft,approved,failed,rejected)",{method:"DELETE",prefer:"return=representation"});
+    if(!deleted?.length) throw new HttpError("This Facebook item could not be deleted.",409);
+    return json({success:true});
   }
   const fbPublishMatch=path.match(/^\/api\/facebook\/posts\/([0-9a-f-]+)\/publish$/i);
   if(request.method==="POST"&&fbPublishMatch){
