@@ -287,7 +287,7 @@ export default {
   },
   async fetch(request,env){
     const url=new URL(request.url);
-    if(url.pathname.startsWith("/api/instagram/")||url.pathname.startsWith("/api/facebook/")){
+    if(url.pathname.startsWith("/api/instagram/")||url.pathname.startsWith("/api/facebook/")||url.pathname.startsWith("/api/social-automation/")){
       if(request.method==="OPTIONS") return new Response(null,{status:204,headers:{"Allow":"GET, POST, OPTIONS"}});
       try{return await handleApi(request,env);}
       catch(error){return json({error:error?.message||"Unexpected server error."},error instanceof HttpError?error.status:500);}
