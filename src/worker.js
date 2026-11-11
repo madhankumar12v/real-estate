@@ -173,13 +173,13 @@ async function handleApi(request,env){
     const created=await supabaseRequest(env,token,"facebook_posts",{method:"POST",prefer:"return=representation",body:{listing_id:body.listing_id,caption:String(body.caption).trim(),image_url:String(body.image_url),status:"draft",created_by:user.id}});
     return json({post:created?.[0]||null},201);
   }
-  const fbApproveMatch=path.match(/^\/api\\/facebook\\/posts\\/([0-9a-f-]+)\\/approve$/i);
+  const fbApproveMatch=path.match(/^\/api\/facebook\/posts\/([0-9a-f-]+)\/approve$/i);
   if(request.method==="POST"&&fbApproveMatch){
     const updated=await supabaseRequest(env,token,"facebook_posts?id=eq."+encodeURIComponent(fbApproveMatch[1])+"&status=eq.draft",{method:"PATCH",prefer:"return=representation",body:{status:"approved",approved_by:user.id,approved_at:new Date().toISOString(),last_error:null}});
     if(!updated?.length) throw new HttpError("Draft not found or it has already been reviewed.",409);
     return json({post:updated[0]});
   }
-  const fbPublishMatch=path.match(/^\/api\\/facebook\\/posts\\/([0-9a-f-]+)\\/publish$/i);
+  const fbPublishMatch=path.match(/^\/api\/facebook\/posts\/([0-9a-f-]+)\/publish$/i);
   if(request.method==="POST"&&fbPublishMatch){
     const rows=await supabaseRequest(env,token,"facebook_posts?select=id,listing_id,caption,image_url,status&id=eq."+encodeURIComponent(fbPublishMatch[1])+"&limit=1");
     const post=rows?.[0];
