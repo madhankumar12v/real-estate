@@ -351,14 +351,14 @@ export default function SocialAutomationPage({user, platformFilter = null, overv
         </table>
       </div>:<div className="instagram-empty" style={{marginTop:14}}>No property posts or queue items found.</div>}
     </section>
-    <section className="instagram-publishing-panel" style={{marginTop:18}}>
+    </>}
+    {!overviewOnly&&!settingsOnly&&<section className="instagram-publishing-panel" style={{marginTop:18}}>
       <h2 style={{margin:'0 0 6px'}}>History · Recently posted</h2>
       <p className="muted" style={{margin:0}}>Latest published property posts across both platforms.</p>
       {[...visibleRows].filter(row=>row.latest).sort((a,b)=>new Date(b.latest.published_at||0)-new Date(a.latest.published_at||0)).slice(0,8).length?<div style={{display:'grid',gap:10,marginTop:14}}>
         {[...visibleRows].filter(row=>row.latest).sort((a,b)=>new Date(b.latest.published_at||0)-new Date(a.latest.published_at||0)).slice(0,8).map(row=><div key={row.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,padding:'11px 0',borderTop:'1px solid var(--border-color, #e5e7eb)'}}><div><b>{row.title}</b><div className="instagram-post-meta">{row.latest.platform==='facebook'?'Facebook':'Instagram'} · {row.latest.published_at?new Date(row.latest.published_at).toLocaleDateString('en-IN'):''}</div></div><a className="btn btn-outline" href={row.latest.permalink} target="_blank" rel="noreferrer">View more <ExternalLink size={13}/></a></div>)}
       </div>:<div className="instagram-empty" style={{marginTop:14}}>No recently published links found.</div>}
-    </section>
-    </>}
+    </section>}
     {rejectingPost&&<div role="dialog" aria-modal="true" aria-labelledby="mrsa-reject-title" style={{position:'fixed',inset:0,zIndex:1000,background:'#10251dcc',display:'grid',placeItems:'center',padding:18}}>
       <form onSubmit={e=>{e.preventDefault();if(rejectReason.trim().length<3)return;actOnPost(rejectingPost.platform,rejectingPost.id,'reject',rejectReason.trim())}} style={{width:'min(100%,460px)',padding:22,borderRadius:16,background:'#fff',boxShadow:'0 20px 60px #0003'}}>
         <h3 id="mrsa-reject-title" style={{margin:'0 0 7px',color:'#20364b'}}>Reject social post</h3>
