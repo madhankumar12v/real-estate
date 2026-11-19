@@ -1,15 +1,6 @@
 import { Facebook, Instagram, LayoutDashboard, History, ShieldCheck, Settings2, Wrench, ChevronDown, Clock3 } from 'lucide-react'
 import SocialAutomationPage from './SocialAutomationPage'
 
-const sections = [
-  { id: 'overview', title: 'Overview', description: 'Publishing totals, queue status and today’s activity.', icon: LayoutDashboard },
-  { id: 'settings', title: 'Automation Settings', description: 'Master switch, publishing schedule and 7-day property cycle.', icon: Settings2 },
-  { id: 'facebook', title: 'Facebook Manager', description: 'Facebook property queue, publishing status and post history.', icon: Facebook },
-  { id: 'instagram', title: 'Instagram Manager', description: 'Instagram property queue, publishing status and post history.', icon: Instagram },
-  { id: 'history', title: 'Publishing History', description: 'Recently published posts and property-wise publishing records.', icon: History },
-  { id: 'troubleshooting', title: 'Troubleshooting', description: 'Connection checks, common errors and safe recovery steps.', icon: Wrench }
-]
-
 export default function SocialMediaMarketingPage({ user }) {
   return <section className="section page-section social-marketing-page">
     <header className="social-marketing-header">
@@ -78,7 +69,7 @@ export default function SocialMediaMarketingPage({ user }) {
             <article><b><ShieldCheck size={16}/> Check Cloudflare secrets</b><p>Open Cloudflare Dashboard → Workers &amp; Pages → mrsa → Settings → Variables and Secrets. Confirm the Supabase service-role key, Facebook Page access token and Instagram access token are configured as secrets. Never paste secret values into chat or website code.</p></article>
             <article><b><Clock3 size={16}/> Posts are waiting in the queue</b><p>Automatic publishing runs in scheduled slots from 10:00 AM to 10:00 PM IST. Check that automation is active and that the listing is still approved on the website.</p></article>
             <article><b><Facebook size={16}/> Facebook or Instagram failed</b><p>Open the relevant platform section and inspect the post error. Resolve token, permission or image issues before retrying. Do not repeatedly retry a post marked “Verify in Meta”; first check whether Meta already published it.</p></article>
-            <article><History size={16}/> Avoid duplicate posts</b><p>Use Publishing History to check the latest status and permalink. If a result is uncertain, verify it in the Meta account before attempting another publish.</p></article>
+            <article><b><History size={16}/> Avoid duplicate posts</b><p>Use Publishing History to check the latest status and permalink. If a result is uncertain, verify it in the Meta account before attempting another publish.</p></article>
           </div>
         </div>
       </details>
