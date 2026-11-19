@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { PauseCircle, PlayCircle, RefreshCw, ShieldCheck, Facebook, Instagram, Check, X, Trash2, ExternalLink, CalendarDays, Eye, MessageCircle, Users } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
-export default function SocialAutomationPage({user, platformFilter = null, overviewOnly = false}){
+export default function SocialAutomationPage({user, platformFilter = null, overviewOnly = false, settingsOnly = false, historyOnly = false}){
   const [settings,setSettings]=useState(null)
   const [runtime,setRuntime]=useState(null)
   const [counts,setCounts]=useState({facebookQueued:0,instagramQueued:0,facebookFailed:0,instagramFailed:0,facebookRejected:0,instagramRejected:0,facebookReview:0,instagramReview:0,facebookPublished:0,instagramPublished:0})
@@ -127,7 +127,7 @@ export default function SocialAutomationPage({user, platformFilter = null, overv
   return <section className="section page-section instagram-publishing-page">
     {notice&&<div className="instagram-publishing-notice" role="status">{notice}</div>}
     {error&&<div className="instagram-publishing-error" role="alert">{error}</div>}
-    {!platformFilter&&!overviewOnly&&<>
+    {!platformFilter&&!overviewOnly&&!historyOnly&&<>
     <div className="instagram-publishing-heading">
       <div><span className="eyebrow">MRSA PROPERTIES · ADMIN</span><h1>Auto Marketing 3.0</h1><p className="muted">All currently admin-approved properties are automatically queued for Facebook and Instagram. The scheduler publishes every 15 minutes during 10:00 AM–10:00 PM IST, with a rolling 7-day property cycle.</p></div>
       <div className="instagram-publishing-actions"><button className="btn btn-outline" onClick={load} disabled={loading}><RefreshCw size={15}/> Refresh</button><Link className="btn btn-outline" to="/admin">← Admin dashboard</Link></div>
@@ -288,7 +288,7 @@ export default function SocialAutomationPage({user, platformFilter = null, overv
         @media(max-width:560px){.mrsa-status-grid{grid-template-columns:1fr 1fr;gap:8px}.mrsa-status-card{padding:12px}.mrsa-status-card>strong{font-size:23px}.mrsa-overview-kpis{gap:8px;margin:17px 0 22px}.mrsa-overview-kpi{padding:13px}.mrsa-overview-kpi>strong,.mrsa-overview-kpi>div>strong{font-size:25px}.mrsa-overview-table-head{align-items:flex-start;flex-direction:column}.mrsa-overview-legend small{margin-left:0;width:100%}}
       `}</style>
     </section>}
-    {!overviewOnly&&<>
+    {!overviewOnly&&!settingsOnly&&!historyOnly&&<>
     <section className="instagram-publishing-panel" style={{marginTop:24}}>
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,flexWrap:'wrap'}}>
         <div><h2 style={{margin:'0 0 6px'}}>Property publishing manager</h2><p className="muted" style={{margin:0}}>One summary row per property. Expand Publishing History to review individual posts without cluttering the overview.</p></div>
@@ -372,7 +372,7 @@ export default function SocialAutomationPage({user, platformFilter = null, overv
         </div>
       </form>
     </div>}
-    {!platformFilter&&<><div className="instagram-publishing-actions" style={{justifyContent:'center',marginTop:18}}><Link className="btn btn-outline" to="/admin/facebook">Open Facebook queue</Link><Link className="btn btn-outline" to="/admin/instagram">Open Instagram queue</Link></div>
+    {!platformFilter&&!historyOnly&&!settingsOnly&&<><div className="instagram-publishing-actions" style={{justifyContent:'center',marginTop:18}}><Link className="btn btn-outline" to="/admin/facebook">Open Facebook queue</Link><Link className="btn btn-outline" to="/admin/instagram">Open Instagram queue</Link></div>
     <p className="muted" style={{textAlign:'center',marginTop:18}}>Last setting update: {settings?.updated_at?new Date(settings.updated_at).toLocaleString('en-IN'):'—'}</p></>}
   </section>
 }
