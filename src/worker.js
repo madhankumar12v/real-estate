@@ -232,7 +232,7 @@ async function handleApi(request,env){
     return json({listings:listings||[]});
   }
   if(request.method==="GET"&&path==="/api/instagram/posts"){
-    const posts=await supabaseRequest(env,token,"instagram_posts?select=id,listing_id,caption,image_url,status,ig_media_id,permalink,last_error,created_at,published_at,auto_generated,attempt_count,next_attempt_at,approved_at,approved_by,listing:listings(title,city,district,status)&order=created_at.desc&limit=50");
+    const posts=await supabaseRequest(env,token,"instagram_posts?select=id,listing_id,caption,image_url,status,ig_media_id,permalink,last_error,created_at,published_at,auto_generated,attempt_count,next_attempt_at,approved_at,approved_by,listing:listings(title,city,district,status)&order=created_at.desc&limit=200");
     return json({posts:posts||[]});
   }
   if(request.method==="POST"&&path==="/api/instagram/posts"){
@@ -311,7 +311,7 @@ async function handleApi(request,env){
     return json({listings:listings||[]});
   }
   if(request.method==="GET"&&path==="/api/facebook/posts"){
-    const posts=await supabaseRequest(env,token,"facebook_posts?select=id,listing_id,caption,image_url,status,fb_media_id,fb_post_id,permalink,last_error,created_at,published_at,auto_generated,attempt_count,next_attempt_at,approved_at,approved_by,listing:listings(title,city,district,status)&order=created_at.desc&limit=50");
+    const posts=await supabaseRequest(env,token,"facebook_posts?select=id,listing_id,caption,image_url,status,fb_media_id,fb_post_id,permalink,last_error,created_at,published_at,auto_generated,attempt_count,next_attempt_at,approved_at,approved_by,listing:listings(title,city,district,status)&order=created_at.desc&limit=200");
     return json({posts:posts||[]});
   }
   if(request.method==="POST"&&path==="/api/facebook/posts"){
