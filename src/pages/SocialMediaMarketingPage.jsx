@@ -9,7 +9,7 @@ export default function SocialMediaMarketingPage({ user }) {
         <h1>Social Media Manager</h1>
         <p className="muted">Manage Facebook and Instagram from one place. Expand only the section you need; your website’s listing approval process remains unchanged.</p>
       </div>
-      <div className="social-marketing-header-note"><ShieldCheck size={17}/><span>Website admin approval required before a property can be promoted</span></div>
+      <div className="social-marketing-header-note"><ShieldCheck size={17}/><span>Website listing admin approval is required. Facebook and Instagram posts publish automatically without separate social media approval.</span></div>
     </header>
 
     <div className="social-marketing-accordion">
