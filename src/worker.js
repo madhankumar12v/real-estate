@@ -154,7 +154,7 @@ function getIndiaClock(date=new Date()){
 }
 
 async function publishOneForPlatform(env,table,platform){
-  const due=await serviceRequest(env,table+"?select=id,listing_id,caption,image_url,attempt_count,created_at&auto_generated=eq.true&status=in.(draft,approved)&next_attempt_at=lte."+encodeURIComponent(new Date().toISOString())+"&order=created_at.asc&limit=1000");
+  const due=await serviceRequest(env,table+"?select=id,listing_id,caption,image_url,attempt_count,created_at&auto_generated=eq.true&status=in.(draft,approved)&or=(next_attempt_at.is.null,next_attempt_at.lte."+encodeURIComponent(new Date().toISOString())+")&order=created_at.asc&limit=1000");
   if(!due?.length) return {processed:0,platform,empty:true};
   const history=await serviceRequest(env,table+"?select=listing_id,published_at&status=eq.published&order=published_at.desc&limit=1000");
   const lastPublishedByProperty=new Map();
