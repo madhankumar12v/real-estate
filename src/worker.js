@@ -69,7 +69,7 @@ async function graphPost(url,params){
   }
   return data;
 }
-async function publishInstagram(env,post){
+async function publishInstagram(env,post,onContainerCreated){
   if(!env.INSTAGRAM_ACCESS_TOKEN||!env.INSTAGRAM_ACCOUNT_ID) throw new Error("Instagram publishing is not configured. Add INSTAGRAM_ACCESS_TOKEN and INSTAGRAM_ACCOUNT_ID as Cloudflare secrets/variables.");
   const imageUrl=new URL(post.image_url);
   if(imageUrl.protocol!=="https:") throw new Error("Instagram requires a publicly accessible HTTPS image URL.");
@@ -81,6 +81,14 @@ async function publishInstagram(env,post){
   const createParams=new URLSearchParams({image_url:post.image_url,caption:post.caption,access_token:env.INSTAGRAM_ACCESS_TOKEN});
   const container=await graphPost(base+"/"+env.INSTAGRAM_ACCOUNT_ID+"/media",createParams);
   if(!container.id) throw new Error("Meta did not return a media container ID.");
+  if(onContainerCreated){
+    try{await onContainerCreated(container.id);}
+    catch(saveError){
+      const review=new Error("Instagram created a media container, but MrSa could not save its ID. Verify the queue record before retrying. "+String(saveError?.message||""));
+      review.reviewRequired=true;
+      throw review;
+    }
+  }
   let ready=false;
   for(let attempt=0;attempt<5;attempt++){
     const statusUrl=new URL(base+"/"+container.id);
@@ -146,7 +154,7 @@ function getIndiaClock(date=new Date()){
 }
 
 async function publishOneForPlatform(env,table,platform){
-  const due=await serviceRequest(env,table+"?select=id,listing_id,caption,image_url,attempt_count,created_at&auto_generated=eq.true&status=eq.approved&approved_at=not.is.null&approved_by=not.is.null&next_attempt_at=lte."+encodeURIComponent(new Date().toISOString())+"&order=created_at.asc&limit=200");
+  const due=await serviceRequest(env,table+"?select=id,listing_id,caption,image_url,attempt_count,created_at&auto_generated=eq.true&status=in.(draft,approved)&next_attempt_at=lte."+encodeURIComponent(new Date().toISOString())+"&order=created_at.asc&limit=1000");
   if(!due?.length) return {processed:0,platform,empty:true};
   const history=await serviceRequest(env,table+"?select=listing_id,published_at&status=eq.published&order=published_at.desc&limit=1000");
   const lastPublishedByProperty=new Map();
@@ -155,7 +163,7 @@ async function publishOneForPlatform(env,table,platform){
   const latest=await serviceRequest(env,"social_automation_settings?select=enabled&id=eq.1&limit=1");
   if(!latest?.[0]?.enabled) return {processed:0,platform,paused:true};
   const attempt=(Number(selected.attempt_count)||0)+1;
-  const claim=await serviceRequest(env,table+"?id=eq."+encodeURIComponent(selected.id)+"&status=eq.approved&auto_generated=eq.true&approved_at=not.is.null&approved_by=not.is.null",{
+  const claim=await serviceRequest(env,table+"?id=eq."+encodeURIComponent(selected.id)+"&status=in.(draft,approved)&auto_generated=eq.true",{
     method:"PATCH",prefer:"return=representation",
     body:{status:"publishing",attempt_count:attempt,last_attempt_at:new Date().toISOString(),processing_started_at:new Date().toISOString(),last_error:null}
   });
@@ -164,10 +172,15 @@ async function publishOneForPlatform(env,table,platform){
   try{
     const listing=await serviceRequest(env,"listings?select=id,status&id=eq."+encodeURIComponent(selected.listing_id)+"&status=eq.approved&limit=1");
     if(!listing?.length) throw new Error("Property is no longer approved. Automatic publishing was blocked.");
-    result=platform==="facebook"?await publishFacebook(env,selected):await publishInstagram(env,selected);
+    result=platform==="facebook"?await publishFacebook(env,selected):await publishInstagram(env,selected,async containerId=>{
+      const saved=await serviceRequest(env,table+"?id=eq."+encodeURIComponent(selected.id)+"&status=eq.publishing",{
+        method:"PATCH",prefer:"return=representation",body:{ig_container_id:containerId}
+      });
+      if(!saved?.length) throw new Error("Instagram container ID was not saved to the publishing record.");
+    });
   }catch(error){
     const message=String(error?.message||"Automatic publishing failed.").slice(0,1000);
-    if(error?.uncertain){
+    if(error?.uncertain||error?.reviewRequired){
       await serviceRequest(env,table+"?id=eq."+encodeURIComponent(selected.id)+"&status=eq.publishing",{method:"PATCH",body:{status:"review_required",last_error:message,next_attempt_at:null,processing_started_at:null}}).catch(()=>{});
       return {processed:1,platform,reviewRequired:true,error:message};
     }
@@ -193,20 +206,39 @@ async function publishOneForPlatform(env,table,platform){
   return {processed:1,platform,published:true};
 }
 
+async function markStalePublishingForReview(env){
+  const cutoff=new Date(Date.now()-30*60*1000).toISOString();
+  let reviewed=0;
+  for(const table of ["facebook_posts","instagram_posts"]){
+    const rows=await serviceRequest(env,table+"?id=not.is.null&status=eq.publishing&processing_started_at=lt."+encodeURIComponent(cutoff),{
+      method:"PATCH",prefer:"return=representation",
+      body:{
+        status:"review_required",
+        last_error:"This publishing attempt was active for over 30 minutes. It was moved to review_required because Meta may have accepted the post. Verify Facebook/Instagram before retrying.",
+        next_attempt_at:null,
+        processing_started_at:null
+      }
+    });
+    reviewed+=(rows||[]).length;
+  }
+  return reviewed;
+}
+
 async function runSocialAutomation(env){
   if(!env.SUPABASE_SERVICE_ROLE_KEY) throw new Error("SUPABASE_SERVICE_ROLE_KEY is not configured.");
   const settings=await serviceRequest(env,"social_automation_settings?select=enabled&id=eq.1&limit=1");
   if(!settings?.[0]?.enabled) return {paused:true,processed:0};
+  const staleReviewed=await markStalePublishingForReview(env);
   const clock=getIndiaClock();
-  if(clock.hour<10||clock.hour>=22) return {quietHours:true,processed:0};
-  if(clock.minute!==0) return {waitingForHourlySlot:true,processed:0};
+  if(clock.hour<10||clock.hour>=22) return {quietHours:true,processed:0,staleReviewed};
+  if(clock.minute%15!==0) return {waitingFor15MinuteSlot:true,processed:0,staleReviewed};
   let processed=0;
   for(const [table,platform] of [["facebook_posts","facebook"],["instagram_posts","instagram"]]){
     const result=await publishOneForPlatform(env,table,platform);
     processed+=result.processed||0;
     if(result.paused) return {paused:true,processed};
   }
-  return {paused:false,processed,timezone:"Asia/Kolkata",quietHours:"22:00-08:00",priority:"property_rotation"};
+  return {paused:false,processed,staleReviewed,timezone:"Asia/Kolkata",publishingWindow:"10:00-22:00",intervalMinutes:15,cycleDays:7,priority:"property_rotation"};
 }
 
 async function handleApi(request,env){
@@ -391,9 +423,9 @@ async function generateDailySocialDrafts(env){
 export default {
   async scheduled(controller,env,ctx){
     const clock=getIndiaClock(new Date(controller.scheduledTime||Date.now()));
-    if(clock.minute!==0||clock.hour<10||clock.hour>=22) return;
+    if(clock.minute%15!==0) return;
     ctx.waitUntil((async()=>{
-      if(clock.hour===10){
+      if(clock.hour===10&&clock.minute===0){
         const batch=await generateDailySocialDrafts(env);
         console.log("MrSa 10:00 IST daily draft batch:",JSON.stringify(batch));
       }
