@@ -57,7 +57,7 @@ export default function FacebookPublishingPage(){
     setSaving(true);setError('');setNotice('')
     try{
       await api('/api/facebook/posts',{method:'POST',body:JSON.stringify({listing_id:selected.id,caption,image_url:image})})
-      setNotice('Facebook draft created. Review and approve it before publishing.')
+      setNotice('Manual Facebook draft created. Review and approve it below before publishing.')
       await load()
     }catch(err){setError(err.message||'Could not create draft.')}
     finally{setSaving(false)}
@@ -75,7 +75,7 @@ export default function FacebookPublishingPage(){
   }
   return <section className="section page-section instagram-publishing-page">
     <div className="instagram-publishing-heading">
-      <div><span className="eyebrow">MRSA PROPERTIES · ADMIN</span><h1><Facebook size={27} style={{verticalAlign:'-5px',marginRight:8}}/>Facebook publishing</h1><p className="muted">Review automatically generated posts from approved listings. Approve, reject or delete each queue item; approved automatic posts publish when Auto Marketing is active.</p></div>
+      <div><span className="eyebrow">MRSA PROPERTIES · ADMIN</span><h1><Facebook size={27} style={{verticalAlign:'-5px',marginRight:8}}/>Facebook publishing</h1><p className="muted">Automatically generated posts from admin-approved property listings publish without separate social approval on a rolling 7-day cycle. Manually created drafts still require admin approval.</p></div>
       <div className="instagram-publishing-actions"><button className="btn btn-outline" onClick={load} disabled={loading}><RefreshCw size={15}/> Refresh</button><Link className="btn btn-outline" to="/admin">← Admin dashboard</Link></div>
     </div>
     {notice&&<div className="instagram-publishing-notice" role="status">{notice}</div>}
@@ -88,11 +88,11 @@ export default function FacebookPublishingPage(){
           {selected&&<div className="instagram-publishing-preview">{selected.images?.[0]?.url?<img src={selected.images[0].url} alt={selected.title}/>:<div/>}<div><b>{selected.title}</b><small>{selected.city}, {selected.district} · {selected.price_per_sqft == null ? 'Price on request' : money(selected.price_per_sqft) + ' / sq.ft.'}</small></div></div>}
           <label>Post text (English + Tamil)<textarea value={caption} onChange={event=>setCaption(event.target.value)} maxLength={5000} required placeholder="Write your Facebook post…"/></label>
           <small>{caption.length}/5,000 characters · Single-photo Page post</small>
-          <button className="btn btn-primary full" type="submit" disabled={saving||loading||!selected||!caption.trim()}>{saving?'Creating draft…':'Create draft for approval'} <CheckCircle2 size={16}/></button>
+          <button className="btn btn-primary full" type="submit" disabled={saving||loading||!selected||!caption.trim()}>{saving?'Creating draft…':'Create manual draft'} <CheckCircle2 size={16}/></button>
         </form>
       </article>
       <article className="instagram-publishing-panel">
-        <h2>Facebook publishing queue</h2><p>Every post stays in the queue until an administrator approves that specific Facebook post. Property approval alone never authorizes social publishing.</p>
+        <h2>Facebook publishing queue</h2><p>Automatic property posts publish without separate social approval. Only manually created drafts require individual approval. All properties must still be admin-approved on the website.</p>
         {loading?<div className="instagram-empty">Loading Facebook queue…</div>:posts.length?<div className="instagram-post-list">{posts.map(post=><article className="instagram-post-card" key={post.id}>
           {post.image_url?<img src={post.image_url} alt="Property post"/>:<div/>}
           <div className="instagram-post-content">
@@ -101,11 +101,11 @@ export default function FacebookPublishingPage(){
             <div className="instagram-post-meta">{post.created_at?new Date(post.created_at).toLocaleString('en-IN'):''}{post.last_error?' · '+post.last_error:''}</div>
             {post.permalink&&<a className="text-link" href={post.permalink} target="_blank" rel="noreferrer">View Facebook post <ExternalLink size={13}/></a>}
             <div className="instagram-post-actions">
-              {['draft','failed'].includes(post.status)||(post.status==='approved'&&(!post.approved_at||!post.approved_by))?<button className="btn btn-outline" title="Approve this post" aria-label="Approve Facebook post" disabled={workingId===post.id} onClick={()=>act(post.id,'approve')}><Check size={15}/></button>:post.status==='approved'?<button className="btn btn-outline" title="Approved by admin" aria-label="Facebook post approved" disabled><Check size={15}/></button>:null}
-              {post.status==='approved'&&post.auto_generated&&<span className="instagram-post-meta">Admin approved · Attempt {post.attempt_count||0}/5 · Next check {post.next_attempt_at?new Date(post.next_attempt_at).toLocaleString('en-IN'):'soon'}</span>}
+              {(!post.auto_generated&&(['draft','failed'].includes(post.status)||(post.status==='approved'&&(!post.approved_at||!post.approved_by))))||(post.auto_generated&&post.status==='failed')?<button className="btn btn-outline" title={post.auto_generated?'Retry automatic post':'Approve this post'} aria-label={post.auto_generated?'Retry automatic Facebook post':'Approve Facebook post'} disabled={workingId===post.id} onClick={()=>act(post.id,'approve')}>{post.auto_generated?'Retry':'Approve'} <Check size={15}/></button>:post.status==='approved'&&!post.auto_generated?<button className="btn btn-outline" title="Approved by admin" aria-label="Facebook post approved" disabled><Check size={15}/></button>:null}
+              {post.auto_generated&&post.status==='draft'&&<span className="instagram-post-meta">Automatic queue · Waiting for publishing slot</span>}{post.status==='approved'&&post.auto_generated&&<span className="instagram-post-meta">Automatic queue · Attempt {post.attempt_count||0}/5 · Next check {post.next_attempt_at?new Date(post.next_attempt_at).toLocaleString('en-IN'):'soon'}</span>}
               {post.status==='approved'&&post.approved_at&&post.approved_by&&!post.auto_generated&&<button className="btn btn-primary" disabled={workingId===post.id} onClick={()=>act(post.id,'publish')}><Send size={13}/>{workingId===post.id?'Publishing…':'Publish to Facebook'}</button>}
               {post.status==='failed'&&<span className="instagram-post-meta">Publishing failed. Review the error before approving again.</span>}
-              {post.status!=='published'&&post.status!=='publishing'&&<button className="btn btn-outline" title="Reject" aria-label="Reject Facebook post" disabled={workingId===post.id||post.status==='rejected'} onClick={()=>act(post.id,'reject')}><X size={15}/></button>}
+              {!post.auto_generated&&post.status!=='published'&&post.status!=='publishing'&&<button className="btn btn-outline" title="Reject" aria-label="Reject Facebook post" disabled={workingId===post.id||post.status==='rejected'} onClick={()=>act(post.id,'reject')}><X size={15}/></button>}
               {post.status!=='published'&&post.status!=='publishing'&&<button className="btn btn-outline" title="Delete" aria-label="Delete Facebook queue item" disabled={workingId===post.id} onClick={()=>act(post.id,'delete')}><Trash2 size={15}/></button>}
               {post.status==='rejected'&&<span className="instagram-post-meta">Rejected · Not scheduled for publishing</span>}
             </div>
@@ -113,6 +113,6 @@ export default function FacebookPublishingPage(){
         </article>)}</div>:<div className="instagram-empty">No Facebook drafts yet. Create one from an approved property.</div>}
       </article>
     </div>
-    <div className="instagram-setup-note"><b><ShieldCheck size={14} style={{verticalAlign:'-3px'}}/> Publishing safeguards</b><br/>Only administrators can access this page. The server checks that the property and photo belong to the selected approved listing, then checks approval again immediately before publishing. The Facebook Page token stays in the Cloudflare Worker secret store. API publishing is not active until the Supabase migration and Cloudflare settings are configured.</div>
+    <div className="instagram-setup-note"><b><ShieldCheck size={14} style={{verticalAlign:'-3px'}}/> Publishing safeguards</b><br/>Only administrators can access this page. The server rechecks that the property is still admin-approved and that its image is publicly reachable. Auto-generated posts need no separate social approval; manual drafts still do. The Facebook Page token stays in Cloudflare secrets.</div>
   </section>
 }

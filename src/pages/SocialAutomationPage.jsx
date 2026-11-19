@@ -113,7 +113,7 @@ export default function SocialAutomationPage({user, platformFilter = null, overv
       const {data,error}=await supabase.from('social_automation_settings').update({enabled,updated_by:user?.id||null,updated_at:new Date().toISOString()}).eq('id',1).select('enabled,updated_at').single()
       if(error)throw error
       setSettings(data)
-      setNotice(enabled?'Automatic publishing enabled. New property approvals create drafts only; each platform post still requires your approval.':'Automatic publishing paused. No queued posts will be sent until you resume.')
+      setNotice(enabled?'Automatic publishing enabled. Admin-approved properties will be queued and published on the 7-day cycle without separate social approval.':'Automatic publishing paused. No queued posts will be sent until you resume.')
     }catch(err){setError(err.message||'Could not update the automation setting.')}
     finally{setSaving(false)}
   }
@@ -129,18 +129,18 @@ export default function SocialAutomationPage({user, platformFilter = null, overv
     {error&&<div className="instagram-publishing-error" role="alert">{error}</div>}
     {!platformFilter&&!overviewOnly&&<>
     <div className="instagram-publishing-heading">
-      <div><span className="eyebrow">MRSA PROPERTIES · ADMIN</span><h1>Auto Marketing 3.0</h1><p className="muted">Daily queue review at 10:00 AM IST. Individually approved Facebook and Instagram posts publish one per platform per hour, with property rotation.</p></div>
+      <div><span className="eyebrow">MRSA PROPERTIES · ADMIN</span><h1>Auto Marketing 3.0</h1><p className="muted">All currently admin-approved properties are automatically queued for Facebook and Instagram. The scheduler publishes every 15 minutes during 10:00 AM–10:00 PM IST, with a rolling 7-day property cycle.</p></div>
       <div className="instagram-publishing-actions"><button className="btn btn-outline" onClick={load} disabled={loading}><RefreshCw size={15}/> Refresh</button><Link className="btn btn-outline" to="/admin">← Admin dashboard</Link></div>
     </div>
     <article className="instagram-publishing-panel" style={{maxWidth:760,margin:'0 auto'}}>
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:16,flexWrap:'wrap'}}>
-        <div><span className="eyebrow">MASTER CONTROL</span><h2 style={{margin:'8px 0'}}>Automatic publishing</h2><p className="muted">{settings?.enabled?'New property approvals create social post drafts. Each Facebook and Instagram post must be approved separately before publishing.':'Publishing is paused. New approvals will not be queued.'}</p></div>
+        <div><span className="eyebrow">MASTER CONTROL</span><h2 style={{margin:'8px 0'}}>Automatic publishing</h2><p className="muted">{settings?.enabled?'Admin-approved property listings are automatically queued and published. No separate Facebook or Instagram post approval is required.':'Publishing is paused. New approvals will not be queued.'}</p></div>
         <span className={'instagram-status instagram-status-'+(settings?.enabled?'published':'draft')}>{loading?'Loading':settings?.enabled?'Active':'Paused'}</span>
       </div>
       <button className={'btn '+(settings?.enabled?'btn-outline':'btn-primary')} style={{marginTop:18}} disabled={loading||saving||!settings||(!settings.enabled&&(!runtime?.serviceRoleConfigured||!runtime?.facebookConfigured||!runtime?.instagramConfigured))} onClick={toggle}>
         {settings?.enabled?<><PauseCircle size={17}/>{saving?'Pausing…':'Pause automation'}</>:<><PlayCircle size={17}/>{saving?'Resuming…':'Resume automation'}</>}
       </button>
-      <div className="instagram-setup-note" style={{marginTop:20}}><b><ShieldCheck size={14} style={{verticalAlign:'-3px'}}/> Publishing rules</b><br/>Only listings approved by an administrator are queued. Daily queue review: 10:00 AM IST. Publishing window: 10:00 AM–10:00 PM IST (no publishing overnight). Rate limit: one Facebook post and one Instagram post per hourly slot. Queue priority: rotate toward the property least recently published on that platform. Facebook and Instagram approvals remain separate. Only individually approved posts with approval metadata can publish. Temporary failures retry in later hourly slots; permanent errors are shown in the publishing queues. Pausing stops the scheduler from sending queued posts.</div>
+      <div className="instagram-setup-note" style={{marginTop:20}}><b><ShieldCheck size={14} style={{verticalAlign:'-3px'}}/> Publishing rules</b><br/>Only website listings approved by an administrator are eligible. The daily 10:00 AM IST job checks all available listings and queues properties when their 7-day cooldown expires. Facebook and Instagram publish automatically every 15 minutes from 10:00 AM to 10:00 PM IST, rotating toward the least recently published property. No separate social-post approval is required. Temporary failures retry automatically; uncertain outcomes are locked for verification to prevent duplicate posts. Pausing stops new publishing.</div>
       <div style={{display:'grid',gap:8,marginTop:16}}>
         <b>Cloudflare connection checks</b>
         <div className="instagram-post-meta">Supabase service-role secret: {runtime?.serviceRoleConfigured?'Configured':'Missing'}</div>
@@ -332,13 +332,13 @@ export default function SocialAutomationPage({user, platformFilter = null, overv
                       </div>
                       <div className="instagram-post-meta" style={{display:'grid',gap:3,marginTop:6}}>
                         {post.created_at&&<span>Added to queue: {new Date(post.created_at).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true})} IST</span>}
-                        {post.approved_at&&<span>Approved at: {new Date(post.approved_at).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true})} IST</span>}
+                        {post.auto_generated&&<span>Automatic publishing · No separate social approval</span>}{post.approved_at&&!post.auto_generated&&<span>Approved at: {new Date(post.approved_at).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true})} IST</span>}
                         {post.published_at&&<span>Published at: {new Date(post.published_at).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true})} IST</span>}
                       </div>
                       {post.permalink&&<a className="text-link" href={post.permalink} target="_blank" rel="noreferrer">View published post <ExternalLink size={12}/></a>}
                       {post.last_error&&<div className="instagram-post-meta" style={{marginTop:5,color:'#9a5b45'}}>{post.last_error}</div>}
                       {post.status==='rejected'&&post.last_error&&<div className="instagram-post-meta" style={{marginTop:7,color:'#9a5b45'}}><b>Rejection reason:</b> {post.last_error}</div>}
-                      {['draft','approved','failed'].includes(post.status)&&<div style={{display:'flex',gap:8,flexWrap:'wrap',marginTop:10}}>
+                      {!post.auto_generated&&['draft','approved','failed'].includes(post.status)&&<div style={{display:'flex',gap:8,flexWrap:'wrap',marginTop:10}}>
                         <button className="btn btn-primary" style={{padding:'8px 13px',fontSize:12}} disabled={workingPost===post.platform+':'+post.id||post.status==='approved'&&post.approved_at&&post.approved_by} onClick={()=>actOnPost(post.platform,post.id,'approve')}><Check size={14}/>{workingPost===post.platform+':'+post.id?'Please wait…':post.status==='approved'?'Approved':'Approve & queue'}</button>
                         <button className="btn btn-outline" style={{padding:'8px 13px',fontSize:12,color:'#a34e42',borderColor:'#e6c8c3'}} disabled={workingPost===post.platform+':'+post.id} onClick={()=>{setRejectingPost({platform:post.platform,id:post.id,title:row.title});setRejectReason('')}}><X size={14}/>Reject</button>
                       </div>}
