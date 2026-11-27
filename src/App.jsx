@@ -165,7 +165,20 @@ function PostPage({user,profile}){
    const file=documents[i];const safeName=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');const path=`${data.id}/${Date.now()}-${i}-${safeName}`;
    const up=await supabase.storage.from('property-documents').upload(path,file,{upsert:false,contentType:'application/pdf'});
    if(up.error){uploadErrors.push(`${file.name}: ${up.error.message}`);continue}
-   documentRows.push({listing_id:data.id,file_name:file.name,file_path:path,mime_type:'application/pdf',size_bytes:file.size,position:i});
+   const uploadedPath=up.data?.path||path;
+   if(!uploadedPath){uploadErrors.push(`${file.name}: Supabase did not return a storage path.`);continue}
+   documentRows.push({
+    listing_id:data.id,
+    storage_path:uploadedPath,
+    file_path:uploadedPath,
+    file_name:file.name,
+    content_type:'application/pdf',
+    mime_type:'application/pdf',
+    size_bytes:file.size,
+    position:i,
+    uploaded_by:user.id,
+    review_status:'received'
+   });
   }
   if(documentRows.length){const {error:documentError}=await supabase.from('listing_documents').insert(documentRows);if(documentError)uploadErrors.push(`PDF records: ${documentError.message}`)}
   setMsg(uploadErrors.length?`Property submitted for admin approval, but some files could not be uploaded: ${uploadErrors.join('; ')}`:'Your property and files have been submitted for admin approval. Photos and PDFs will be visible to buyers after the listing is approved.');
