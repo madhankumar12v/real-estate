@@ -127,6 +127,25 @@ function ResetPasswordPage(){
  const submit=async e=>{e.preventDefault();setMsg('');if(password.length<8){setMsg('Use at least 8 characters for your password.');return}if(password!==confirm){setMsg('The passwords do not match.');return}setBusy(true);const {error}=await supabase.auth.updateUser({password});setBusy(false);if(error)setMsg(error.message);else{setSaved(true);setMsg('Your password has been updated successfully. You can now sign in with your new password.')}}
  return <div className="auth-wrap"><form className="auth-card" onSubmit={submit}><span className="eyebrow">MrSa Properties</span><h1>Set a new password</h1><p className="muted">Choose a strong password with at least 8 characters.</p><label>New password<input type="password" required minLength="8" autoComplete="new-password" value={password} onChange={e=>setPassword(e.target.value)}/></label><label>Confirm new password<input type="password" required minLength="8" autoComplete="new-password" value={confirm} onChange={e=>setConfirm(e.target.value)}/></label><button disabled={busy||saved} className="btn btn-primary full">{busy?'Updating…':'Update password'}</button>{msg&&<p className="notice">{msg}</p>}{saved&&<Link className="btn btn-outline full" to="/login">Go to sign in</Link>}</form></div>
 }
+async function toJpegPropertyPhoto(file){
+ if(file.type==='image/jpeg')return file;
+ if(!['image/png','image/webp'].includes(file.type))throw new Error('Only JPG, PNG and WEBP property photos are supported.');
+ if(typeof createImageBitmap!=='function')throw new Error('This browser cannot convert this photo. Please upload a JPG/JPEG image.');
+ const bitmap=await createImageBitmap(file);
+ try{
+  const canvas=document.createElement('canvas');
+  canvas.width=bitmap.width;canvas.height=bitmap.height;
+  const context=canvas.getContext('2d');
+  if(!context)throw new Error('Could not prepare the property photo for Instagram.');
+  context.fillStyle='#ffffff';context.fillRect(0,0,canvas.width,canvas.height);
+  context.drawImage(bitmap,0,0);
+  const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',0.9));
+  if(!blob)throw new Error('Could not convert this property photo to JPEG.');
+  const baseName=file.name.replace(/\.[^.]+$/,'')||'property-photo';
+  return new File([blob],baseName+'.jpg',{type:'image/jpeg',lastModified:Date.now()});
+ }finally{bitmap.close?.();}
+}
+
 function PostPage({user,profile}){
  const [form,setForm]=useState({title:'',property_type:'Apartment',listing_tag:'',city:'',locality:'',area_sqft:'',price_per_sqft:'',description:'',partner_id:''});
  const [photos,setPhotos]=useState([]),[documents,setDocuments]=useState([]),[msg,setMsg]=useState(''),[busy,setBusy]=useState(false),[partners,setPartners]=useState([]);
@@ -154,8 +173,10 @@ function PostPage({user,profile}){
   if(error){setMsg(error.message);setBusy(false);return}
   const uploadErrors=[];let urls=[];
   for(let i=0;i<photos.length;i++){
-   const file=photos[i];const path=`${user.id}/${data.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
-   const up=await supabase.storage.from('property-images').upload(path,file,{upsert:false});
+   const originalFile=photos[i];let file;
+   try{file=await toJpegPropertyPhoto(originalFile)}catch(error){uploadErrors.push(originalFile.name+': '+(error.message||'JPEG conversion failed.'));continue}
+   const path=user.id+'/'+data.id+'/'+Date.now()+'-'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+   const up=await supabase.storage.from('property-images').upload(path,file,{upsert:false,contentType:file.type||'image/jpeg'});
    if(up.error){uploadErrors.push(`${file.name}: ${up.error.message}`);continue}
    const {data:pub}=supabase.storage.from('property-images').getPublicUrl(path);urls.push({listing_id:data.id,url:pub.publicUrl,position:i});
   }
