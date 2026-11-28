@@ -328,3 +328,207 @@ async function checkSocialConnections(env){
 }
 
 async function handleApi(request,env){
+  const url=new URL(request.url);
+  const path=url.pathname;
+  const {token,user}=await requireAdmin(request,env);
+  if(request.method==="GET"&&path==="/api/social-automation/property-history"){
+    const [facebook,instagram]=await Promise.all([
+      supabaseRequest(env,token,"facebook_posts?select=id,listing_id,fb_post_id,permalink,published_at,listing:listings(title,city)&status=eq.published&order=published_at.desc&limit=1000"),
+      supabaseRequest(env,token,"instagram_posts?select=id,listing_id,ig_media_id,permalink,published_at,listing:listings(title,city)&status=eq.published&order=published_at.desc&limit=1000")
+    ]);
+    return json({facebook:facebook||[],instagram:instagram||[]});
+  }
+  if(request.method==="POST"&&path==="/api/social-automation/check-connections"){
+    return json(await checkSocialConnections(env));
+  }
+  if(request.method==="GET"&&path==="/api/social-automation/status"){
+    return json({
+      serviceRoleConfigured:Boolean(String(env.SUPABASE_SERVICE_ROLE_KEY||"").trim()),
+      facebookConfigured:Boolean(String(env.FACEBOOK_PAGE_ID||"").trim()&&String(env.FACEBOOK_PAGE_ACCESS_TOKEN||"").trim()),
+      instagramConfigured:Boolean(String(env.INSTAGRAM_ACCOUNT_ID||"").trim()&&String(env.INSTAGRAM_ACCESS_TOKEN||"").trim())
+    });
+  }
+  if(request.method==="GET"&&path==="/api/instagram/listings"){
+    const listings=await supabaseRequest(env,token,"listings?select=id,title,city,district,locality,property_type,price_per_sqft,description,images:listing_images(url)&status=eq.approved&order=created_at.desc&limit=100");
+    return json({listings:listings||[]});
+  }
+  if(request.method==="GET"&&path==="/api/instagram/posts"){
+    const posts=await supabaseRequest(env,token,"instagram_posts?select=id,listing_id,caption,image_url,status,ig_media_id,permalink,last_error,created_at,published_at,auto_generated,attempt_count,next_attempt_at,approved_at,approved_by,listing:listings(title,city,district,status)&order=created_at.desc&limit=200");
+    return json({posts:posts||[]});
+  }
+  if(request.method==="POST"&&path==="/api/instagram/posts"){
+    const body=await request.json().catch(()=>null);
+    if(!body?.listing_id||!String(body.caption||"").trim()||!body.image_url) throw new HttpError("Choose an approved property, photo and caption.");
+    if(String(body.caption).length>2200) throw new HttpError("Instagram captions cannot exceed 2,200 characters.");
+    const listingRows=await supabaseRequest(env,token,"listings?select=id,status&id=eq."+encodeURIComponent(body.listing_id)+"&limit=1");
+    if(!listingRows?.length||listingRows[0].status!=="approved") throw new HttpError("Only currently approved property listings can be posted.",409);
+    const imageRows=await supabaseRequest(env,token,"listing_images?select=id&listing_id=eq."+encodeURIComponent(body.listing_id)+"&url=eq."+encodeURIComponent(String(body.image_url))+"&limit=1");
+    if(!imageRows?.length) throw new HttpError("Choose a photo attached to the selected property listing.",409);
+    const created=await supabaseRequest(env,token,"instagram_posts",{method:"POST",prefer:"return=representation",body:{listing_id:body.listing_id,caption:String(body.caption).trim(),image_url:String(body.image_url),status:"draft",created_by:user.id}});
+    return json({post:created?.[0]||null},201);
+  }
+  const approveMatch=path.match(/^\/api\/instagram\/posts\/([0-9a-f-]+)\/approve$/i);
+  if(request.method==="POST"&&approveMatch){
+    const updated=await supabaseRequest(env,token,"instagram_posts?id=eq."+encodeURIComponent(approveMatch[1])+"&status=in.(draft,failed)",{method:"PATCH",prefer:"return=representation",body:{status:"approved",approved_by:user.id,approved_at:new Date().toISOString(),next_attempt_at:new Date().toISOString(),attempt_count:0,last_error:null}});
+    if(!updated?.length) throw new HttpError("Draft not found or it has already been reviewed.",409);
+    return json({post:updated[0]});
+  }
+  const instagramRejectMatch=path.match(/^\/api\/instagram\/posts\/([0-9a-f-]+)\/reject$/i);
+  if(request.method==="POST"&&instagramRejectMatch){
+    const body=await request.json().catch(()=>({}));
+    const reason=String(body?.reason||"").trim().slice(0,500);
+    if(reason.length<3) throw new HttpError("Please enter a rejection reason (at least 3 characters).");
+    const id=encodeURIComponent(instagramRejectMatch[1]);
+    // requireAdmin() has already verified this caller is an administrator.
+    // Use the service role for this protected admin action so table RLS policies
+    // cannot silently block the rejection update.
+    const rows=await serviceRequest(env,"instagram_posts?select=id,status&id=eq."+id+"&limit=1");
+    const post=rows?.[0];
+    if(!post) throw new HttpError("Instagram queue item not found.",404);
+    if(["published","publishing"].includes(post.status)) throw new HttpError("Published or currently publishing posts cannot be rejected.",409);
+    const updated=await serviceRequest(env,"instagram_posts?id=eq."+id+"&status=in.(draft,approved,failed,rejected)",{method:"PATCH",prefer:"return=representation",body:{status:"rejected",last_error:reason,next_attempt_at:new Date().toISOString(),processing_started_at:null}});
+    if(!updated?.length) throw new HttpError("This Instagram item can no longer be rejected.",409);
+    return json({post:updated[0]});
+  }
+  const instagramDeleteMatch=path.match(/^\/api\/instagram\/posts\/([0-9a-f-]+)\/delete$/i);
+  if(request.method==="POST"&&instagramDeleteMatch){
+    const id=encodeURIComponent(instagramDeleteMatch[1]);
+    const rows=await supabaseRequest(env,token,"instagram_posts?select=id,status&id=eq."+id+"&limit=1");
+    const post=rows?.[0];
+    if(!post) throw new HttpError("Instagram queue item not found.",404);
+    if(["published","publishing"].includes(post.status)) throw new HttpError("Published or currently publishing posts cannot be deleted. Keep the publishing history.",409);
+    const deleted=await supabaseRequest(env,token,"instagram_posts?id=eq."+id+"&status=in.(draft,approved,failed,rejected)",{method:"DELETE",prefer:"return=representation"});
+    if(!deleted?.length) throw new HttpError("This Instagram item could not be deleted.",409);
+    return json({success:true});
+  }
+  const publishMatch=path.match(/^\/api\/instagram\/posts\/([0-9a-f-]+)\/publish$/i);
+  if(request.method==="POST"&&publishMatch){
+    const rows=await supabaseRequest(env,token,"instagram_posts?select=id,listing_id,caption,image_url,status,approved_at,approved_by&id=eq."+encodeURIComponent(publishMatch[1])+"&limit=1");
+    const post=rows?.[0];
+    if(!post) throw new HttpError("Instagram draft not found.",404);
+    if(post.status!=="approved"||!post.approved_at||!post.approved_by) throw new HttpError("This post needs explicit administrator approval before publishing.",409);
+    const listingRows=await supabaseRequest(env,token,"listings?select=id,status&id=eq."+encodeURIComponent(post.listing_id)+"&limit=1");
+    if(!listingRows?.length||listingRows[0].status!=="approved") throw new HttpError("This property is no longer approved. Publishing has been blocked.",409);
+    const claimed=await supabaseRequest(env,token,"instagram_posts?id=eq."+encodeURIComponent(post.id)+"&status=eq.approved&approved_at=not.is.null&approved_by=not.is.null",{method:"PATCH",prefer:"return=representation",body:{status:"publishing",last_error:null}});
+    if(!claimed?.length) throw new HttpError("This post is already being processed or is no longer approved.",409);
+    let metaAccepted=false;
+    try{
+      const result=await publishInstagram(env,post);
+      metaAccepted=true;
+      const saved=await supabaseRequest(env,token,"instagram_posts?id=eq."+encodeURIComponent(post.id),{method:"PATCH",prefer:"return=representation",body:{status:"published",ig_container_id:result.containerId,ig_media_id:result.mediaId,permalink:result.permalink,published_at:new Date().toISOString(),last_error:null}});
+      return json({success:true,post:saved?.[0]||null,permalink:result.permalink});
+    }catch(error){
+      const message=String(error?.message||"Instagram publishing failed.").slice(0,1000);
+      await supabaseRequest(env,token,"instagram_posts?id=eq."+encodeURIComponent(post.id),{method:"PATCH",body:{status:(error?.uncertain||metaAccepted)?"review_required":"failed",last_error:message,next_attempt_at:new Date().toISOString(),processing_started_at:null}}).catch(()=>{});
+      throw new HttpError(message,502);
+    }
+  }
+
+  if(request.method==="GET"&&path==="/api/facebook/config"){
+    return json({facebookPageIdConfigured:Boolean(String(env.FACEBOOK_PAGE_ID||"").trim()),facebookPageAccessTokenConfigured:Boolean(String(env.FACEBOOK_PAGE_ACCESS_TOKEN||"").trim())});
+  }
+  if(request.method==="GET"&&path==="/api/facebook/listings"){
+    const listings=await supabaseRequest(env,token,"listings?select=id,title,city,district,locality,property_type,price_per_sqft,description,images:listing_images(url)&status=eq.approved&order=created_at.desc&limit=100");
+    return json({listings:listings||[]});
+  }
+  if(request.method==="GET"&&path==="/api/facebook/posts"){
+    const posts=await supabaseRequest(env,token,"facebook_posts?select=id,listing_id,caption,image_url,status,fb_media_id,fb_post_id,permalink,last_error,created_at,published_at,auto_generated,attempt_count,next_attempt_at,approved_at,approved_by,listing:listings(title,city,district,status)&order=created_at.desc&limit=200");
+    return json({posts:posts||[]});
+  }
+  if(request.method==="POST"&&path==="/api/facebook/posts"){
+    const body=await request.json().catch(()=>null);
+    if(!body?.listing_id||!String(body.caption||"").trim()||!body.image_url) throw new HttpError("Choose an approved property, photo and caption.");
+    if(String(body.caption).length>5000) throw new HttpError("Facebook post text cannot exceed 5,000 characters.");
+    const listingRows=await supabaseRequest(env,token,"listings?select=id,status&id=eq."+encodeURIComponent(body.listing_id)+"&limit=1");
+    if(!listingRows?.length||listingRows[0].status!=="approved") throw new HttpError("Only currently approved property listings can be posted.",409);
+    const imageRows=await supabaseRequest(env,token,"listing_images?select=id&listing_id=eq."+encodeURIComponent(body.listing_id)+"&url=eq."+encodeURIComponent(String(body.image_url))+"&limit=1");
+    if(!imageRows?.length) throw new HttpError("Choose a photo attached to the selected property listing.",409);
+    const created=await supabaseRequest(env,token,"facebook_posts",{method:"POST",prefer:"return=representation",body:{listing_id:body.listing_id,caption:String(body.caption).trim(),image_url:String(body.image_url),status:"draft",created_by:user.id}});
+    return json({post:created?.[0]||null},201);
+  }
+  const fbApproveMatch=path.match(/^\/api\/facebook\/posts\/([0-9a-f-]+)\/approve$/i);
+  if(request.method==="POST"&&fbApproveMatch){
+    const updated=await supabaseRequest(env,token,"facebook_posts?id=eq."+encodeURIComponent(fbApproveMatch[1])+"&status=in.(draft,failed)",{method:"PATCH",prefer:"return=representation",body:{status:"approved",approved_by:user.id,approved_at:new Date().toISOString(),next_attempt_at:new Date().toISOString(),attempt_count:0,last_error:null}});
+    if(!updated?.length) throw new HttpError("Draft not found or it has already been reviewed.",409);
+    return json({post:updated[0]});
+  }
+  const fbRejectMatch=path.match(/^\/api\/facebook\/posts\/([0-9a-f-]+)\/reject$/i);
+  if(request.method==="POST"&&fbRejectMatch){
+    const body=await request.json().catch(()=>({}));
+    const reason=String(body?.reason||"").trim().slice(0,500);
+    if(reason.length<3) throw new HttpError("Please enter a rejection reason (at least 3 characters).");
+    const id=encodeURIComponent(fbRejectMatch[1]);
+    // requireAdmin() has already verified this caller is an administrator.
+    // Use the service role for this protected admin action so table RLS policies
+    // cannot silently block the rejection update.
+    const rows=await serviceRequest(env,"facebook_posts?select=id,status&id=eq."+id+"&limit=1");
+    const post=rows?.[0];
+    if(!post) throw new HttpError("Facebook queue item not found.",404);
+    if(["published","publishing"].includes(post.status)) throw new HttpError("Published or currently publishing posts cannot be rejected.",409);
+    const updated=await serviceRequest(env,"facebook_posts?id=eq."+id+"&status=in.(draft,approved,failed,rejected)",{method:"PATCH",prefer:"return=representation",body:{status:"rejected",last_error:reason,next_attempt_at:new Date().toISOString(),processing_started_at:null}});
+    if(!updated?.length) throw new HttpError("This Facebook item can no longer be rejected.",409);
+    return json({post:updated[0]});
+  }
+  const fbDeleteMatch=path.match(/^\/api\/facebook\/posts\/([0-9a-f-]+)\/delete$/i);
+  if(request.method==="POST"&&fbDeleteMatch){
+    const id=encodeURIComponent(fbDeleteMatch[1]);
+    const rows=await supabaseRequest(env,token,"facebook_posts?select=id,status&id=eq."+id+"&limit=1");
+    const post=rows?.[0];
+    if(!post) throw new HttpError("Facebook queue item not found.",404);
+    if(["published","publishing"].includes(post.status)) throw new HttpError("Published or currently publishing posts cannot be deleted. Keep the publishing history.",409);
+    const deleted=await supabaseRequest(env,token,"facebook_posts?id=eq."+id+"&status=in.(draft,approved,failed,rejected)",{method:"DELETE",prefer:"return=representation"});
+    if(!deleted?.length) throw new HttpError("This Facebook item could not be deleted.",409);
+    return json({success:true});
+  }
+  const fbPublishMatch=path.match(/^\/api\/facebook\/posts\/([0-9a-f-]+)\/publish$/i);
+  if(request.method==="POST"&&fbPublishMatch){
+    const rows=await supabaseRequest(env,token,"facebook_posts?select=id,listing_id,caption,image_url,status,approved_at,approved_by&id=eq."+encodeURIComponent(fbPublishMatch[1])+"&limit=1");
+    const post=rows?.[0];
+    if(!post) throw new HttpError("Facebook draft not found.",404);
+    if(post.status!=="approved"||!post.approved_at||!post.approved_by) throw new HttpError("This post needs explicit administrator approval before publishing.",409);
+    const listingRows=await supabaseRequest(env,token,"listings?select=id,status&id=eq."+encodeURIComponent(post.listing_id)+"&limit=1");
+    if(!listingRows?.length||listingRows[0].status!=="approved") throw new HttpError("This property is no longer approved. Publishing has been blocked.",409);
+    const claimed=await supabaseRequest(env,token,"facebook_posts?id=eq."+encodeURIComponent(post.id)+"&status=eq.approved&approved_at=not.is.null&approved_by=not.is.null",{method:"PATCH",prefer:"return=representation",body:{status:"publishing",last_error:null}});
+    if(!claimed?.length) throw new HttpError("This post is already being processed or is no longer approved.",409);
+    let metaAccepted=false;
+    try{
+      const result=await publishFacebook(env,post);
+      metaAccepted=true;
+      const saved=await supabaseRequest(env,token,"facebook_posts?id=eq."+encodeURIComponent(post.id),{method:"PATCH",prefer:"return=representation",body:{status:"published",fb_media_id:result.mediaId,fb_post_id:result.postId,permalink:result.permalink,published_at:new Date().toISOString(),last_error:null}});
+      return json({success:true,post:saved?.[0]||null,permalink:result.permalink});
+    }catch(error){
+      const message=String(error?.message||"Facebook publishing failed.").slice(0,1000);
+      await supabaseRequest(env,token,"facebook_posts?id=eq."+encodeURIComponent(post.id),{method:"PATCH",body:{status:(error?.uncertain||metaAccepted)?"review_required":"failed",last_error:message,next_attempt_at:new Date().toISOString(),processing_started_at:null}}).catch(()=>{});
+      throw new HttpError(message,502);
+    }
+  }
+
+  throw new HttpError("Social publishing API route not found.",404);
+}
+async function generateDailySocialDrafts(env){
+  return serviceRequest(env,"rpc/generate_daily_social_drafts",{method:"POST",body:{}});
+}
+
+export default {
+  async scheduled(controller,env,ctx){
+    const clock=getIndiaClock(new Date(controller.scheduledTime||Date.now()));
+    if(clock.minute%15!==0) return;
+    ctx.waitUntil((async()=>{
+      if(clock.hour===10&&clock.minute===0){
+        const batch=await generateDailySocialDrafts(env);
+        console.log("MrSa 10:00 IST daily draft batch:",JSON.stringify(batch));
+      }
+      const cycle=await runSocialAutomation(env);
+      console.log("MrSa automatic publishing cycle:",JSON.stringify(cycle));
+    })().catch(error=>console.error("MrSa social automation:",error?.message||error)));
+  },
+  async fetch(request,env){
+    const url=new URL(request.url);
+    if(url.pathname.startsWith("/api/instagram/")||url.pathname.startsWith("/api/facebook/")||url.pathname.startsWith("/api/social-automation/")){
+      if(request.method==="OPTIONS") return new Response(null,{status:204,headers:{"Allow":"GET, POST, OPTIONS"}});
+      try{return await handleApi(request,env);}
+      catch(error){return json({error:error?.message||"Unexpected server error."},error instanceof HttpError?error.status:500);}
+    }
+    return env.ASSETS.fetch(request);
+  }
+};
