@@ -153,25 +153,78 @@ function getIndiaClock(date=new Date()){
   return {hour:Number(values.hour),minute:Number(values.minute)};
 }
 
+async function getEligibleAutoPlotIds(env,listingIds){
+  const ids=[...new Set((listingIds||[]).filter(Boolean))];
+  if(!ids.length) return new Set();
+  const inFilter="("+ids.map(id=>encodeURIComponent(id)).join(",")+")";
+  const listings=await serviceRequest(env,"listings?select=id,status,property_type&id=in."+inFilter+"&status=eq.approved&property_type=eq.Plot");
+  if(!listings?.length) return new Set();
+  const approvedIds=listings.map(row=>row.id);
+  const availability=await serviceRequest(env,"plot_availability?select=listing_id,available_count&listing_id=in.("+approvedIds.map(id=>encodeURIComponent(id)).join(",")+")&available_count=gt.0");
+  const availableIds=new Set((availability||[]).filter(row=>Number(row.available_count)>0).map(row=>row.listing_id));
+  return new Set(approvedIds.filter(id=>availableIds.has(id)));
+}
+
 async function publishOneForPlatform(env,table,platform){
-  const due=await serviceRequest(env,table+"?select=id,listing_id,caption,image_url,attempt_count,created_at&auto_generated=eq.true&status=in.(draft,approved)&or=(next_attempt_at.is.null,next_attempt_at.lte."+encodeURIComponent(new Date().toISOString())+")&order=created_at.asc&limit=1000");
-  if(!due?.length) return {processed:0,platform,empty:true};
-  const history=await serviceRequest(env,table+"?select=listing_id,published_at&status=eq.published&order=published_at.desc&limit=1000");
-  const lastPublishedByProperty=new Map();
-  for(const row of history||[]) if(row.listing_id&&!lastPublishedByProperty.has(row.listing_id)) lastPublishedByProperty.set(row.listing_id,new Date(row.published_at||0).getTime());
-  const selected=[...due].sort((a,b)=>(lastPublishedByProperty.get(a.listing_id)||0)-(lastPublishedByProperty.get(b.listing_id)||0)||new Date(a.created_at||0)-new Date(b.created_at||0))[0];
   const latest=await serviceRequest(env,"social_automation_settings?select=enabled&id=eq.1&limit=1");
   if(!latest?.[0]?.enabled) return {processed:0,platform,paused:true};
+
+  const due=await serviceRequest(env,table+"?select=id,listing_id,caption,image_url,attempt_count,created_at,next_attempt_at&auto_generated=eq.true&status=in.(draft,approved)&or=(next_attempt_at.is.null,next_attempt_at.lte."+encodeURIComponent(new Date().toISOString())+")&order=created_at.asc&limit=1000");
+  if(!due?.length) return {processed:0,platform,empty:true};
+
+  // Eligibility is checked at send time, not only when a draft is generated.
+  // A missing availability row is treated as unavailable (fail closed).
+  const eligibleIds=await getEligibleAutoPlotIds(env,due.map(row=>row.listing_id));
+  if(!eligibleIds.size) return {processed:0,platform,noEligibleAvailablePlots:true};
+
+  const history=await serviceRequest(env,table+"?select=listing_id,published_at&status=eq.published&published_at=not.is.null&order=published_at.desc&limit=1000");
+  const lastPublishedByProperty=new Map();
+  for(const row of history||[]){
+    if(row.listing_id&&!lastPublishedByProperty.has(row.listing_id)){
+      lastPublishedByProperty.set(row.listing_id,new Date(row.published_at).getTime());
+    }
+  }
+
+  const cooldownMs=7*24*60*60*1000;
+  const now=Date.now();
+  const candidates=due.filter(row=>{
+    if(!eligibleIds.has(row.listing_id)) return false;
+    const lastPublished=lastPublishedByProperty.get(row.listing_id);
+    return !lastPublished||now-lastPublished>=cooldownMs;
+  });
+  if(!candidates.length) return {processed:0,platform,noEligibleAfterSevenDayCooldown:true};
+
+  const selected=[...candidates].sort((a,b)=>
+    (lastPublishedByProperty.get(a.listing_id)||0)-(lastPublishedByProperty.get(b.listing_id)||0)||
+    new Date(a.created_at||0)-new Date(b.created_at||0)
+  )[0];
+
   const attempt=(Number(selected.attempt_count)||0)+1;
   const claim=await serviceRequest(env,table+"?id=eq."+encodeURIComponent(selected.id)+"&status=in.(draft,approved)&auto_generated=eq.true",{
     method:"PATCH",prefer:"return=representation",
     body:{status:"publishing",attempt_count:attempt,last_attempt_at:new Date().toISOString(),processing_started_at:new Date().toISOString(),last_error:null}
   });
   if(!claim?.length) return {processed:0,platform,claimed:false};
+
   let result;
   try{
-    const listing=await serviceRequest(env,"listings?select=id,status&id=eq."+encodeURIComponent(selected.listing_id)+"&status=eq.approved&limit=1");
-    if(!listing?.length) throw new Error("Property is no longer approved. Automatic publishing was blocked.");
+    // Recheck inventory and approval after claiming the row, immediately before
+    // contacting Meta. If inventory changed, release the queue item untouched.
+    const stillEligible=await getEligibleAutoPlotIds(env,[selected.listing_id]);
+    if(!stillEligible.has(selected.listing_id)){
+      await serviceRequest(env,table+"?id=eq."+encodeURIComponent(selected.id)+"&status=eq.publishing",{
+        method:"PATCH",
+        body:{
+          status:"draft",
+          attempt_count:Number(selected.attempt_count)||0,
+          processing_started_at:null,
+          last_error:null,
+          next_attempt_at:new Date(Date.now()+15*60*1000).toISOString()
+        }
+      });
+      return {processed:0,platform,skippedUnavailableOrUnapproved:true};
+    }
+
     result=platform==="facebook"?await publishFacebook(env,selected):await publishInstagram(env,selected,async containerId=>{
       const saved=await serviceRequest(env,table+"?id=eq."+encodeURIComponent(selected.id)+"&status=eq.publishing",{
         method:"PATCH",prefer:"return=representation",body:{ig_container_id:containerId}
@@ -184,13 +237,14 @@ async function publishOneForPlatform(env,table,platform){
       await serviceRequest(env,table+"?id=eq."+encodeURIComponent(selected.id)+"&status=eq.publishing",{method:"PATCH",body:{status:"review_required",last_error:message,next_attempt_at:new Date().toISOString(),processing_started_at:null}}).catch(()=>{});
       return {processed:1,platform,reviewRequired:true,error:message};
     }
-    const permanent=/requires a JPEG|permission|not configured|invalid access token|unsupported post|no longer approved|deprecated/i.test(message);
+    const permanent=/requires a JPEG|permission|not configured|invalid access token|unsupported post|deprecated/i.test(message);
     const retryMinutes=[60,120,180,240];
     const exhausted=attempt>=5||permanent;
     const nextAttempt=new Date(Date.now()+(retryMinutes[Math.min(attempt-1,retryMinutes.length-1)]||240)*60000).toISOString();
-    await serviceRequest(env,table+"?id=eq."+encodeURIComponent(selected.id)+"&status=eq.publishing",{method:"PATCH",body:{status:exhausted?"failed":"approved",last_error:message,next_attempt_at:nextAttempt,processing_started_at:null}}).catch(()=>{});
+    await serviceRequest(env,table+"?id=eq."+encodeURIComponent(selected.id)+"&status=eq.publishing",{method:"PATCH",body:{status:exhausted?"failed":"draft",last_error:message,next_attempt_at:nextAttempt,processing_started_at:null}}).catch(()=>{});
     return {processed:1,platform,failed:true,error:message};
   }
+
   const fields=platform==="facebook"
     ? {status:"published",fb_media_id:result.mediaId,fb_post_id:result.postId,permalink:result.permalink,published_at:new Date().toISOString(),last_error:null,processing_started_at:null,next_attempt_at:new Date().toISOString()}
     : {status:"published",ig_container_id:result.containerId,ig_media_id:result.mediaId,permalink:result.permalink,published_at:new Date().toISOString(),last_error:null,processing_started_at:null,next_attempt_at:new Date().toISOString()};
@@ -203,9 +257,8 @@ async function publishOneForPlatform(env,table,platform){
     console.error("Published externally but could not save "+platform+" status for "+selected.id+":",saveError?.message||saveError);
     return {processed:1,platform,published:true,reviewRequired:true};
   }
-  return {processed:1,platform,published:true};
+  return {processed:1,platform,published:true,listingId:selected.listing_id};
 }
-
 async function markStalePublishingForReview(env){
   const cutoff=new Date(Date.now()-30*60*1000).toISOString();
   let reviewed=0;
