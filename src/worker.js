@@ -181,7 +181,7 @@ async function publishOneForPlatform(env,table,platform){
   }catch(error){
     const message=String(error?.message||"Automatic publishing failed.").slice(0,1000);
     if(error?.uncertain||error?.reviewRequired){
-      await serviceRequest(env,table+"?id=eq."+encodeURIComponent(selected.id)+"&status=eq.publishing",{method:"PATCH",body:{status:"review_required",last_error:message,next_attempt_at:null,processing_started_at:null}}).catch(()=>{});
+      await serviceRequest(env,table+"?id=eq."+encodeURIComponent(selected.id)+"&status=eq.publishing",{method:"PATCH",body:{status:"review_required",last_error:message,next_attempt_at:new Date().toISOString(),processing_started_at:null}}).catch(()=>{});
       return {processed:1,platform,reviewRequired:true,error:message};
     }
     const permanent=/requires a JPEG|permission|not configured|invalid access token|unsupported post|no longer approved|deprecated/i.test(message);
@@ -192,14 +192,14 @@ async function publishOneForPlatform(env,table,platform){
     return {processed:1,platform,failed:true,error:message};
   }
   const fields=platform==="facebook"
-    ? {status:"published",fb_media_id:result.mediaId,fb_post_id:result.postId,permalink:result.permalink,published_at:new Date().toISOString(),last_error:null,processing_started_at:null,next_attempt_at:null}
-    : {status:"published",ig_container_id:result.containerId,ig_media_id:result.mediaId,permalink:result.permalink,published_at:new Date().toISOString(),last_error:null,processing_started_at:null,next_attempt_at:null};
+    ? {status:"published",fb_media_id:result.mediaId,fb_post_id:result.postId,permalink:result.permalink,published_at:new Date().toISOString(),last_error:null,processing_started_at:null,next_attempt_at:new Date().toISOString()}
+    : {status:"published",ig_container_id:result.containerId,ig_media_id:result.mediaId,permalink:result.permalink,published_at:new Date().toISOString(),last_error:null,processing_started_at:null,next_attempt_at:new Date().toISOString()};
   try{
     const saved=await serviceRequest(env,table+"?id=eq."+encodeURIComponent(selected.id)+"&status=eq.publishing",{method:"PATCH",prefer:"return=representation",body:fields});
     if(!saved?.length) throw new Error("MrSa could not confirm the saved publishing record.");
   }catch(saveError){
     const message=("Meta accepted the post, but MrSa could not confirm the saved post ID. Verify Meta before retrying. "+String(saveError?.message||"")).slice(0,1000);
-    await serviceRequest(env,table+"?id=eq."+encodeURIComponent(selected.id)+"&status=eq.publishing",{method:"PATCH",body:{status:"review_required",last_error:message,next_attempt_at:null,processing_started_at:null}}).catch(()=>{});
+    await serviceRequest(env,table+"?id=eq."+encodeURIComponent(selected.id)+"&status=eq.publishing",{method:"PATCH",body:{status:"review_required",last_error:message,next_attempt_at:new Date().toISOString(),processing_started_at:null}}).catch(()=>{});
     console.error("Published externally but could not save "+platform+" status for "+selected.id+":",saveError?.message||saveError);
     return {processed:1,platform,published:true,reviewRequired:true};
   }
@@ -215,7 +215,6 @@ async function markStalePublishingForReview(env){
       body:{
         status:"review_required",
         last_error:"This publishing attempt was active for over 30 minutes. It was moved to review_required because Meta may have accepted the post. Verify Facebook/Instagram before retrying.",
-        next_attempt_at:null,
         processing_started_at:null
       }
     });
@@ -297,7 +296,7 @@ async function handleApi(request,env){
     const post=rows?.[0];
     if(!post) throw new HttpError("Instagram queue item not found.",404);
     if(["published","publishing"].includes(post.status)) throw new HttpError("Published or currently publishing posts cannot be rejected.",409);
-    const updated=await serviceRequest(env,"instagram_posts?id=eq."+id+"&status=in.(draft,approved,failed,rejected)",{method:"PATCH",prefer:"return=representation",body:{status:"rejected",last_error:reason,next_attempt_at:null,processing_started_at:null}});
+    const updated=await serviceRequest(env,"instagram_posts?id=eq."+id+"&status=in.(draft,approved,failed,rejected)",{method:"PATCH",prefer:"return=representation",body:{status:"rejected",last_error:reason,next_attempt_at:new Date().toISOString(),processing_started_at:null}});
     if(!updated?.length) throw new HttpError("This Instagram item can no longer be rejected.",409);
     return json({post:updated[0]});
   }
@@ -330,7 +329,7 @@ async function handleApi(request,env){
       return json({success:true,post:saved?.[0]||null,permalink:result.permalink});
     }catch(error){
       const message=String(error?.message||"Instagram publishing failed.").slice(0,1000);
-      await supabaseRequest(env,token,"instagram_posts?id=eq."+encodeURIComponent(post.id),{method:"PATCH",body:{status:(error?.uncertain||metaAccepted)?"review_required":"failed",last_error:message,next_attempt_at:null,processing_started_at:null}}).catch(()=>{});
+      await supabaseRequest(env,token,"instagram_posts?id=eq."+encodeURIComponent(post.id),{method:"PATCH",body:{status:(error?.uncertain||metaAccepted)?"review_required":"failed",last_error:message,next_attempt_at:new Date().toISOString(),processing_started_at:null}}).catch(()=>{});
       throw new HttpError(message,502);
     }
   }
@@ -376,7 +375,7 @@ async function handleApi(request,env){
     const post=rows?.[0];
     if(!post) throw new HttpError("Facebook queue item not found.",404);
     if(["published","publishing"].includes(post.status)) throw new HttpError("Published or currently publishing posts cannot be rejected.",409);
-    const updated=await serviceRequest(env,"facebook_posts?id=eq."+id+"&status=in.(draft,approved,failed,rejected)",{method:"PATCH",prefer:"return=representation",body:{status:"rejected",last_error:reason,next_attempt_at:null,processing_started_at:null}});
+    const updated=await serviceRequest(env,"facebook_posts?id=eq."+id+"&status=in.(draft,approved,failed,rejected)",{method:"PATCH",prefer:"return=representation",body:{status:"rejected",last_error:reason,next_attempt_at:new Date().toISOString(),processing_started_at:null}});
     if(!updated?.length) throw new HttpError("This Facebook item can no longer be rejected.",409);
     return json({post:updated[0]});
   }
@@ -409,7 +408,7 @@ async function handleApi(request,env){
       return json({success:true,post:saved?.[0]||null,permalink:result.permalink});
     }catch(error){
       const message=String(error?.message||"Facebook publishing failed.").slice(0,1000);
-      await supabaseRequest(env,token,"facebook_posts?id=eq."+encodeURIComponent(post.id),{method:"PATCH",body:{status:(error?.uncertain||metaAccepted)?"review_required":"failed",last_error:message,next_attempt_at:null,processing_started_at:null}}).catch(()=>{});
+      await supabaseRequest(env,token,"facebook_posts?id=eq."+encodeURIComponent(post.id),{method:"PATCH",body:{status:(error?.uncertain||metaAccepted)?"review_required":"failed",last_error:message,next_attempt_at:new Date().toISOString(),processing_started_at:null}}).catch(()=>{});
       throw new HttpError(message,502);
     }
   }
