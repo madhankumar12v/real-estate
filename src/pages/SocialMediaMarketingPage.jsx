@@ -20,7 +20,7 @@ export default function SocialMediaMarketingPage({ user }) {
     }catch(error){setConnectionError(error.message||'Could not check Meta connections.')}
     finally{setCheckingConnections(false)}
   }
-  const statusLabel=status=>({LIVE:'LIVE',EXPIRED:'EXPIRED',NOT_CONFIGURED:'NOT CONFIGURED',ACTION_REQUIRED:'ACTION REQUIRED',CHECK_FAILED:'CHECK FAILED'}[status]||'NOT CHECKED')
+  const statusLabel=status=>({LIVE:'LIVE',EXPIRED:'EXPIRED',NOT_CONFIGURED:'NOT CONFIGURED',ACTION_REQUIRED:'ACTION REQUIRED',CHECK_FAILED:'CHECK FAILED',PUBLISH_PERMISSION_UNVERIFIED:'PERMISSIONS UNVERIFIED',VERIFIED:'VERIFIED',UNVERIFIED:'UNVERIFIED',NOT_CHECKED:'NOT CHECKED'}[status]||'NOT CHECKED')
   const statusColor=status=>status==='LIVE'?'#18794e':status==='EXPIRED'||status==='ACTION_REQUIRED'?'#b42318':'#8a5a12'
   return <section className="section page-section social-marketing-page">
     <header className="social-marketing-header">
@@ -39,7 +39,8 @@ export default function SocialMediaMarketingPage({ user }) {
         {['facebook','instagram'].map(platform=>{const result=connectionCheck?.[platform];return <article key={platform} className="social-token-card"><span>{platform==='facebook'?<Facebook size={17}/>:<Instagram size={17}/>} {platform==='facebook'?'Facebook Page':'Instagram account'}</span><strong style={{color:statusColor(result?.status)}}>{statusLabel(result?.status)}</strong><small>{result?.name||result?.message||(connectionCheck?'No result returned.':'Run a connection check to verify the saved token.')}</small></article>})}
       </div>
       {connectionCheck?.checkedAt&&<small className="social-token-checked">Last checked: {new Date(connectionCheck.checkedAt).toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'})}</small>}
-      <p className="social-token-footnote">LIVE means Meta accepted the token during this check. EXPIRED means Meta returned an invalid/expired-token error. This is a live check, not a guarantee that the token will remain valid indefinitely.</p>
+      {connectionCheck&&<div className="social-token-grid">{['facebook','instagram'].map(platform=>{const result=connectionCheck[platform];return <article key={platform+'-permissions'} className="social-token-card"><span>{platform==='facebook'?'Facebook':'Instagram'} publishing permission</span><strong style={{color:result?.publishing?.status==='VERIFIED'?'#18794e':result?.publishing?.status==='ACTION_REQUIRED'||result?.publishing?.status==='EXPIRED'?'#b42318':'#8a5a12'}}>{statusLabel(result?.publishing?.status)}</strong><small>{result?.publishing?.message||'Permission check not available.'}</small></article>})}</div>}
+      <p className="social-token-footnote">LIVE now requires Meta to confirm both account access and the platform’s required publishing permissions. Permission verification uses Meta’s read-only token debugger; it does not publish a test post. Configure META_APP_ID and META_APP_SECRET in Cloudflare to enable permission-level checks. No token or app-secret values are displayed.</p>
     </section>
 
     <div className="social-marketing-accordion">
