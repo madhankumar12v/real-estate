@@ -293,7 +293,7 @@ async function runSocialAutomation(env){
   return {paused:false,processed,staleReviewed,timezone:"Asia/Kolkata",publishingWindow:"10:00-22:00",intervalMinutes:15,cycleDays:7,priority:"property_rotation"};
 }
 
-async function checkMetaToken(url,token,expectedId,platform){
+async function checkMetaToken(token,expectedId,platform){
   if(!token||!expectedId) return {status:"NOT_CONFIGURED",message:"Add the required Cloudflare credentials."};
   const endpoint=new URL("https://graph.facebook.com/"+API_VERSION+"/"+encodeURIComponent(expectedId));
   endpoint.searchParams.set("fields",platform==="facebook"?"id,name":"id,username");
@@ -321,8 +321,8 @@ async function checkMetaToken(url,token,expectedId,platform){
 }
 async function checkSocialConnections(env){
   const [facebook,instagram]=await Promise.all([
-    checkMetaToken("",String(env.FACEBOOK_PAGE_ACCESS_TOKEN||"").trim(),String(env.FACEBOOK_PAGE_ID||"").trim(),"facebook"),
-    checkMetaToken("",String(env.INSTAGRAM_ACCESS_TOKEN||"").trim(),String(env.INSTAGRAM_ACCOUNT_ID||"").trim(),"instagram")
+    checkMetaToken(String(env.FACEBOOK_PAGE_ACCESS_TOKEN||"").trim(),String(env.FACEBOOK_PAGE_ID||"").trim(),"facebook"),
+    checkMetaToken(String(env.INSTAGRAM_ACCESS_TOKEN||"").trim(),String(env.INSTAGRAM_ACCOUNT_ID||"").trim(),"instagram")
   ]);
   return {checkedAt:new Date().toISOString(),facebook,instagram};
 }
