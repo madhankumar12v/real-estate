@@ -319,12 +319,55 @@ async function checkMetaToken(token,expectedId,platform){
   }
   return {status:"CHECK_FAILED",message:String(metaError.message||"Meta could not verify this account. Check the Page/account ID and permissions.").slice(0,300)};
 }
+async function checkMetaPublishingPermissions(env,token,platform){
+  if(!String(env.META_APP_ID||"").trim()||!String(env.META_APP_SECRET||"").trim()){
+    return {status:"UNVERIFIED",message:"Account access is valid, but publishing permissions are not verified. Add META_APP_ID and META_APP_SECRET as Cloudflare secrets to enable a read-only Meta permission check."};
+  }
+  const endpoint=new URL("https://graph.facebook.com/"+API_VERSION+"/debug_token");
+  endpoint.searchParams.set("input_token",token);
+  endpoint.searchParams.set("access_token",String(env.META_APP_ID).trim()+"|"+String(env.META_APP_SECRET).trim());
+  let response,data;
+  try{
+    response=await fetch(endpoint.toString(),{headers:{Accept:"application/json"}});
+    data=await response.json().catch(()=>({}));
+  }catch{
+    return {status:"CHECK_FAILED",message:"Could not verify Meta publishing permissions. Try again later."};
+  }
+  if(!response.ok||data.error){
+    const error=data?.error||{};
+    if(Number(error.code)===190)return {status:"EXPIRED",message:"Meta rejected the token during the permission check."};
+    return {status:"CHECK_FAILED",message:String(error.message||"Meta could not inspect this token. Check that the app ID and app secret belong to the app that issued the token.").slice(0,300)};
+  }
+  const tokenData=data.data||{};
+  if(tokenData.is_valid===false)return {status:"EXPIRED",message:"Meta reports that this access token is invalid or expired."};
+  if(tokenData.app_id&&String(tokenData.app_id)!==String(env.META_APP_ID).trim()){
+    return {status:"ACTION_REQUIRED",message:"The saved token was issued by a different Meta app than META_APP_ID."};
+  }
+  const scopes=new Set([
+    ...(Array.isArray(tokenData.scopes)?tokenData.scopes:[]),
+    ...(Array.isArray(tokenData.granular_scopes)?tokenData.granular_scopes.map(item=>item?.scope).filter(Boolean):[])
+  ]);
+  const required=platform==="facebook"
+    ? ["pages_manage_posts","pages_read_engagement","pages_show_list"]
+    : ["instagram_basic","instagram_content_publish","pages_read_engagement","pages_show_list"];
+  if(!scopes.size)return {status:"ACTION_REQUIRED",message:"Meta validated the token but returned no permission scopes. Recheck the app/token pairing and granted permissions."};
+  const missing=required.filter(permission=>!scopes.has(permission));
+  if(missing.length)return {status:"ACTION_REQUIRED",message:"Missing required permission(s): "+missing.join(", ")+". Re-authorize the app with these permissions.",missing};
+  return {status:"VERIFIED",required,granted:required};
+}
+async function checkPlatformConnection(env,token,expectedId,platform){
+  const account=await checkMetaToken(token,expectedId,platform);
+  if(account.status!=="LIVE")return {...account,accountStatus:account.status,publishing:{status:"NOT_CHECKED",message:"Publishing permissions were not checked because account access failed."}};
+  const publishing=await checkMetaPublishingPermissions(env,token,platform);
+  const status=publishing.status==="VERIFIED"?"LIVE":publishing.status==="ACTION_REQUIRED"||publishing.status==="EXPIRED"?"ACTION_REQUIRED":"PUBLISH_PERMISSION_UNVERIFIED";
+  return {...account,accountStatus:"LIVE",publishing,status,message:publishing.status==="VERIFIED"?"Meta confirmed account access and the required publishing permissions.":publishing.message};
+}
 async function checkSocialConnections(env){
   const [facebook,instagram]=await Promise.all([
-    checkMetaToken(String(env.FACEBOOK_PAGE_ACCESS_TOKEN||"").trim(),String(env.FACEBOOK_PAGE_ID||"").trim(),"facebook"),
-    checkMetaToken(String(env.INSTAGRAM_ACCESS_TOKEN||"").trim(),String(env.INSTAGRAM_ACCOUNT_ID||"").trim(),"instagram")
+    checkPlatformConnection(env,String(env.FACEBOOK_PAGE_ACCESS_TOKEN||"").trim(),String(env.FACEBOOK_PAGE_ID||"").trim(),"facebook"),
+    checkPlatformConnection(env,String(env.INSTAGRAM_ACCESS_TOKEN||"").trim(),String(env.INSTAGRAM_ACCOUNT_ID||"").trim(),"instagram")
   ]);
-  return {checkedAt:new Date().toISOString(),facebook,instagram};
+  return {checkedAt:new Date().toISOString(),facebook,instagram,permissionCheck:"read_only_meta_debug_token"};
 }
 
 async function handleApi(request,env){
