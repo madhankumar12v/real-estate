@@ -5,6 +5,22 @@
   "compatibility_date": "2026-11-06",
   "keep_vars": true,
   "triggers": { "crons": ["* * * * *"] },
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "invocation_logs": true,
+      "persist": true
+    },
+    "traces": {
+      "enabled": false,
+      "head_sampling_rate": 1,
+      "persist": true
+    },
+    "issue_detection": {
+      "enabled": false
+    }
+  },
   "vars": {
     "SUPABASE_URL": "https://rapjnxjinkwgksantkhu.supabase.co",
     "SUPABASE_ANON_KEY": "sb_publishable_1A7qgmJP38Sq8g0R3JHhzA_8F_FjAS2",
