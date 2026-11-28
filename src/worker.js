@@ -481,7 +481,8 @@ export default {
         const batch=await generateDailySocialDrafts(env);
         console.log("MrSa 10:00 IST daily draft batch:",JSON.stringify(batch));
       }
-      await runSocialAutomation(env);
+      const cycle=await runSocialAutomation(env);
+      console.log("MrSa automatic publishing cycle:",JSON.stringify(cycle));
     })().catch(error=>console.error("MrSa social automation:",error?.message||error)));
   },
   async fetch(request,env){
