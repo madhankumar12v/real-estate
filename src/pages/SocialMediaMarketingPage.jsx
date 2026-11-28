@@ -1,7 +1,27 @@
-import { Facebook, Instagram, LayoutDashboard, History, ShieldCheck, Settings2, Wrench, ChevronDown, Clock3 } from 'lucide-react'
+import { useState } from 'react'
+import { Facebook, Instagram, LayoutDashboard, History, ShieldCheck, Settings2, Wrench, ChevronDown, Clock3, RefreshCw } from 'lucide-react'
+import { supabase } from '../lib/supabase'
 import SocialAutomationPage from './SocialAutomationPage'
 
 export default function SocialMediaMarketingPage({ user }) {
+  const [connectionCheck,setConnectionCheck]=useState(null)
+  const [checkingConnections,setCheckingConnections]=useState(false)
+  const [connectionError,setConnectionError]=useState('')
+  const checkConnections=async()=>{
+    setCheckingConnections(true);setConnectionError('')
+    try{
+      const {data,error}=await supabase.auth.getSession()
+      if(error)throw error
+      if(!data.session?.access_token)throw new Error('Your admin session has expired. Please sign in again.')
+      const response=await fetch('/api/social-automation/check-connections',{method:'POST',headers:{Authorization:'Bearer '+data.session.access_token}})
+      const result=await response.json().catch(()=>({}))
+      if(!response.ok)throw new Error(result.error||'Could not check Meta connections.')
+      setConnectionCheck(result)
+    }catch(error){setConnectionError(error.message||'Could not check Meta connections.')}
+    finally{setCheckingConnections(false)}
+  }
+  const statusLabel=status=>({LIVE:'LIVE',EXPIRED:'EXPIRED',NOT_CONFIGURED:'NOT CONFIGURED',ACTION_REQUIRED:'ACTION REQUIRED',CHECK_FAILED:'CHECK FAILED'}[status]||'NOT CHECKED')
+  const statusColor=status=>status==='LIVE'?'#18794e':status==='EXPIRED'||status==='ACTION_REQUIRED'?'#b42318':'#8a5a12'
   return <section className="section page-section social-marketing-page">
     <header className="social-marketing-header">
       <div>
@@ -11,6 +31,16 @@ export default function SocialMediaMarketingPage({ user }) {
       </div>
       <div className="social-marketing-header-note"><ShieldCheck size={17}/><span>Website listing admin approval is required. Facebook and Instagram posts publish automatically without separate social media approval.</span></div>
     </header>
+
+    <section className="social-token-check" aria-label="Meta token connection status">
+      <div className="social-token-check-heading"><div><b>Meta connection &amp; token status</b><small>Checks the saved Cloudflare tokens directly against Meta. No token values are displayed.</small></div><button className="btn btn-outline" onClick={checkConnections} disabled={checkingConnections}><RefreshCw size={15}/>{checkingConnections?'Checking…':'Check Connection'}</button></div>
+      {connectionError&&<p className="social-token-error" role="alert">{connectionError}</p>}
+      <div className="social-token-grid">
+        {['facebook','instagram'].map(platform=>{const result=connectionCheck?.[platform];return <article key={platform} className="social-token-card"><span>{platform==='facebook'?<Facebook size={17}/>:<Instagram size={17}/>} {platform==='facebook'?'Facebook Page':'Instagram account'}</span><strong style={{color:statusColor(result?.status)}}>{statusLabel(result?.status)}</strong><small>{result?.name||result?.message||(connectionCheck?'No result returned.':'Run a connection check to verify the saved token.')}</small></article>})}
+      </div>
+      {connectionCheck?.checkedAt&&<small className="social-token-checked">Last checked: {new Date(connectionCheck.checkedAt).toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'})}</small>}
+      <p className="social-token-footnote">LIVE means Meta accepted the token during this check. EXPIRED means Meta returned an invalid/expired-token error. This is a live check, not a guarantee that the token will remain valid indefinitely.</p>
+    </section>
 
     <div className="social-marketing-accordion">
       <details className="social-marketing-accordion-item" open>
@@ -80,6 +110,13 @@ export default function SocialMediaMarketingPage({ user }) {
       .social-marketing-header h1{margin:7px 0;font-size:clamp(30px,4vw,42px);color:#20364b}
       .social-marketing-header>div:first-child{max-width:760px}
       .social-marketing-header-note{display:flex;align-items:center;gap:8px;padding:11px 14px;border:1px solid #dcebe4;border-radius:10px;background:#f5faf7;color:#286b53;font-size:12px;font-weight:600;max-width:300px}
+      .social-token-check{margin:0 0 18px;padding:16px;border:1px solid #e2ebe6;border-radius:14px;background:#fff}
+      .social-token-check-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+      .social-token-check-heading>div{display:grid;gap:4px}.social-token-check-heading b{font-size:14px;color:#20364b}.social-token-check-heading small,.social-token-checked,.social-token-footnote{font-size:11px;color:#718078;line-height:1.55}
+      .social-token-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:13px}
+      .social-token-card{display:grid;gap:7px;padding:13px;border:1px solid #e8eeeb;border-radius:10px;background:#fbfdfc;min-width:0}
+      .social-token-card>span{display:flex;align-items:center;gap:7px;color:#50645a;font-size:12px;font-weight:650}.social-token-card>strong{font-size:15px;letter-spacing:.03em}.social-token-card>small{font-size:11px;color:#718078;line-height:1.5;overflow-wrap:anywhere}
+      .social-token-error{color:#b42318;font-size:12px}.social-token-checked{display:block;margin-top:10px}.social-token-footnote{margin:8px 0 0}
       .social-marketing-accordion{display:grid;gap:12px}
       .social-marketing-accordion-item{overflow:hidden;border:1px solid #e2ebe6;border-radius:15px;background:#fff;box-shadow:0 5px 18px #20364b08}
       .social-marketing-accordion-item>summary{display:flex;align-items:center;gap:14px;min-height:76px;padding:14px 18px;cursor:pointer;list-style:none}
@@ -102,7 +139,7 @@ export default function SocialMediaMarketingPage({ user }) {
       .social-troubleshooting-grid article{padding:16px;border:1px solid #e8eeeb;border-radius:12px;background:#fbfdfc}
       .social-troubleshooting-grid article>b{display:flex;align-items:center;gap:8px;color:#20364b;font-size:13px}
       .social-troubleshooting-grid p{margin:9px 0 0;color:#687a71;font-size:12px;line-height:1.7}
-      @media(max-width:760px){.social-marketing-header{align-items:flex-start;flex-direction:column}.social-marketing-header-note{max-width:none}.social-troubleshooting-grid{grid-template-columns:1fr}.social-marketing-accordion-body{padding:13px}}
+      @media(max-width:760px){.social-token-grid{grid-template-columns:1fr}.social-marketing-header{align-items:flex-start;flex-direction:column}.social-marketing-header-note{max-width:none}.social-troubleshooting-grid{grid-template-columns:1fr}.social-marketing-accordion-body{padding:13px}}
       @media(max-width:560px){.social-marketing-accordion-item>summary{gap:10px;padding:12px}.social-marketing-accordion-icon{flex-basis:38px;width:38px;height:38px}.social-marketing-accordion-copy b{font-size:14px}.social-marketing-accordion-copy small{font-size:11px}}
     `}</style>
   </section>
